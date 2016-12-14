@@ -8,7 +8,6 @@
 
 
 //! Public facing modules
-pub mod cairus;
 pub mod compositor;
 
 
