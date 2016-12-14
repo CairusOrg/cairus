@@ -1,7 +1,37 @@
 //! This module is for image compositing operations.
 //!
 //! Cairus currently supports the `over` compositing operation.
-use cairus::Rgba;
+
+
+/// Rgba is the primary representation of color in Cairus.  Rgba is for API-level definition of
+/// color, and is NOT the 32-bit (8-bit per channel) pixel representation found in bitmaps.
+#[derive(Debug)]
+pub struct Rgba {
+    pub red: f32,
+    pub green: f32,
+    pub blue: f32,
+    pub alpha: f32,
+}
+
+
+impl Rgba {
+    pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
+        Rgba{red: red, green: green, blue: blue, alpha: alpha}
+    }
+
+    pub fn to_int(&self) -> (i32, i32, i32, i32) {
+        ((self.red * 255.) as i32,  (self.green * 255.) as i32,
+         (self.blue * 255.) as i32, (self.alpha * 255.) as i32)
+    }
+}
+
+
+impl PartialEq for Rgba {
+    fn eq(&self, other: &Rgba) -> bool {
+        self.red == other.red && self.green == other.green &&
+        self.blue == other.blue && self.alpha == other.alpha
+    }
+}
 
 
 /// This enum will hold all types of supported operations.
@@ -31,11 +61,9 @@ pub fn over(src: &Rgba, dst: &Rgba) -> Rgba {
 }
 
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cairus::Rgba;
 
     #[test]
     fn test_over_operator_semi_transparent_src() {
@@ -64,4 +92,21 @@ mod tests {
         assert_eq!(result, Rgba::new(0., 0.5, 0.5, 1.0));
     }
 
+    #[test]
+    fn test_rgba_to_int_all_ones() {
+        let color = Rgba::new(1., 1., 1., 1.);
+        assert_eq!(color.to_int(), (255, 255, 255, 255));
+    }
+
+    #[test]
+    fn test_rgba_to_int_all_zeroes() {
+        let color = Rgba::new(0., 0., 0., 0.);
+        assert_eq!(color.to_int(), (0, 0, 0, 0));
+    }
+
+    #[test]
+    fn test_rgba_to_int_all_half() {
+        let color = Rgba::new(0.5, 0.5, 0.5, 0.5);
+        assert_eq!(color.to_int(), (127, 127, 127, 127));
+    }
 }
