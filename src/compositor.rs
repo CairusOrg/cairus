@@ -39,21 +39,22 @@ impl PartialEq for Rgba {
 ///
 /// This is cairus's default operator.  If the source is semi-transparent, the over operation will
 /// blend the src and the destination.  If the source is opaque, it will cover the destination.
-pub fn over(src: &Rgba, dst: &Rgba) -> Rgba {
+pub fn over(src: &Rgba, dst: &mut Rgba) {
     // Returns a new Rgba struct, the result of compositing `src` and `dst`.
-    let new_alpha = src.alpha + (dst.alpha * (1. - src.alpha));
-    let composite = | x: f32, y: f32 | -> f32 {
-        ((x * src.alpha) + y * dst.alpha * (1. - src.alpha)) / new_alpha
-    };
-
-    Rgba {
-          red: composite(src.red, dst.red),
-        green: composite(src.green, dst.green),
-         blue: composite(src.blue, dst.blue),
-        alpha: new_alpha
-    }
+    let new_alpha = over_alpha(&src.alpha, &dst.alpha);
+    dst.red = over_color(&src.red, &dst.red, &src.alpha, &dst.alpha, &new_alpha);
+    dst.green = over_color(&src.green, &dst.green, &src.alpha, &dst.alpha, &new_alpha);
+    dst.blue = over_color(&src.blue, &dst.blue, &src.alpha, &dst.alpha, &new_alpha);
+    dst.alpha = new_alpha;
 }
 
+fn over_color(x: &f32, y: &f32, src_alpha: &f32, dst_alpha: &f32, new_alpha: &f32) -> f32 {
+    ((x * src_alpha) + y * dst_alpha * (1. - src_alpha)) / new_alpha
+}
+
+fn over_alpha(src: &f32, dst: &f32) -> f32 {
+    src + (dst * (1. - src))
+}
 
 #[cfg(test)]
 mod tests {
@@ -62,28 +63,28 @@ mod tests {
     #[test]
     fn test_over_operator_semi_transparent_src() {
         let src = Rgba::new(1., 0., 0., 0.5);
-        let dst = Rgba::new(0., 1., 0., 0.5);
-        let result = over(&src, &dst);
+        let mut dst = Rgba::new(0., 1., 0., 0.5);
+        over(&src, &mut dst);
 
         // This result was computed manually to be correct, and then modified to match Rust's
         // default floating point decimal place rounding.
-        assert_eq!(result, Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
+        assert_eq!(dst, Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
     }
 
     #[test]
     fn test_over_operator_opaque_src() {
         let src = Rgba::new(1., 0., 0., 1.0);
-        let dst = Rgba::new(0., 1., 1., 0.5);
-        let result = over(&src, &dst);
-        assert_eq!(result, Rgba::new(1., 0., 0., 1.0));
+        let mut dst = Rgba::new(0., 1., 1., 0.5);
+        over(&src, &mut dst);
+        assert_eq!(dst, Rgba::new(1., 0., 0., 1.0));
     }
 
     #[test]
     fn test_over_operator_opaque_dst() {
         let src = Rgba::new(0., 0., 1., 0.5);
-        let dst = Rgba::new(0., 1., 0., 1.);
-        let result = over(&src, &dst);
-        assert_eq!(result, Rgba::new(0., 0.5, 0.5, 1.0));
+        let mut dst = Rgba::new(0., 1., 0., 1.);
+        over(&src, &mut dst);
+        assert_eq!(dst, Rgba::new(0., 0.5, 0.5, 1.0));
     }
 
     #[test]
