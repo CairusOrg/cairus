@@ -1,10 +1,14 @@
 //! This module is for image compositing operations.
 //!
-//! Cairus currently supports the `over` compositing operation.
+//! Cairus currently only supports the `over` compositing operation.
 
+/// This enum will hold all types of supported operations.
+#[allow(dead_code)]
+pub enum Operator {
+    Over,
+}
 
-/// Rgba is the primary representation of color in Cairus.  Rgba is for API-level definition of
-/// color, and is NOT the 32-bit (8-bit per channel) pixel representation found in bitmaps.
+/// Rgba is the primary representation of color in Cairus.
 #[derive(Debug)]
 pub struct Rgba {
     pub red: f32,
@@ -12,7 +16,6 @@ pub struct Rgba {
     pub blue: f32,
     pub alpha: f32,
 }
-
 
 impl Rgba {
     pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
@@ -25,21 +28,12 @@ impl Rgba {
     }
 }
 
-
 impl PartialEq for Rgba {
     fn eq(&self, other: &Rgba) -> bool {
         self.red == other.red && self.green == other.green &&
         self.blue == other.blue && self.alpha == other.alpha
     }
 }
-
-
-/// This enum will hold all types of supported operations.
-#[allow(dead_code)]
-pub enum Operator {
-    Over,
-}
-
 
 /// Composite two Rgba types using the over operation.
 ///
