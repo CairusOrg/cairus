@@ -35,7 +35,7 @@ impl PartialEq for Rgba {
     }
 }
 
-/// Composite two Rgba types using the over operation.
+/// The `over` operator function.
 ///
 /// This is cairus's default operator.  If the source is semi-transparent, the over operation will
 /// blend the src and the destination.  If the source is opaque, it will cover the destination.
@@ -103,5 +103,34 @@ mod tests {
     fn test_rgba_to_int_all_half() {
         let color = Rgba::new(0.5, 0.5, 0.5, 0.5);
         assert_eq!(color.to_int(), (127, 127, 127, 127));
+    }
+
+    #[test]
+    fn test_rgba_vector() {
+        // This test demonstrates the use case of having a 2D vector of RGBAs, similar to how a
+        // context and a surface might interact.
+        let width = 10;
+        let height = 20;
+        let src = Rgba::new(0., 0., 1., 0.5);
+        let mut dst = Vec::with_capacity(height);
+        // Construct 10x20 matrix of RGBAs
+        for h in 0..height {
+            let row = Vec::with_capacity(width);
+            dst.push(row);
+            for _ in 0..width {
+                dst[h].push(Rgba::new(0., 1., 0., 1.));
+            }
+        }
+
+        let expected = Rgba::new(0., 0.5, 0.5, 1.0);
+        for mut row in &mut dst {
+            for col in row.iter_mut() {
+                over(&src, col);
+                assert_eq!(col.red, expected.red);
+                assert_eq!(col.blue, expected.blue);
+                assert_eq!(col.green, expected.green);
+                assert_eq!(col.alpha, expected.alpha);
+            }
+        }
     }
 }
