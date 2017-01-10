@@ -7,7 +7,7 @@
 //! implementation.
 
 
-//! Public facing modules
+// Public facing modules
 pub mod compositor;
 
 

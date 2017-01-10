@@ -1,14 +1,17 @@
-//! This module is for image compositing operations.
+
+// Copyright 2016, the Cairus project developers.
+// See the `LICENSE` file for details, or LICENSE-LGPL-2_1 and LICENSE-MPL-2_0 for
+// the respective license texts.
+
+// compositor.rs
+//! This module defines image compositing operations.
 //!
-//! Cairus currently only supports the `over` compositing operation.
+//! # Supported Operators:
+//! * Over - Cairo's default operator.  Blends a source onto a destination, similar to overlapping
+//!          two semi-transparent slides.  If the source is opaque, the over operation will make
+//!          the destination opaque as well.
 
-/// This enum will hold all types of supported operations.
-#[allow(dead_code)]
-pub enum Operator {
-    Over,
-}
-
-/// Rgba is the primary representation of color in Cairus.
+/// Represents color with red, green, blue, and alpha channels.
 #[derive(Debug)]
 pub struct Rgba {
     pub red: f32,
@@ -18,25 +21,32 @@ pub struct Rgba {
 }
 
 impl Rgba {
+    /// Returns an Rgba struct.
+    ///
+    /// If any argument is set above 1.0, it will be reset to 1.0.  If any argument is set below
+    /// 0.0, it will be reset to 0.0.
     pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
-        // Returns a new Rgba.  Initialized Rgba's call correctify() by default.
         let mut result = Rgba {red: red, green: green, blue: blue, alpha: alpha};
-        result.correctify();
+        result.correct();
         result
     }
 
+    /// Returns a 4-tuple of i32 representations of the Rgba's RGBA values.
+    /// Each integer ranges from 1 to 255.
     pub fn to_int(&self) -> (i32, i32, i32, i32) {
         ((self.red * 255.) as i32,  (self.green * 255.) as i32,
          (self.blue * 255.) as i32, (self.alpha * 255.) as i32)
     }
 
-    pub fn correctify(&mut self) {
-        // Any value greater than 1.0 resets to 1.0, any value lower than 0.0 resets to 0.0
+    /// Modifies all RGBA values to be between 1.0 and 0.0.
+    /// Any value greater than 1.0 resets to 1.0, any value lower than 0.0 resets to 0.0.
+    fn correct(&mut self) {
         self.red = self.red.min(1.).max(0.);
         self.green = self.green.min(1.).max(0.);
         self.blue = self.blue.min(1.).max(0.);
         self.alpha = self.alpha.min(1.).max(0.);
     }
+
 }
 
 impl PartialEq for Rgba {
@@ -46,25 +56,90 @@ impl PartialEq for Rgba {
     }
 }
 
-/// The `over` operator function.
+// Image Compositing Operations
+// This section defines all functions and enums for image compositing.
+//
+// # Adding a new operator
+// To add a new operator, implement the function for the operator, create an enum for it, and then
+// add the "enum => function" match in `fetch_operator`.  The new operator will now be available
+// to any context via `fetch_operator`.
+//
+// Descriptions/formulas:  [Cairo Operators](https://www.cairographics.org/operators/)
+
+/// Defines the kind of compositing operations in Cairus.
+#[allow(dead_code)]
+pub enum Operator {
+    Over,
+}
+
+/// Returns an image compositing function that corresponds to an Operator enum.
 ///
-/// This is cairus's default operator.  If the source is semi-transparent, the over operation will
-/// blend the src and the destination.  If the source is opaque, it will cover the destination.
-pub fn over(src: &Rgba, dst: &mut Rgba) {
-    // Returns a new Rgba struct, the result of compositing `src` and `dst`.
-    let new_alpha = over_alpha(&src.alpha, &dst.alpha);
-    dst.red = over_color(&src.red, &dst.red, &src.alpha, &dst.alpha, &new_alpha);
-    dst.green = over_color(&src.green, &dst.green, &src.alpha, &dst.alpha, &new_alpha);
-    dst.blue = over_color(&src.blue, &dst.blue, &src.alpha, &dst.alpha, &new_alpha);
-    dst.alpha = new_alpha;
+/// # Arguments
+/// * `op` - Reference to an enum `Operator` that matches the desired operation.
+///
+/// # Example
+/// ```
+/// // Use the over operation on a source and destination Rgba.
+/// use cairus::compositor::fetch_operator;
+/// use cairus::compositor::Rgba;
+/// use cairus::compositor::Operator;
+/// use cairus::compositor::over;
+///
+/// // Setup some test values
+/// let source = Rgba::new(1., 1., 1., 1.);
+/// let (mut destination1, mut destination2) = (Rgba::new(0.2, 0.4, 0.2, 0.2),
+///                                             Rgba::new(0.2, 0.4, 0.2, 0.2));
+/// // Choose the over operator
+/// let op_enum = Operator::Over;
+///
+/// // Fetch and use the operator
+/// let compose = fetch_operator(&op_enum);
+/// compose(&source, &mut destination1);
+///
+/// // Check that the result is equal to the native over operation
+/// over(&source, &mut destination2);
+/// assert_eq!(destination1, destination2); // fetch_operator(&Operator::Over)() == over()
+/// ```
+pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
+    match *op {
+        Operator::Over => over,
+    }
 }
 
-fn over_color(x: &f32, y: &f32, src_alpha: &f32, dst_alpha: &f32, new_alpha: &f32) -> f32 {
-    ((x * src_alpha) + y * dst_alpha * (1. - src_alpha)) / new_alpha
+/// Composites `source` over `destination`.
+///
+/// # Arguments
+/// * `source` - The source Rgba to be applied to the destination Rgba.
+/// * `destination` - The destination Rgba that holds the resulting composition.
+///
+/// Over is Cairus's default operator.  If the source is semi-transparent, the over operation will
+/// blend the source and the destination.  If the source is opaque, it will cover the destination
+/// without blending.
+pub fn over(source: &Rgba, destination: &mut Rgba) {
+    let alpha = over_alpha(&source.alpha, &destination.alpha);
+    destination.red = over_color(&source.red, &destination.red,
+                                 &source.alpha, &destination.alpha,
+                                 &alpha);
+    destination.green = over_color(&source.green, &destination.green,
+                                   &source.alpha, &destination.alpha,
+                                   &alpha);
+    destination.blue = over_color(&source.blue, &destination.blue,
+                                  &source.alpha, &destination.alpha,
+                                  &alpha);
+    destination.alpha = alpha;
 }
 
-fn over_alpha(src: &f32, dst: &f32) -> f32 {
-    src + (dst * (1. - src))
+fn over_color(source_color: &f32, destination_color: &f32,
+              source_alpha: &f32, destination_alpha: &f32,
+              new_alpha: &f32) -> f32 {
+    (
+        (source_color * source_alpha) +
+        (destination_color * destination_alpha * (1. - source_alpha))
+    ) / new_alpha
+}
+
+fn over_alpha(source: &f32, destination: &f32) -> f32 {
+    source + (destination * (1. - source))
 }
 
 #[cfg(test)]
@@ -72,38 +147,38 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_over_operator_semi_transparent_src() {
-        let src = Rgba::new(1., 0., 0., 0.5);
-        let mut dst = Rgba::new(0., 1., 0., 0.5);
-        over(&src, &mut dst);
+    fn test_over_operator_semi_transparent_source() {
+        let source = Rgba::new(1., 0., 0., 0.5);
+        let mut destination = Rgba::new(0., 1., 0., 0.5);
+        over(&source, &mut destination);
 
         // This result was computed manually to be correct, and then modified to match Rust's
         // default floating point decimal place rounding.
-        assert_eq!(dst, Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
+        assert_eq!(destination, Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
     }
 
     #[test]
-    fn test_over_operator_opaque_src() {
-        let src = Rgba::new(1., 0., 0., 1.0);
-        let mut dst = Rgba::new(0., 1., 1., 0.5);
-        over(&src, &mut dst);
-        assert_eq!(dst, Rgba::new(1., 0., 0., 1.0));
+    fn test_over_operator_opaque_source() {
+        let source = Rgba::new(1., 0., 0., 1.0);
+        let mut destination = Rgba::new(0., 1., 1., 0.5);
+        over(&source, &mut destination);
+        assert_eq!(destination, Rgba::new(1., 0., 0., 1.0));
     }
 
     #[test]
-    fn test_over_operator_opaque_dst() {
-        let src = Rgba::new(0., 0., 1., 0.5);
-        let mut dst = Rgba::new(0., 1., 0., 1.);
-        over(&src, &mut dst);
-        assert_eq!(dst, Rgba::new(0., 0.5, 0.5, 1.0));
+    fn test_over_operator_opaque_destination() {
+        let source = Rgba::new(0., 0., 1., 0.5);
+        let mut destination = Rgba::new(0., 1., 0., 1.);
+        over(&source, &mut destination);
+        assert_eq!(destination, Rgba::new(0., 0.5, 0.5, 1.0));
     }
 
     #[test]
     fn test_over_operator_too_large() {
-        let src = Rgba{red: 3.0, green: 3.0, blue: 3.0, alpha: 3.0};
-        let mut dst = Rgba::new(0., 1., 0., 1.);
-        over(&src, &mut dst);
-        println!("{:?}", dst);
+        let source = Rgba{red: 3.0, green: 3.0, blue: 3.0, alpha: 3.0};
+        let mut destination = Rgba::new(0., 1., 0., 1.);
+        over(&source, &mut destination);
+        println!("{:?}", destination);
         //assert_eq!();
     }
 
@@ -138,26 +213,40 @@ mod tests {
     }
 
     #[test]
+    fn test_fetch_operator() {
+        let source = Rgba::new(1., 0., 0., 0.5);
+        let mut destination = Rgba::new(0., 1., 0., 0.5);
+
+        let myop = Operator::Over;
+        let operator = fetch_operator(&myop);
+        operator(&source, &mut destination);
+
+        // This result was computed manually to be correct, and then modified to match Rust's
+        // default floating point decimal place rounding.
+        assert_eq!(destination, Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
+    }
+
+    #[test]
     fn test_rgba_vector() {
         // This test demonstrates the use case of having a 2D vector of RGBAs, similar to how a
-        // context and a surface might interact.
+        // context and a surface might be.
         let width = 10;
         let height = 20;
-        let src = Rgba::new(0., 0., 1., 0.5);
-        let mut dst = Vec::with_capacity(height);
+        let source = Rgba::new(0., 0., 1., 0.5);
+        let mut destination = Vec::with_capacity(height);
         // Construct 10x20 matrix of RGBAs
         for h in 0..height {
             let row = Vec::with_capacity(width);
-            dst.push(row);
+            destination.push(row);
             for _ in 0..width {
-                dst[h].push(Rgba::new(0., 1., 0., 1.));
+                destination[h].push(Rgba::new(0., 1., 0., 1.));
             }
         }
 
         let expected = Rgba::new(0., 0.5, 0.5, 1.0);
-        for mut row in &mut dst {
+        for mut row in &mut destination {
             for col in row.iter_mut() {
-                over(&src, col);
+                over(&source, col);
                 assert_eq!(col.red, expected.red);
                 assert_eq!(col.blue, expected.blue);
                 assert_eq!(col.green, expected.green);
