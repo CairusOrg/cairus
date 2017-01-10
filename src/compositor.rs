@@ -19,12 +19,23 @@ pub struct Rgba {
 
 impl Rgba {
     pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
-        Rgba{red: red, green: green, blue: blue, alpha: alpha}
+        // Returns a new Rgba.  Initialized Rgba's call correctify() by default.
+        let mut result = Rgba {red: red, green: green, blue: blue, alpha: alpha};
+        result.correctify();
+        result
     }
 
     pub fn to_int(&self) -> (i32, i32, i32, i32) {
         ((self.red * 255.) as i32,  (self.green * 255.) as i32,
          (self.blue * 255.) as i32, (self.alpha * 255.) as i32)
+    }
+
+    pub fn correctify(&mut self) {
+        // Any value greater than 1.0 resets to 1.0, any value lower than 0.0 resets to 0.0
+        self.red = self.red.min(1.).max(0.);
+        self.green = self.green.min(1.).max(0.);
+        self.blue = self.blue.min(1.).max(0.);
+        self.alpha = self.alpha.min(1.).max(0.);
     }
 }
 
@@ -88,6 +99,15 @@ mod tests {
     }
 
     #[test]
+    fn test_over_operator_too_large() {
+        let src = Rgba{red: 3.0, green: 3.0, blue: 3.0, alpha: 3.0};
+        let mut dst = Rgba::new(0., 1., 0., 1.);
+        over(&src, &mut dst);
+        println!("{:?}", dst);
+        //assert_eq!();
+    }
+
+    #[test]
     fn test_rgba_to_int_all_ones() {
         let color = Rgba::new(1., 1., 1., 1.);
         assert_eq!(color.to_int(), (255, 255, 255, 255));
@@ -103,6 +123,18 @@ mod tests {
     fn test_rgba_to_int_all_half() {
         let color = Rgba::new(0.5, 0.5, 0.5, 0.5);
         assert_eq!(color.to_int(), (127, 127, 127, 127));
+    }
+
+    #[test]
+    fn test_rgba_corrects_large_values() {
+        let color = Rgba::new(3., 3., 3., 3.);
+        assert_eq!(color, Rgba::new(1., 1., 1., 1.));
+    }
+
+    #[test]
+    fn test_rgba_corrects_small_values() {
+        let color = Rgba::new(-3., -3., -3., -3.);
+        assert_eq!(color, Rgba::new(0., 0., 0., 0.));
     }
 
     #[test]
