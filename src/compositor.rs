@@ -115,15 +115,16 @@ pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
 /// without blending.
 pub fn over(source: &Rgba, destination: &mut Rgba) {
     let alpha = over_alpha(&source.alpha, &destination.alpha);
-    destination.red = over_color(&source.red, &destination.red,
-                                 &source.alpha, &destination.alpha,
-                                 &alpha);
-    destination.green = over_color(&source.green, &destination.green,
-                                   &source.alpha, &destination.alpha,
-                                   &alpha);
-    destination.blue = over_color(&source.blue, &destination.blue,
-                                  &source.alpha, &destination.alpha,
-                                  &alpha);
+    let (red, green, blue, alpha) = (
+        over_color(&source.red, &destination.red, &source.alpha, &destination.alpha, &alpha),
+        over_color(&source.green, &destination.green, &source.alpha, &destination.alpha, &alpha),
+        over_color(&source.blue, &destination.blue, &source.alpha, &destination.alpha, &alpha),
+        alpha,
+    );
+
+    destination.red = red;
+    destination.green = green;
+    destination.blue = blue;
     destination.alpha = alpha;
 }
 
