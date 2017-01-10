@@ -46,24 +46,30 @@ impl PartialEq for Rgba {
     }
 }
 
-/// The `over` operator function.
+/// Returns a new Rgba struct, the result of compositing `src` and `dst`.
+///
+/// # Arguments
+/// * `src` - A reference to the source's Rgba
+/// * `dst` - A referece to the destination's Rgba
 ///
 /// This is cairus's default operator.  If the source is semi-transparent, the over operation will
-/// blend the src and the destination.  If the source is opaque, it will cover the destination.
-pub fn over(src: &Rgba, dst: &mut Rgba) {
-    // Returns a new Rgba struct, the result of compositing `src` and `dst`.
-    let new_alpha = over_alpha(&src.alpha, &dst.alpha);
-    dst.red = over_color(&src.red, &dst.red, &src.alpha, &dst.alpha, &new_alpha);
-    dst.green = over_color(&src.green, &dst.green, &src.alpha, &dst.alpha, &new_alpha);
-    dst.blue = over_color(&src.blue, &dst.blue, &src.alpha, &dst.alpha, &new_alpha);
-    dst.alpha = new_alpha;
+/// blend the src and the destination.  If the source is opaque, it will cover the destination with
+/// no blending.
+pub fn over(src: &Rgba, dst: &Rgba) -> Rgba {
+    let alpha = over_alpha(src.alpha, dst.alpha);
+    Rgba::new(
+        over_color(src.red, dst.red, src.alpha, dst.alpha, alpha),
+        over_color(src.green, dst.green, src.alpha, dst.alpha, alpha),
+        over_color(src.blue, dst.blue, src.alpha, dst.alpha, alpha),
+        alpha
+    )
 }
 
-fn over_color(x: &f32, y: &f32, src_alpha: &f32, dst_alpha: &f32, new_alpha: &f32) -> f32 {
+fn over_color(x: f32, y: f32, src_alpha: f32, dst_alpha: f32, new_alpha: f32) -> f32 {
     ((x * src_alpha) + y * dst_alpha * (1. - src_alpha)) / new_alpha
 }
 
-fn over_alpha(src: &f32, dst: &f32) -> f32 {
+fn over_alpha(src: f32, dst: f32) -> f32 {
     src + (dst * (1. - src))
 }
 
@@ -74,37 +80,32 @@ mod tests {
     #[test]
     fn test_over_operator_semi_transparent_src() {
         let src = Rgba::new(1., 0., 0., 0.5);
-        let mut dst = Rgba::new(0., 1., 0., 0.5);
-        over(&src, &mut dst);
-
+        let dst = Rgba::new(0., 1., 0., 0.5);
         // This result was computed manually to be correct, and then modified to match Rust's
         // default floating point decimal place rounding.
-        assert_eq!(dst, Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
+        assert_eq!(over(&src, &dst), Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
     }
 
     #[test]
     fn test_over_operator_opaque_src() {
         let src = Rgba::new(1., 0., 0., 1.0);
-        let mut dst = Rgba::new(0., 1., 1., 0.5);
-        over(&src, &mut dst);
-        assert_eq!(dst, Rgba::new(1., 0., 0., 1.0));
+        let dst = Rgba::new(0., 1., 1., 0.5);
+        over(&src, &dst);
+        assert_eq!(over(&src, &dst), Rgba::new(1., 0., 0., 1.0));
     }
 
     #[test]
     fn test_over_operator_opaque_dst() {
         let src = Rgba::new(0., 0., 1., 0.5);
-        let mut dst = Rgba::new(0., 1., 0., 1.);
-        over(&src, &mut dst);
-        assert_eq!(dst, Rgba::new(0., 0.5, 0.5, 1.0));
+        let dst = Rgba::new(0., 1., 0., 1.);
+        assert_eq!(over(&src, &dst), Rgba::new(0., 0.5, 0.5, 1.0));
     }
 
     #[test]
     fn test_over_operator_too_large() {
         let src = Rgba{red: 3.0, green: 3.0, blue: 3.0, alpha: 3.0};
-        let mut dst = Rgba::new(0., 1., 0., 1.);
-        over(&src, &mut dst);
-        println!("{:?}", dst);
-        //assert_eq!();
+        let dst = Rgba::new(0., 1., 0., 1.);
+        assert_eq!(over(&src, &dst), Rgba::new(1., 1., 1., 1.));
     }
 
     #[test]
@@ -140,29 +141,43 @@ mod tests {
     #[test]
     fn test_rgba_vector() {
         // This test demonstrates the use case of having a 2D vector of RGBAs, similar to how a
-        // context and a surface might interact.
+        // surface might be.
+
+        // Create a 2D vector
         let width = 10;
         let height = 20;
         let src = Rgba::new(0., 0., 1., 0.5);
         let mut dst = Vec::with_capacity(height);
+
         // Construct 10x20 matrix of RGBAs
         for h in 0..height {
-            let row = Vec::with_capacity(width);
-            dst.push(row);
+            dst.push(Vec::with_capacity(width));
             for _ in 0..width {
                 dst[h].push(Rgba::new(0., 1., 0., 1.));
             }
         }
 
+        // Create a new matrix with the source applied to the destination
+        let mut new_vector = Vec::new();
+
         let expected = Rgba::new(0., 0.5, 0.5, 1.0);
-        for mut row in &mut dst {
-            for col in row.iter_mut() {
-                over(&src, col);
+        for row in dst.iter() {
+            new_vector.push(Vec::with_capacity(width));
+            for (idx, col) in row.iter().enumerate() {
+                let new = over(&src, &col);
+                new_vector[idx].push(new);
+            }
+        }
+
+
+        for row in new_vector.iter() {
+            for col in row.iter() {
                 assert_eq!(col.red, expected.red);
                 assert_eq!(col.blue, expected.blue);
                 assert_eq!(col.green, expected.green);
                 assert_eq!(col.alpha, expected.alpha);
             }
+
         }
     }
 }
