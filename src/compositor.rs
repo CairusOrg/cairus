@@ -1,9 +1,7 @@
-
 // Copyright 2016, the Cairus project developers.
 // See the `LICENSE` file for details, or LICENSE-LGPL-2_1 and LICENSE-MPL-2_0 for
 // the respective license texts.
 
-// compositor.rs
 //! This module defines image compositing operations.
 //!
 //! # Supported Operators:
@@ -59,7 +57,7 @@ impl PartialEq for Rgba {
 // Image Compositing Operations
 // This section defines all functions and enums for image compositing.
 //
-// # Adding a new operator
+// Adding a new operator
 // To add a new operator, implement the function for the operator, create an enum for it, and then
 // add the "enum => function" match in `fetch_operator`.  The new operator will now be available
 // to any context via `fetch_operator`.
