@@ -5,7 +5,7 @@
 //! This module defines image compositing operations.
 //!
 //! # Supported Operators:
-//! * Over - Cairo's default operator.  Blends a source onto a destination, similar to overlapping
+//! * Over - Cairus's default operator.  Blends a source onto a destination, similar to overlapping
 //!          two semi-transparent slides.  If the source is opaque, the over operation will make
 //!          the destination opaque as well.
 //!
@@ -65,10 +65,8 @@ impl PartialEq for Rgba {
 // to any context via `fetch_operator`.
 
 /// The supported image compositing operators in Cairus.
-///
-/// Use the Operator enum with `fetch_operator` to get the corresponding operator function
-/// dynamically.
 pub enum Operator {
+    /// Cairus's default operator.  Draws source layer on top of destination layer.
     Over,
 }
 
