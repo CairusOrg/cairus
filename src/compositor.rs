@@ -215,33 +215,4 @@ mod tests {
         // default floating point decimal place rounding.
         assert_eq!(destination, Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
     }
-
-    #[test]
-    fn test_rgba_vector() {
-        // This test demonstrates the use case of having a 2D vector of RGBAs, similar to how a
-        // context and a surface might be.
-        let width = 10;
-        let height = 20;
-        let source = Rgba::new(0., 0., 1., 0.5);
-        let mut destination = Vec::with_capacity(height);
-        // Construct 10x20 matrix of RGBAs
-        for h in 0..height {
-            let row = Vec::with_capacity(width);
-            destination.push(row);
-            for _ in 0..width {
-                destination[h].push(Rgba::new(0., 1., 0., 1.));
-            }
-        }
-
-        let expected = Rgba::new(0., 0.5, 0.5, 1.0);
-        for mut row in &mut destination {
-            for col in row.iter_mut() {
-                over(&source, col);
-                assert_eq!(col.red, expected.red);
-                assert_eq!(col.blue, expected.blue);
-                assert_eq!(col.green, expected.green);
-                assert_eq!(col.alpha, expected.alpha);
-            }
-        }
-    }
 }
