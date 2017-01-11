@@ -64,7 +64,10 @@ impl PartialEq for Rgba {
 // add the "enum => function" match in `fetch_operator`.  The new operator will now be available
 // to any context via `fetch_operator`.
 
-/// Defines the kind of compositing operations in Cairus.
+/// The supported image compositing operators in Cairus.
+///
+/// Use the Operator enum with `fetch_operator` to get the corresponding operator function
+/// dynamically.
 pub enum Operator {
     Over,
 }
@@ -113,11 +116,10 @@ pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
 /// without blending.
 pub fn over(source: &Rgba, destination: &mut Rgba) {
     let alpha = over_alpha(&source.alpha, &destination.alpha);
-    let (red, green, blue, alpha) = (
+    let (red, green, blue) = (
         over_color(&source.red, &destination.red, &source.alpha, &destination.alpha, &alpha),
         over_color(&source.green, &destination.green, &source.alpha, &destination.alpha, &alpha),
         over_color(&source.blue, &destination.blue, &source.alpha, &destination.alpha, &alpha),
-        alpha,
     );
 
     destination.red = red;
