@@ -8,6 +8,8 @@
 //! * Over - Cairo's default operator.  Blends a source onto a destination, similar to overlapping
 //!          two semi-transparent slides.  If the source is opaque, the over operation will make
 //!          the destination opaque as well.
+//!
+//! Descriptions/formulas for Cairo operators:  [Cairo Operators](https://www.cairographics.org/operators/)
 
 /// Represents color with red, green, blue, and alpha channels.
 #[derive(Debug)]
@@ -61,8 +63,6 @@ impl PartialEq for Rgba {
 // To add a new operator, implement the function for the operator, create an enum for it, and then
 // add the "enum => function" match in `fetch_operator`.  The new operator will now be available
 // to any context via `fetch_operator`.
-//
-// Descriptions/formulas:  [Cairo Operators](https://www.cairographics.org/operators/)
 
 /// Defines the kind of compositing operations in Cairus.
 pub enum Operator {
