@@ -65,7 +65,6 @@ impl PartialEq for Rgba {
 // Descriptions/formulas:  [Cairo Operators](https://www.cairographics.org/operators/)
 
 /// Defines the kind of compositing operations in Cairus.
-#[allow(dead_code)]
 pub enum Operator {
     Over,
 }
@@ -77,7 +76,6 @@ pub enum Operator {
 ///
 /// # Example
 /// ```
-/// // Use the over operation on a source and destination Rgba.
 /// use cairus::compositor::fetch_operator;
 /// use cairus::compositor::Rgba;
 /// use cairus::compositor::Operator;
