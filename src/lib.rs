@@ -6,8 +6,9 @@
 //! to utilize and preserve the Cairo drawing model while providing the benefits of a native Rust
 //! implementation.
 
-// Public facing modules
-pub mod compositor;
+// Private modules
+#[allow(dead_code)]
+mod compositor;
 
 #[cfg(test)]
 mod tests {

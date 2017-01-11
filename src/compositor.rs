@@ -74,31 +74,19 @@ pub enum Operator {
 
 /// Returns an image compositing function that corresponds to an Operator enum.
 ///
+/// This function maps an enum to its function, allowing for dynamic determination of the operator
+/// function.  This is likely a good way for a context to fetch the correct function just by having
+/// an Operator enum.
+///
 /// # Arguments
 /// * `op` - Reference to an enum `Operator` that matches the desired operation.
 ///
-/// # Example
-/// ```
-/// use cairus::compositor::fetch_operator;
-/// use cairus::compositor::Rgba;
-/// use cairus::compositor::Operator;
-/// use cairus::compositor::over;
-///
-/// // Setup some test values
-/// let source = Rgba::new(1., 1., 1., 1.);
-/// let (mut destination1, mut destination2) = (Rgba::new(0.2, 0.4, 0.2, 0.2),
-///                                             Rgba::new(0.2, 0.4, 0.2, 0.2));
-/// // Choose the over operator
+/// # Usage
 /// let op_enum = Operator::Over;
 ///
 /// // Fetch and use the operator
 /// let compose = fetch_operator(&op_enum);
 /// compose(&source, &mut destination1);
-///
-/// // Check that the result is equal to the native over operation
-/// over(&source, &mut destination2);
-/// assert_eq!(destination1, destination2); // fetch_operator(&Operator::Over)() == over()
-/// ```
 pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     match *op {
         Operator::Over => over,
