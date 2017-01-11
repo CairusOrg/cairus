@@ -171,15 +171,6 @@ mod tests {
     }
 
     #[test]
-    fn test_over_operator_too_large() {
-        let source = Rgba{red: 3.0, green: 3.0, blue: 3.0, alpha: 3.0};
-        let mut destination = Rgba::new(0., 1., 0., 1.);
-        over(&source, &mut destination);
-        println!("{:?}", destination);
-        //assert_eq!();
-    }
-
-    #[test]
     fn test_rgba_to_int_all_ones() {
         let color = Rgba::new(1., 1., 1., 1.);
         assert_eq!(color.to_int(), (255, 255, 255, 255));
