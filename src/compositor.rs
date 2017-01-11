@@ -13,7 +13,7 @@
 
 /// Represents color with red, green, blue, and alpha channels.
 #[derive(Debug)]
-pub struct Rgba {
+struct Rgba {
     pub red: f32,
     pub green: f32,
     pub blue: f32,
@@ -87,7 +87,7 @@ pub enum Operator {
 /// // Fetch and use the operator
 /// let compose = fetch_operator(&op_enum);
 /// compose(&source, &mut destination1);
-pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
+fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     match *op {
         Operator::Over => over,
     }
@@ -102,7 +102,7 @@ pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
 /// Over is Cairus's default operator.  If the source is semi-transparent, the over operation will
 /// blend the source and the destination.  If the source is opaque, it will cover the destination
 /// without blending.
-pub fn over(source: &Rgba, destination: &mut Rgba) {
+fn over(source: &Rgba, destination: &mut Rgba) {
     let alpha = over_alpha(&source.alpha, &destination.alpha);
     let (red, green, blue) = (
         over_color(&source.red, &destination.red, &source.alpha, &destination.alpha, &alpha),
@@ -131,8 +131,10 @@ fn over_alpha(source: &f32, destination: &f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
+    use super::Operator;
+    use super::Rgba;
+    use super::over;
+    use super::fetch_operator;
     #[test]
     fn test_over_operator_semi_transparent_source() {
         let source = Rgba::new(1., 0., 0., 0.5);

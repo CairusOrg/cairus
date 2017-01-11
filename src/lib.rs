@@ -8,7 +8,8 @@
 
 // Private modules
 #[allow(dead_code)]
-mod compositor;
+pub mod compositor;
+
 
 #[cfg(test)]
 mod tests {
