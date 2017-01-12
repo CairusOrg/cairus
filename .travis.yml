@@ -23,4 +23,4 @@ script:
       travis-cargo --only stable doc
 
 after_success:
-  - travis-cargo --only stable doc-upload --branch test-if-travis-runs-this
+  - travis-cargo --only stable doc-upload --branch develop
