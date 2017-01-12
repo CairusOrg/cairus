@@ -62,11 +62,11 @@ impl Rgba {
         result
     }
 
-    /// Returns a 4-tuple of i32 representations of the Rgba's RGBA values.
+    /// Returns a 4-tuple of u8 representations of the Rgba's RGBA values.
     /// Each integer ranges from 1 to 255.
-    pub fn to_int(&self) -> (i32, i32, i32, i32) {
-        ((self.red * 255.) as i32,  (self.green * 255.) as i32,
-         (self.blue * 255.) as i32, (self.alpha * 255.) as i32)
+    pub fn to_int(&self) -> (u8, u8, u8, u8) {
+        ((self.red * 255.) as u8,  (self.green * 255.) as u8,
+         (self.blue * 255.) as u8, (self.alpha * 255.) as u8)
     }
 
     /// Modifies all RGBA values to be between 1.0 and 0.0.
