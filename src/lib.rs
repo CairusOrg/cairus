@@ -47,7 +47,7 @@
 // by some public function.  We should remove these compiler flags once cairus's upper level API is
 // complete.
 #[allow(dead_code)]
-pub mod compositor;
+pub mod operators;
 
 #[allow(dead_code)]
 mod types;
