@@ -32,3 +32,22 @@
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
  *
  */
+
+/*
+ trait Surface {
+    fn get(&self, x:i32, y;i32) -> impl Color;
+ }
+
+
+ #[cfg(test)]
+ mod tests {
+
+     #[test]
+     fn test_image_surface_default() {
+         // Test that ImageSurface's iterator is functioning correctly
+         let default_rgba = Rgba::new(0., 0., 0., 0.);
+         let surface = ImageSurface::new(1, 1);
+         assert_eq!(surface.get(0, 0), default_rgba);
+     }
+ }
+*/
