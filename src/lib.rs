@@ -32,7 +32,7 @@
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
  *
  */
- 
+
 //! The main crate for Cairus.
 //!
 //! ## Overview
@@ -42,9 +42,15 @@
 //! implementation.
 
 // Private modules
+//
+// We allow dead code because warnings will be thrown until in-module private functions get used
+// by some public function.  We should remove these compiler flags once cairus's upper level API is
+// complete.
 #[allow(dead_code)]
 pub mod compositor;
 
+#[allow(dead_code)]
+mod types;
 
 #[cfg(test)]
 mod tests {
