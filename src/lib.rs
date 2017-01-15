@@ -32,7 +32,7 @@
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
  *
  */
- 
+
 //! The main crate for Cairus.
 //!
 //! ## Overview
@@ -43,7 +43,7 @@
 
 // Private modules
 #[allow(dead_code)]
-pub mod compositor;
+pub mod operators;
 
 
 #[cfg(test)]
