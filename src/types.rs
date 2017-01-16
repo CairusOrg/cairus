@@ -38,6 +38,7 @@
 
 /// Represents color with red, green, blue, and alpha channels.
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct Rgba {
      pub red: f32,
      pub green: f32,

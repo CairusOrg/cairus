@@ -52,6 +52,9 @@ pub mod operators;
 #[allow(dead_code)]
 mod types;
 
+#[allow(dead_code)]
+mod surfaces;
+
 #[cfg(test)]
 mod tests {
     #[test]
