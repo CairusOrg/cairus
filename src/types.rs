@@ -30,23 +30,11 @@
  *
  * Contributor(s):
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
- *
  */
 
 //! Defines Cairus types
 //!
 //! Currently the only types here are for representing color.
-
-/// Defines behavior to be common to all colors.
-///
-/// Because image compositing operations are defined in terms of red, green, blue, and alpha values
-// (Rgba), colors need to be able to provide a representation of themselves as Rgba values.
-trait Color {
-    pub fn to_rgba(&self) -> Rgba;
-    pub fn to_rgba_ref(&self) -> &Rgba;
-    pub fn to_rgba_mut(&self) -> &mut Rgba;
-    pub fn apply_operator(operator: fn(&<T: Color>, &mut <T: Color>), source: &<T: Color>);
-}
 
 /// Represents color with red, green, blue, and alpha channels.
 #[derive(Debug)]
