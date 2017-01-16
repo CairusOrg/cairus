@@ -62,11 +62,12 @@ impl Rgba {
         result
     }
 
-    /// Returns a 4-tuple of u8 representations of the Rgba's RGBA values.
-    /// Each integer ranges from 1 to 255.
-    pub fn to_int(&self) -> (u8, u8, u8, u8) {
-        ((self.red * 255.) as u8,  (self.green * 255.) as u8,
-         (self.blue * 255.) as u8, (self.alpha * 255.) as u8)
+    /// Returns a vector of bytes representing the Rgba's RGBA values.
+    pub fn into_bytes(&self) -> Vec<u8> {
+        vec![
+             (self.red * 255.) as u8,  (self.green * 255.) as u8,
+             (self.blue * 255.) as u8, (self.alpha * 255.) as u8
+            ]
     }
 
     /// Modifies all RGBA values to be between 1.0 and 0.0.
@@ -77,7 +78,6 @@ impl Rgba {
         self.blue = self.blue.min(1.).max(0.);
         self.alpha = self.alpha.min(1.).max(0.);
     }
-
 }
 
 impl PartialEq for Rgba {
@@ -192,21 +192,24 @@ mod tests {
     }
 
     #[test]
-    fn test_rgba_to_int_all_ones() {
+    fn test_rgba_into_bytes_all_ones() {
         let color = Rgba::new(1., 1., 1., 1.);
-        assert_eq!(color.to_int(), (255, 255, 255, 255));
+        let expected = vec![255, 255, 255, 255];
+        assert_eq!(color.into_bytes(), expected);
     }
 
     #[test]
-    fn test_rgba_to_int_all_zeroes() {
+    fn test_rgba_into_bytes_all_zeroes() {
         let color = Rgba::new(0., 0., 0., 0.);
-        assert_eq!(color.to_int(), (0, 0, 0, 0));
+        let expected = vec![0, 0, 0, 0];
+        assert_eq!(color.into_bytes(), expected);
     }
 
     #[test]
-    fn test_rgba_to_int_all_half() {
+    fn test_rgba_into_bytes_all_half() {
         let color = Rgba::new(0.5, 0.5, 0.5, 0.5);
-        assert_eq!(color.to_int(), (127, 127, 127, 127));
+        let expected = vec![127, 127, 127, 127];
+        assert_eq!(color.into_bytes(), expected);
     }
 
     #[test]
