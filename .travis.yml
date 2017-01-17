@@ -36,16 +36,16 @@ script:
 
 after_success:
   - travis-cargo --only stable doc-upload --branch develop
-  - travis-cargo coveralls --no-sudo --verify
+#  - travis-cargo coveralls --no-sudo --verify
 
-#  - wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
-#  - tar xzf master.tar.gz
-#  - cd kcov-master
-#  - mkdir build
-#  - cd build
-#  - cmake ..
-#  - make
-#  - sudo make install
-#  - cd ../..
-#  - rm -rf kcov-master
-#  - kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo,/usr/lib --verify target/cov target/debug/cairus-*
+  - wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
+  - tar xzf master.tar.gz
+  - cd kcov-master
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+  - sudo make install
+  - cd ../..
+  - rm -rf kcov-master
+  - kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo,/usr/lib --verify target/cov target/debug/cairus-*
