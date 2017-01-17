@@ -51,6 +51,19 @@ impl ImageSurface {
     }
 }
 
+
+struct ImageSurfaceIterator {
+    
+}
+
+impl Iterator for ImageSurfaceIterator {
+    type Item = Rgba;
+
+    fn next(&mut self) -> Option<Self::Item> {
+
+    }
+}
+
 impl IntoIterator for ImageSurface {
     type Item = Rgba;
     type IntoIter = ::std::vec::IntoIter<Rgba>;
@@ -73,5 +86,11 @@ mod tests {
         for pixel in surface {
             assert_eq!(pixel, default_rgba);
         }
+    }
+
+    #[test]
+    fn test_image_surface_map_collect() {
+        let surface = ImageSurface::new(100, 100);
+        let result = surface.iter().map(|&pixel| pixel.red = 0.3).collect::<ImageSurface>();
     }
 }
