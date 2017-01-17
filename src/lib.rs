@@ -5,8 +5,6 @@ mod tests {
     }
 }
 
-mod test2{
-    fn works(){
-
-    }
+mod test2 {
+    fn works() {}
 }
