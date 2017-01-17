@@ -7,6 +7,12 @@ matrix:
   allow_failures:
   - rust: nightly
 
+
+addons:
+  apt:
+    packages:
+      - kcov
+
 env:
   global:
     - secure: Irc56/zFWRPxXA5Eyuij5EV7v8uyij9yRo98bd588EnCjKVGRl/tKN44jVKmp8tuok4cV8FuhSDORLc5vEXvu3VvQPN8OY3L399YQyYL2Vk9yiJYPSk6Lg1gilwdnKiuRXI7gyxQGlw6ZoIaJsuhkQlKFKzuc0MotkjxKpFk8ONL0I1WJqevFCPlryO7hzjUYmXNReXjaE/IRylCYHWRNhIDjTYn+4TzJ6t1ijakmZs4YewyDQv1vuNMeiPZKp2DTe2hjzseZfHPZKYepruHy98mY4u6vDxe3CxNgrGoobZm9of8mTkoAa0RVGXOE0QToORxXejMDHc4EOyMgVHi8FYqhnJ4q+KabVZVstBQb2zwi64U9KVKdEnPu2YS4YxQ+YWMBy5mxWPCNELnV1DTy01NDEU3QIzAIQYHzG4Ir1eTdG5kLW3QRkp2/OOKerymad06ldlj+3DOHkCkACb1hbnwFB54S7gqc5dyhxlb8xnVqDG7tna2Y5QgkrFTHvqtnL+P+H+3RNGkP+tZSIa7WuqY23IfESiwXFO/NnNKAF0f1JRB9HGdb+CZJx9l6LuQ+++VWZv2AHnXpAQiB64xbPWmzM0pmZDm6wiq27PTECZw8f+Rpmnwo23uWtDZbvDyW/PJkFxKMsTbFGrN1O207K+2dIAF0p/NVG8/lMQyXoY=
@@ -24,4 +30,4 @@ script:
 
 after_success:
   - travis-cargo --only stable doc-upload --branch develop
-  - travis-cargo coveralls --no-sudo --verify
+  - kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo,/usr/lib --verify target/cov target/debug/cairus-* &&
