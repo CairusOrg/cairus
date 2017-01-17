@@ -30,4 +30,4 @@ script:
 
 after_success:
   - travis-cargo --only stable doc-upload --branch develop
-  - kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo,/usr/lib --verify target/cov target/debug/cairus-* &&
+  - kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo,/usr/lib --verify target/cov target/debug/cairus-*
