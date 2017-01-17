@@ -1,4 +1,11 @@
 # Cairus
+
+[![Build Status](https://travis-ci.org/CairusOrg/cairus.svg?branch=develop)](https://travis-ci.org/CairusOrg/cairus)
+
+[![Coverage Status](https://coveralls.io/repos/github/CairusOrg/cairus/badge.svg?branch=coveralls-integration)](https://coveralls.io/github/CairusOrg/cairus?branch=coveralls-integration)
+
+
+
 A reimplementation of the [Cairo](https://www.cairographics.org/) vector
 graphics library in Rust.
 
