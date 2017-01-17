@@ -4,3 +4,9 @@ mod tests {
     fn it_works() {
     }
 }
+
+mod test2{
+    fn works(){
+
+    }
+}
