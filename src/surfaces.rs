@@ -31,12 +31,17 @@
  * Contributor(s):
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
  *  Evan Smelser <evanjsmelser@gmail.com>
+ *
  */
 
 use types::Rgba;
 
+
+//Format enum descriptors for the surface object
+//These are specifically the format types copied from the C implementation,
+//some may not be necessary
 #[allow(non_camel_case_types)]
-enum Format {    
+pub enum Format {    
     Invalid,
     ARGB32,
     RGB24,
