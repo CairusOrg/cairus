@@ -53,17 +53,17 @@ pub struct cairo_t{
 
 impl cairo_t{
 
-    fn cairo_reference(cr: &mut cairo_t) -> cairo_t{
-        cr.ref_count+=1; //increases reference count by one
+    fn cairo_reference(&mut self) -> cairo_t{
+        self.ref_count+=1; //increases reference count by one
 
-        return cr;
+        return self;
     }
 
-    fn cairo_destroy(cr: &mut cairo_t){
-        if(cr.ref_count != 0){
-            cr.ref_count-=1;
+    fn cairo_destroy(&mut self){
+        if(self.ref_count != 0){
+            self.ref_count-=1;
         }
-        //else need to free cr and associated resources. Not sure how to implement that
+        //else need to free cairo_t object and associated resources. Not sure how to implement that
     }
 
 }
