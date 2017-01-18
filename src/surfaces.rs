@@ -30,10 +30,21 @@
  *
  * Contributor(s):
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
- *
+ *  Evan Smelser <evanjsmelser@gmail.com>
  */
 
 use types::Rgba;
+
+#[allow(non_camel_case_types)]
+enum Format {    
+    Invalid,
+    ARGB32,
+    RGB24,
+    A8,
+    A1,
+    RGB16_565,
+    RGB30,
+}
 
 struct ImageSurface {
     base: Vec<Rgba>,
