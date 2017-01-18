@@ -72,7 +72,7 @@ pub enum Operator {
 /// // Fetch and use the operator
 /// let compose = fetch_operator(&op_enum);
 /// compose(&source, &mut destination1);
-fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
+pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     match *op {
         Operator::Over => over,
     }
