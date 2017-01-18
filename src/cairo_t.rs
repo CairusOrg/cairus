@@ -43,6 +43,13 @@ struct cairo_array{
 
 }
 
+impl cairo_array{
+
+    fn new(size: u64, num_elements: u64, element_size: u64, elements: &char)->cairo_array{
+        cairo_array{size: size, num_elements: num_elements, element_size: element_size, elements: elements}
+    }
+}
+
 pub struct cairo_t{
 
     pub ref_count: u64,
@@ -52,6 +59,16 @@ pub struct cairo_t{
 }
 
 impl cairo_t{
+
+    fn new(ref_count: u64, cairo_status: cairo_status_t, user_data_array: cairo_array)->cairo_t{
+
+        cairo_t{
+            ref_count:ref_count,
+            cairo_status: cairo_status,
+            user_data_array: cairo_array::new(user_data_array.size, user_data_array.element_size, user_data_array.num_elements, user_data_array.elements)
+
+        }
+    }
 
     fn cairo_reference(&mut self) -> cairo_t{
         self.ref_count+=1; //increases reference count by one
