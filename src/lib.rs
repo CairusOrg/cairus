@@ -55,6 +55,8 @@ mod types;
 #[allow(dead_code)]
 mod surfaces;
 
+mod cairo_t;
+
 #[cfg(test)]
 mod tests {
     #[test]

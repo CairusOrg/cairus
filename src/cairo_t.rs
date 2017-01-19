@@ -33,14 +33,29 @@
  *
  */
 
-use cairo_status::cairo_status_t;
 
-struct cairo_array{
+
+use surfaces::ImageSurface;
+use types::Rgba;
+
+enum Status{
+
+    Success = 0,
+    NoMemory,
+    InvalidRestore,
+    InvalidPopGroup,
+    NoCurrentPoint,
+    InvalidMatrix,
+    InvalidStatus,
+    NullPointer,
+    InvalidString
+}
+
+/*struct cairo_array{
     size: u64,
     num_elements: u64,
-    element_size: u64,
-    elements: &char
-
+    element_size: u64, //no need
+    elements: &char //DONT NEED IT FOR NOW
 }
 
 impl cairo_array{
@@ -48,39 +63,41 @@ impl cairo_array{
     fn new(size: u64, num_elements: u64, element_size: u64, elements: &char)->cairo_array{
         cairo_array{size: size, num_elements: num_elements, element_size: element_size, elements: elements}
     }
-}
+}*/
 
 pub struct cairo_t{
 
-    pub ref_count: u64,
-    pub cairo_status: cairo_status_t,
-    pub user_data_array: cairo_array
+    //hold a surface and an rgba or just rgba
+    //holds a reference to another surface
+
+    //pub surface: &'a ImageSurface,
+    pub rgba: Rgba,
+    //pub ref_count: u64, // no need
+    status: Status,
+    //pub user_data_array: cairo_array
 
 }
 
 impl cairo_t{
 
-    fn new(ref_count: u64, cairo_status: cairo_status_t, user_data_array: cairo_array)->cairo_t{
+    fn new(status: Status)->cairo_t{
 
         cairo_t{
-            ref_count:ref_count,
-            cairo_status: cairo_status,
-            user_data_array: cairo_array::new(user_data_array.size, user_data_array.element_size, user_data_array.num_elements, user_data_array.elements)
-
+            status: status,
+            rgba: Rgba::new(0., 0., 0., 0.)
         }
     }
 
-    fn cairo_reference(&mut self) -> cairo_t{
-        self.ref_count+=1; //increases reference count by one
+    fn set_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
 
-        return self;
-    }
+        self.rgba.red = red;
+        self.rgba.green = green;
+        self.rgba.blue = blue;
+        self.rgba.alpha = alpha;
 
-    fn cairo_destroy(&mut self){
-        if(self.ref_count != 0){
-            self.ref_count-=1;
-        }
-        //else need to free cairo_t object and associated resources. Not sure how to implement that
     }
 
 }
+
+
+
