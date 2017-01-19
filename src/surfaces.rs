@@ -86,7 +86,7 @@ impl FromIterator<Rgba> for ImageSurface {
 }
 */
 
-struct ImageSurfaceIterator {
+pub struct ImageSurfaceIterator {
     surface: Vec<Rgba>,
     index: usize,
     width: usize,
@@ -108,7 +108,7 @@ impl Iterator for ImageSurfaceIterator {
     }
 }
 
-struct ImageSurfaceRefIterator<'a> {
+pub struct ImageSurfaceRefIterator<'a> {
     surface: &'a ImageSurface,
     index: usize,
 }
