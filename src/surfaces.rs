@@ -36,7 +36,7 @@
 use std::slice::IterMut;
 use types::Rgba;
 
-struct ImageSurface {
+pub struct ImageSurface {
     base: Vec<Rgba>,
     width: usize,
     height: usize,
