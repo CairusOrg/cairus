@@ -37,7 +37,7 @@ use std::slice::{IterMut, Iter};
 use std::vec::IntoIter;
 use types::Rgba;
 
-struct ImageSurface {
+pub struct ImageSurface {
     base: Vec<Rgba>,
     width: usize,
     height: usize,
@@ -58,6 +58,14 @@ impl ImageSurface {
 
     fn iter_mut(&mut self) -> IterMut<Rgba> {
         self.base.iter_mut()
+    }
+
+    fn from_vec(vec: Vec<Rgba>, width: usize, height: usize) -> ImageSurface {
+        ImageSurface {
+            base: vec,
+            width: width,
+            height: height,
+        }
     }
 }
 
