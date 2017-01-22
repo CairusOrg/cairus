@@ -54,6 +54,7 @@ pub struct Rgba {
      /// 0.0, it will be reset to 0.0.
      pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
          let mut result = Rgba {red: red, green: green, blue: blue, alpha: alpha};
+         result.premultiply();
          result.correct();
          result
      }
@@ -72,6 +73,12 @@ pub struct Rgba {
          self.green = self.green.min(1.).max(0.);
          self.blue = self.blue.min(1.).max(0.);
          self.alpha = self.alpha.min(1.).max(0.);
+     }
+
+     fn premultiply(&mut self) {
+         self.red *= self.alpha;
+         self.green *= self.alpha;
+         self.blue *= self.alpha;
      }
 
  }
