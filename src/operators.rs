@@ -44,6 +44,7 @@
 
 /// Represents color with red, green, blue, and alpha channels.
 #[derive(Debug)]
+#[derive(Copy)]
 struct Rgba {
     pub red: f32,
     pub green: f32,
@@ -57,9 +58,11 @@ impl Rgba {
     /// If any argument is set above 1.0, it will be reset to 1.0.  If any argument is set below
     /// 0.0, it will be reset to 0.0.
     pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
-        let mut result = Rgba {red: red, green: green, blue: blue, alpha: alpha};
-        result.correct();
-        result
+        Rgba{
+            red: red * alpha,
+            green: green * alpha,
+            blue: blue * alpha,
+            alpha: alpha}
     }
 
     /// Returns a vector of bytes representing the Rgba's RGBA values.
