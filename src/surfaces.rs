@@ -33,7 +33,8 @@
  *
  */
 
-use std::slice::IterMut;
+use std::slice::{IterMut, Iter};
+use std::vec::IntoIter;
 use types::Rgba;
 
 struct ImageSurface {
@@ -44,95 +45,30 @@ struct ImageSurface {
 
 impl ImageSurface {
     fn create(width: usize, height: usize) -> ImageSurface {
-        let base = vec![Rgba::new(0., 0., 0., 0.); width * height];
-        ImageSurface::from_vec(base, width, height)
+        ImageSurface{
+            base: vec![Rgba::new(0., 0., 0., 0.); width * height],
+            width: width,
+            height: height,
+        }
     }
 
-    fn iter(&self) -> ImageSurfaceRefIterator {
-        ImageSurfaceRefIterator{surface: self, index: 0}
+    fn iter(&self) -> Iter<Rgba> {
+        self.base.iter()
     }
 
     fn iter_mut(&mut self) -> IterMut<Rgba> {
         self.base.iter_mut()
     }
-
-    fn from_vec(vec: Vec<Rgba>, width: usize, height: usize) -> ImageSurface {
-        ImageSurface {
-            base: vec,
-            width: width,
-            height: height,
-        }
-    }
 }
 
 impl IntoIterator for ImageSurface {
     type Item = Rgba;
-    type IntoIter = ImageSurfaceIterator;
+    type IntoIter = IntoIter<Rgba>;
 
     fn into_iter(self) -> Self::IntoIter {
-        ImageSurfaceIterator{surface: self.base, index: 0, width: self.width, height: self.height}
+        self.base.into_iter()
     }
 }
-
-/*
-impl FromIterator<Rgba> for ImageSurface {
-    fn from_iter<I: IntoIterator<Item = Rgba>>(iter: I) -> Self {
-        let vec = Vec::with_capacity(iter.width * iter.height);
-        for pixel in iter{
-            vec.push(pixel);
-        }
-        ImageSurface::from_vec(vec, iter.width, iter.height);
-    }
-}
-*/
-
-struct ImageSurfaceIterator {
-    surface: Vec<Rgba>,
-    index: usize,
-    width: usize,
-    height: usize,
-}
-
-impl Iterator for ImageSurfaceIterator {
-    type Item = Rgba;
-
-    fn next(&mut self) -> Option<Rgba> {
-        match self.index < self.surface.len() {
-            true => {
-                let elem = self.surface[self.index];
-                self.index += 1;
-                Some(elem)
-            },
-            false => None
-        }
-    }
-}
-
-struct ImageSurfaceRefIterator<'a> {
-    surface: &'a ImageSurface,
-    index: usize,
-}
-
-impl<'a> Iterator for ImageSurfaceRefIterator<'a> {
-    type Item = &'a Rgba;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.index < self.surface.width * self.surface.height {
-            true => {
-                let result = Some(&self.surface.base[self.index]);
-                self.index += 1;
-                result
-            },
-            false => None,
-        }
-    }
-}
-
-
-trait IntoSurface {
-    fn into_surface(self) -> ImageSurface;
-}
-
 
 #[cfg(test)]
 mod tests {
