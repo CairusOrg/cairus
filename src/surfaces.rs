@@ -59,14 +59,6 @@ impl ImageSurface {
     fn iter_mut(&mut self) -> IterMut<Rgba> {
         self.base.iter_mut()
     }
-
-    fn from_vec(vec: Vec<Rgba>, width: usize, height: usize) -> ImageSurface {
-        ImageSurface {
-            base: vec,
-            width: width,
-            height: height,
-        }
-    }
 }
 
 impl IntoIterator for ImageSurface {
