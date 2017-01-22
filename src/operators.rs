@@ -44,6 +44,7 @@
 
 /// Represents color with red, green, blue, and alpha channels.
 #[derive(Debug)]
+#[derive(Clone)]
 #[derive(Copy)]
 struct Rgba {
     pub red: f32,
@@ -68,18 +69,25 @@ impl Rgba {
     /// Returns a vector of bytes representing the Rgba's RGBA values.
     pub fn into_bytes(&self) -> Vec<u8> {
         vec![
-             (self.red * 255.) as u8,  (self.green * 255.) as u8,
-             (self.blue * 255.) as u8, (self.alpha * 255.) as u8
+             (self.red * 255. / self.alpha) as u8,  (self.green * 255. / self.alpha) as u8,
+             (self.blue * 255. / self.alpha) as u8, (self.alpha * 255.) as u8
             ]
     }
 
     /// Modifies all RGBA values to be between 1.0 and 0.0.
     /// Any value greater than 1.0 resets to 1.0, any value lower than 0.0 resets to 0.0.
     fn correct(&mut self) {
-        self.red = self.red.min(1.).max(0.);
-        self.green = self.green.min(1.).max(0.);
-        self.blue = self.blue.min(1.).max(0.);
-        self.alpha = self.alpha.min(1.).max(0.);
+        if self.alpha < 0. {
+            self.red = 0.;
+            self.green = 0.;
+            self.blue = 0.;
+            self.alpha = 0.;
+        } else {
+            self.red = self.red.min(1.).max(0.);
+            self.green = self.green.min(1.).max(0.);
+            self.blue = self.blue.min(1.).max(0.);
+            self.alpha = self.alpha.min(1.).max(0.);
+        }
     }
 }
 
@@ -133,32 +141,12 @@ fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
 ///
 /// Over is Cairus's default operator.  If the source is semi-transparent, the over operation will
 /// blend the source and the destination.  If the source is opaque, it will cover the destination
-/// without blending.
+/// without blending.  Assumes pre-multiplied alpha.
 fn over(source: &Rgba, destination: &mut Rgba) {
-    let alpha = over_alpha(&source.alpha, &destination.alpha);
-    let (red, green, blue) = (
-        over_color(&source.red, &destination.red, &source.alpha, &destination.alpha, &alpha),
-        over_color(&source.green, &destination.green, &source.alpha, &destination.alpha, &alpha),
-        over_color(&source.blue, &destination.blue, &source.alpha, &destination.alpha, &alpha),
-    );
-
-    destination.red = red;
-    destination.green = green;
-    destination.blue = blue;
-    destination.alpha = alpha;
-}
-
-fn over_color(source_color: &f32, destination_color: &f32,
-              source_alpha: &f32, destination_alpha: &f32,
-              new_alpha: &f32) -> f32 {
-    (
-        (source_color * source_alpha) +
-        (destination_color * destination_alpha * (1. - source_alpha))
-    ) / new_alpha
-}
-
-fn over_alpha(source: &f32, destination: &f32) -> f32 {
-    source + (destination * (1. - source))
+    destination.alpha = source.alpha + destination.alpha * (1. - source.alpha);
+    destination.red = source.red + destination.red * (1. - source.alpha);
+    destination.green = source.green + destination.green * (1. - source.alpha);
+    destination.blue = source.blue + destination.blue * (1. - source.alpha);
 }
 
 #[cfg(test)]
@@ -217,13 +205,15 @@ mod tests {
 
     #[test]
     fn test_rgba_corrects_large_values() {
-        let color = Rgba::new(3., 3., 3., 3.);
+        let mut color = Rgba::new(3., 3., 3., 3.);
+        color.correct();
         assert_eq!(color, Rgba::new(1., 1., 1., 1.));
     }
 
     #[test]
     fn test_rgba_corrects_small_values() {
-        let color = Rgba::new(-3., -3., -3., -3.);
+        let mut color = Rgba::new(-3., -3., -3., -3.);
+        color.correct();
         assert_eq!(color, Rgba::new(0., 0., 0., 0.));
     }
 
@@ -231,13 +221,15 @@ mod tests {
     fn test_fetch_operator() {
         let source = Rgba::new(1., 0., 0., 0.5);
         let mut destination = Rgba::new(0., 1., 0., 0.5);
+        let mut expected = Rgba::new(0., 1., 0., 0.5);
 
         let myop = Operator::Over;
         let operator = fetch_operator(&myop);
         operator(&source, &mut destination);
+        over(&source, &mut expected);
 
         // This result was computed manually to be correct, and then modified to match Rust's
         // default floating point decimal place rounding.
-        assert_eq!(destination, Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
+        assert_eq!(destination, expected);
     }
 }
