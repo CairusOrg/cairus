@@ -40,7 +40,9 @@
 //!          two semi-transparent slides.  If the source is opaque, the over operation will make
 //!          the destination opaque as well.
 //!
-//! Descriptions/formulas for Cairo operators:  [Cairo Operators](https://www.cairographics.org/operators/)
+//! Descriptions/formulas for Cairo operators:
+//! [Cairo Operators](https://www.cairographics.org/operators/)
+
 use types::Rgba;
 
 // Image Compositing Operations
@@ -86,32 +88,12 @@ pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
 ///
 /// Over is Cairus's default operator.  If the source is semi-transparent, the over operation will
 /// blend the source and the destination.  If the source is opaque, it will cover the destination
-/// without blending.
+/// without blending.  Assumes pre-multiplied alpha.
 fn over(source: &Rgba, destination: &mut Rgba) {
-    let alpha = over_alpha(&source.alpha, &destination.alpha);
-    let (red, green, blue) = (
-        over_color(&source.red, &destination.red, &source.alpha, &destination.alpha, &alpha),
-        over_color(&source.green, &destination.green, &source.alpha, &destination.alpha, &alpha),
-        over_color(&source.blue, &destination.blue, &source.alpha, &destination.alpha, &alpha),
-    );
-
-    destination.red = red;
-    destination.green = green;
-    destination.blue = blue;
-    destination.alpha = alpha;
-}
-
-fn over_color(source_color: &f32, destination_color: &f32,
-              source_alpha: &f32, destination_alpha: &f32,
-              new_alpha: &f32) -> f32 {
-    (
-        (source_color * source_alpha) +
-        (destination_color * destination_alpha * (1. - source_alpha))
-    ) / new_alpha
-}
-
-fn over_alpha(source: &f32, destination: &f32) -> f32 {
-    source + (destination * (1. - source))
+    destination.alpha = source.alpha + destination.alpha * (1. - source.alpha);
+    destination.red = source.red + destination.red * (1. - source.alpha);
+    destination.green = source.green + destination.green * (1. - source.alpha);
+    destination.blue = source.blue + destination.blue * (1. - source.alpha);
 }
 
 #[cfg(test)]
@@ -152,13 +134,15 @@ mod tests {
     fn test_fetch_operator() {
         let source = Rgba::new(1., 0., 0., 0.5);
         let mut destination = Rgba::new(0., 1., 0., 0.5);
+        let mut expected = Rgba::new(0., 1., 0., 0.5);
 
         let myop = Operator::Over;
         let operator = fetch_operator(&myop);
         operator(&source, &mut destination);
+        over(&source, &mut expected);
 
         // This result was computed manually to be correct, and then modified to match Rust's
         // default floating point decimal place rounding.
-        assert_eq!(destination, Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
+        assert_eq!(destination, expected);
     }
 }

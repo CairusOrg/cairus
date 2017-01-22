@@ -44,9 +44,8 @@ pub struct ImageSurface {
 }
 
 impl ImageSurface {
-
     fn create(width: usize, height: usize) -> ImageSurface {
-        ImageSurface{
+        ImageSurface {
             base: vec![Rgba::new(0., 0., 0., 0.); width * height],
             width: width,
             height: height,
@@ -111,12 +110,23 @@ mod tests {
         let surface = ImageSurface::create(100, 100);
 
         // Leave pixel.red to default (0.0), change all other hcannels to 1.0
-        let result = surface
-                        .iter()
-                        .map( |&pixel| Rgba{red: pixel.red, green: 1., blue: 1., alpha: 1.})
-                        .collect::<Vec<Rgba>>();
+        let result = surface.iter()
+            .map(|&pixel| {
+                Rgba {
+                    red: pixel.red,
+                    green: 1.,
+                    blue: 1.,
+                    alpha: 1.,
+                }
+            })
+            .collect::<Vec<Rgba>>();
 
-        let expected = Rgba{red: 0., green: 1., blue: 1., alpha: 1.};
+        let expected = Rgba {
+            red: 0.,
+            green: 1.,
+            blue: 1.,
+            alpha: 1.,
+        };
         for pixel in result.into_iter() {
             // Red is 0. because it is the default, the others got set to 1.
             assert_eq!(pixel, expected);
@@ -127,14 +137,13 @@ mod tests {
     fn test_image_surface_iter_mut() {
         // Passes if ImageSurface::iter_mut() functions properly
         let mut surface = ImageSurface::create(100, 100);
+        let expected = Rgba::new(1., 0., 0., 1.);
 
         for mut pixel in surface.iter_mut() {
-            // Red is 0. because it is the default, the others got set to 1.
-            //pixel = Rgba::new(0.5, 0.5, 0.5, 0.5);
-            pixel.red = 1.;
+            pixel.alpha = expected.alpha;
+            pixel.red = expected.red;
         }
 
-        let expected = Rgba::new(1., 0., 0., 0.);
         for pixel in surface {
             assert_eq!(pixel, expected);
         }

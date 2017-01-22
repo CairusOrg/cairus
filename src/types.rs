@@ -41,86 +41,95 @@
 #[derive(Clone)]
 #[derive(Copy)]
 pub struct Rgba {
-     pub red: f32,
-     pub green: f32,
-     pub blue: f32,
-     pub alpha: f32,
- }
+    pub red: f32,
+    pub green: f32,
+    pub blue: f32,
+    pub alpha: f32,
+}
 
- impl Rgba {
-     /// Returns an Rgba struct.
-     ///
-     /// If any argument is set above 1.0, it will be reset to 1.0.  If any argument is set below
-     /// 0.0, it will be reset to 0.0.
-     pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
-         let mut result = Rgba {red: red, green: green, blue: blue, alpha: alpha};
-         result.premultiply();
-         result.correct();
-         result
-     }
+impl Rgba {
+    /// Returns an Rgba struct.
+    ///
+    /// If any argument is set above 1.0, it will be reset to 1.0.  If any argument is set below
+    /// 0.0, it will be reset to 0.0.
+    pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
+        Rgba {
+            red: red * alpha,
+            green: green * alpha,
+            blue: blue * alpha,
+            alpha: alpha,
+        }
+    }
 
-     /// Returns a 4-tuple of u8 representations of the Rgba's RGBA values.
-     /// Each integer ranges from 1 to 255.
-     pub fn to_int(&self) -> (u8, u8, u8, u8) {
-         ((self.red * 255.) as u8,  (self.green * 255.) as u8,
-          (self.blue * 255.) as u8, (self.alpha * 255.) as u8)
-     }
+    /// Returns a vector of bytes representing the Rgba's RGBA values.
+    pub fn into_bytes(&self) -> Vec<u8> {
+        vec![(self.red * 255. / self.alpha) as u8,
+             (self.green * 255. / self.alpha) as u8,
+             (self.blue * 255. / self.alpha) as u8,
+             (self.alpha * 255.) as u8]
+    }
 
-     /// Modifies all RGBA values to be between 1.0 and 0.0.
-     /// Any value greater than 1.0 resets to 1.0, any value lower than 0.0 resets to 0.0.
-     fn correct(&mut self) {
-         self.red = self.red.min(1.).max(0.);
-         self.green = self.green.min(1.).max(0.);
-         self.blue = self.blue.min(1.).max(0.);
-         self.alpha = self.alpha.min(1.).max(0.);
-     }
+    /// Modifies all RGBA values to be between 1.0 and 0.0.
+    /// Any value greater than 1.0 resets to 1.0, any value lower than 0.0 resets to 0.0.
+    fn correct(&mut self) {
+        if self.alpha < 0. {
+            self.red = 0.;
+            self.green = 0.;
+            self.blue = 0.;
+            self.alpha = 0.;
+        } else {
+            self.red = self.red.min(1.).max(0.);
+            self.green = self.green.min(1.).max(0.);
+            self.blue = self.blue.min(1.).max(0.);
+            self.alpha = self.alpha.min(1.).max(0.);
+        }
+    }
+}
 
-     fn premultiply(&mut self) {
-         self.red *= self.alpha;
-         self.green *= self.alpha;
-         self.blue *= self.alpha;
-     }
+impl PartialEq for Rgba {
+    fn eq(&self, other: &Rgba) -> bool {
+        self.red == other.red && self.green == other.green && self.blue == other.blue &&
+        self.alpha == other.alpha
+    }
+}
 
- }
+#[cfg(test)]
+mod tests {
+    use super::Rgba;
 
- impl PartialEq for Rgba {
-     fn eq(&self, other: &Rgba) -> bool {
-         self.red == other.red && self.green == other.green &&
-         self.blue == other.blue && self.alpha == other.alpha
-     }
- }
+    #[test]
+    fn test_rgba_into_bytes_all_ones() {
+        let color = Rgba::new(1., 1., 1., 1.);
+        let expected = vec![255, 255, 255, 255];
+        assert_eq!(color.into_bytes(), expected);
+    }
 
- #[cfg(test)]
- mod tests {
-     use super::Rgba;
+    #[test]
+    fn test_rgba_into_bytes_all_zeroes() {
+        let color = Rgba::new(0., 0., 0., 0.);
+        let expected = vec![0, 0, 0, 0];
+        assert_eq!(color.into_bytes(), expected);
+    }
 
-     #[test]
-     fn test_rgba_to_int_all_ones() {
-         let color = Rgba::new(1., 1., 1., 1.);
-         assert_eq!(color.to_int(), (255, 255, 255, 255));
-     }
+    #[test]
+    fn test_rgba_into_bytes_all_half() {
+        let color = Rgba::new(0.5, 0.5, 0.5, 0.5);
+        let expected = vec![127, 127, 127, 127];
+        assert_eq!(color.into_bytes(), expected);
+    }
 
-     #[test]
-     fn test_rgba_to_int_all_zeroes() {
-         let color = Rgba::new(0., 0., 0., 0.);
-         assert_eq!(color.to_int(), (0, 0, 0, 0));
-     }
+    #[test]
+    fn test_rgba_corrects_large_values() {
+        let mut color = Rgba::new(3., 3., 3., 3.);
+        color.correct();
+        assert_eq!(color, Rgba::new(1., 1., 1., 1.));
+    }
 
-     #[test]
-     fn test_rgba_to_int_all_half() {
-         let color = Rgba::new(0.5, 0.5, 0.5, 0.5);
-         assert_eq!(color.to_int(), (127, 127, 127, 127));
-     }
+    #[test]
+    fn test_rgba_corrects_small_values() {
+        let mut color = Rgba::new(-3., -3., -3., -3.);
+        color.correct();
+        assert_eq!(color, Rgba::new(0., 0., 0., 0.));
+    }
 
-     #[test]
-     fn test_rgba_corrects_large_values() {
-         let color = Rgba::new(3., 3., 3., 3.);
-         assert_eq!(color, Rgba::new(1., 1., 1., 1.));
-     }
-
-     #[test]
-     fn test_rgba_corrects_small_values() {
-         let color = Rgba::new(-3., -3., -3., -3.);
-         assert_eq!(color, Rgba::new(0., 0., 0., 0.));
-     }
 }
