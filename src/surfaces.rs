@@ -44,6 +44,7 @@ pub struct ImageSurface {
 }
 
 impl ImageSurface {
+    
     fn create(width: usize, height: usize) -> ImageSurface {
         ImageSurface{
             base: vec![Rgba::new(0., 0., 0., 0.); width * height],
