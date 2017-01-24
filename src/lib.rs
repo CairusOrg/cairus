@@ -41,6 +41,9 @@
 //! to utilize and preserve the Cairo drawing model while providing the benefits of a native Rust
 //! implementation.
 
+/// ### Top-level Design
+/// ## Stroke Implementation
+///
 
 /// When we get down to the level of pixels, they are blended together by operations
 /// defined in the operators module.
