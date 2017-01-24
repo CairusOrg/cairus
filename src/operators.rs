@@ -48,7 +48,7 @@
 //!          the destination opaque as well.
 //!
 //! Descriptions/formulas for Cairo operators:
-//! [Cairo Operators](https://www.cairographics.org/operators/)
+//!
 //!
 
 /// # Rgba, the main color representation in Cairus
@@ -169,9 +169,8 @@ fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
 }
 
 /// # Operator Formulas
-/// Keep in mind it is not important to understand how these formulas actually work, just that
-/// they are defined here the same way they are defined according the Porter/Duff definitions of the
-/// operators.
+/// The following functions are implementations of the Porter Duff operator formulas. (See below
+/// for the Porter Duff paper in the references section, or the Cairo operator documentation page).
 
 /// Composites `source` over `destination`.
 ///
@@ -192,6 +191,7 @@ fn over(source: &Rgba, destination: &mut Rgba) {
 /// # References
 /// [Porter Duff]: https://keithp.com/~keithp/porterduff/p253-porter.pdf).
 /// [Nvidia]: https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
+/// [Cairo Operators]: https://www.cairographics.org/operators/
 
 #[cfg(test)]
 mod tests {
