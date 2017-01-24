@@ -35,31 +35,20 @@
 
 //! # Overview
 //!
-//! Image compositing operators are functions that take two colors and blend (or 'composite') them
-//! them together.  Compositing red and green, for example, yields yellow.  There is one primary
-//! way of representing color in Cairus, and that is the `Rgba` struct.  This defines three color
-//! values (red, green, and blue), and one alpha channel (used to control opacity).  Traditional
-//! formulas are used for calculating the compositing output `Rgba`, and should include the full
-//! collection of Porter Duff operators. (See references for paper on Porter Duff operators)
+//! This module allows Cairus to take one pixel and blend it in some way with another pixel.  By
+//! the time this module is used, Cairus will already have figured out what pixels in the context
+//! to blend with what pixels in the destination.  The purpose of this module is to provide
+//! blending operations that can be done on a pixel-by-pixel basis.
+//!
+//! Cairus operators are equivalent to the Porter Duff operators (See references at the bottom of
+//! this page).
 //!
 //! # Supported Operators:
 //! * Over - Cairus's default operator.  Blends a source onto a destination, similar to overlapping
 //!          two semi-transparent slides.  If the source is opaque, the over operation will make
 //!          the destination opaque as well.
-//!
-//! Descriptions/formulas for Cairo operators:
-//!
-//!
 
-/// # Rgba, the main color representation in Cairus
 /// Represents color with red, green, blue, and alpha channels.
-///
-/// This struct is the primary way of expressing color in Cairus.  Red, green, and blue values can
-/// be combined to create any color visible to the human eye, and that is exactly what the RGB
-/// color model is used for.  Setting red to 1 and green and blue to 0 gives you a red color.
-/// Setting green and red to 1 but blue to 0 gives you yellow.  The alpha channel (the A of RGBA)
-/// sets the opacity of the color.  1 is opaque, and 0 is transparent.  Note that the minimum value
-/// for any channel is 0, and the maximum value is 1.
 #[derive(Debug)]
 #[derive(Clone)]
 #[derive(Copy)]
@@ -73,18 +62,14 @@ struct Rgba {
 
 impl Rgba {
     /// Returns an Rgba struct.
-    ///
     pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
-        /// Note that the values are pre-multiplied.  Pre-multiplied RGBA just means that the colors
-        /// are multipled by the alpha channel's value BEFORE any compositing operation is done to
-        /// the RGBA.  The reason for this is twofold:  Most operator formulas include multiplying
-        /// alpha value with each color value. Pre-multiplying factors out this multiplication
-        /// beforehand.  Reason two is that pre-multipling ensures that the resulting Rgba is the
-        /// correct value after an operation.  See the Nvidia article in the references section
-        /// below on why pre-multiplying always gives the correct result, and post multiplying
-        /// sometimes doesn't.
-        ///
-        /// Note: All compositing operations in Cairus assume that the Rgba is pre-multiplied.
+        // Each color is multiplied by the alpha channel because this ensures that operations on
+        // this Rgba are correct.  This is called pre-multiplied alpha.
+        //
+        // See the Nvidia article in the references section below on why pre-multiplying always
+        // gives the correct result, and post multiplying sometimes doesn't.
+        //
+        // Note: All compositing operations in Cairus assume that the Rgba is pre-multiplied.
         Rgba{
             red: red * alpha,
             green: green * alpha,
@@ -94,9 +79,9 @@ impl Rgba {
 
     /// Returns a vector of bytes representing the Rgba values.
     ///
-    /// This will be used when converting a surface (which is essentially a Vec<Rgba>), into a form
-    /// for converting into an actual image file, like a PNG.  This form is traditionally an array
-    /// of bytes, one byte per RGBA channel.
+    /// Each channel gets converted from a float to a byte (which can represent numbers up to 255).
+    /// They are divided by the alpha value to 'factor out' colors being pre-multiplied (see method
+    /// Rgba::new() on pre-multiplied alpha).
     pub fn into_bytes(&self) -> Vec<u8> {
         vec![
              (self.red * 255. / self.alpha) as u8,  (self.green * 255. / self.alpha) as u8,
@@ -105,7 +90,9 @@ impl Rgba {
     }
 
     /// Modifies all RGBA values to be between 1.0 and 0.0.
-    /// Any value greater than 1.0 resets to 1.0, any value lower than 0.0 resets to 0.0.
+    /// Any value greater than 1.0 resets to 1.0, any value lower than 0.0 resets to 0.0.  This is
+    /// not a feature of color theory, but of Cairo (it also corrects bad Rgba values without
+    /// throwing errors).
     fn correct(&mut self) {
         // Because Rgba is pre-multiplied by the alpha value, if alpha is zero or less then all
         // channels are zero.

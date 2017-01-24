@@ -42,6 +42,8 @@
 //! implementation.
 
 
+/// When we get down to the level of pixels, they are blended together by operations
+/// defined in the operators module.
 #[allow(dead_code)]
 pub mod operators;
 
