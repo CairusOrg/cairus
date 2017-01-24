@@ -33,15 +33,20 @@
  *
  */
 
-//! This module defines image compositing operations.
+//! # Overview
+//!
+//! This module allows Cairus to take one pixel and blend it with another pixel.  By
+//! the time this module is reached, Cairus will already have figured out what pixels in the context
+//! to blend with what pixels in the destination.  The purpose of this module is to provide
+//! the pixel-by-pixel blending operations used in that process.
+//!
+//! Cairus operators are equivalent to the Porter Duff operators (See references at the bottom of
+//! this page).
 //!
 //! # Supported Operators:
 //! * Over - Cairus's default operator.  Blends a source onto a destination, similar to overlapping
 //!          two semi-transparent slides.  If the source is opaque, the over operation will make
 //!          the destination opaque as well.
-//!
-//! Descriptions/formulas for Cairo operators:
-//! [Cairo Operators](https://www.cairographics.org/operators/)
 
 use types::Rgba;
 
@@ -63,7 +68,9 @@ pub enum Operator {
 ///
 /// This function maps an enum to its function, allowing for dynamic determination of the operator
 /// function.  This is likely a good way for a context to fetch the correct function just by having
-/// an Operator enum.
+/// an Operator enum, instead of it having to use a match statement to find the correct operator,
+/// or having this fetch function implemented in the context module (away from the rest of the
+/// operator definitions).
 ///
 /// # Arguments
 /// * `op` - Reference to an enum `Operator` that matches the desired operation.
@@ -80,6 +87,10 @@ pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     }
 }
 
+/// # Operator Formulas
+/// The following functions are implementations of the Porter Duff operator formulas. (See below
+/// for the Porter Duff paper in the references section, or the Cairo operator documentation page).
+
 /// Composites `source` over `destination`.
 ///
 /// # Arguments
@@ -95,6 +106,11 @@ fn over(source: &Rgba, destination: &mut Rgba) {
     destination.green = source.green + destination.green * (1. - source.alpha);
     destination.blue = source.blue + destination.blue * (1. - source.alpha);
 }
+
+/// # References
+/// [Porter Duff]: https://keithp.com/~keithp/porterduff/p253-porter.pdf).
+/// [Nvidia]: https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
+/// [Cairo Operators]: https://www.cairographics.org/operators/
 
 #[cfg(test)]
 mod tests {
@@ -128,6 +144,41 @@ mod tests {
         let mut destination = Rgba::new(0., 1., 0., 1.);
         over(&source, &mut destination);
         assert_eq!(destination, Rgba::new(0., 0.5, 0.5, 1.0));
+    }
+
+    #[test]
+    fn test_rgba_into_bytes_all_ones() {
+        let color = Rgba::new(1., 1., 1., 1.);
+        let expected = vec![255, 255, 255, 255];
+        assert_eq!(color.into_bytes(), expected);
+    }
+
+    #[test]
+    fn test_rgba_into_bytes_all_zeroes() {
+        let color = Rgba::new(0., 0., 0., 0.);
+        let expected = vec![0, 0, 0, 0];
+        assert_eq!(color.into_bytes(), expected);
+    }
+
+    #[test]
+    fn test_rgba_into_bytes_all_half() {
+        let color = Rgba::new(0.5, 0.5, 0.5, 0.5);
+        let expected = vec![127, 127, 127, 127];
+        assert_eq!(color.into_bytes(), expected);
+    }
+
+    #[test]
+    fn test_rgba_corrects_large_values() {
+        let mut color = Rgba::new(3., 3., 3., 3.);
+        color.correct();
+        assert_eq!(color, Rgba::new(1., 1., 1., 1.));
+    }
+
+    #[test]
+    fn test_rgba_corrects_small_values() {
+        let mut color = Rgba::new(-3., -3., -3., -3.);
+        color.correct();
+        assert_eq!(color, Rgba::new(0., 0., 0., 0.));
     }
 
     #[test]

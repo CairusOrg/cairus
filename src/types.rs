@@ -44,40 +44,53 @@ pub struct Rgba {
     pub red: f32,
     pub green: f32,
     pub blue: f32,
+    // The opacity channel
     pub alpha: f32,
 }
 
 impl Rgba {
     /// Returns an Rgba struct.
-    ///
-    /// If any argument is set above 1.0, it will be reset to 1.0.  If any argument is set below
-    /// 0.0, it will be reset to 0.0.
     pub fn new(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
-        Rgba {
+        // Each color is multiplied by the alpha channel because this ensures that operations on
+        // this Rgba are correct.  This is called pre-multiplied alpha.
+        //
+        // See the Nvidia article in the references section below on why pre-multiplying always
+        // gives the correct result, and post multiplying sometimes doesn't.
+        //
+        // Note: All compositing operations in Cairus assume that the Rgba is pre-multiplied.
+        Rgba{
             red: red * alpha,
             green: green * alpha,
             blue: blue * alpha,
-            alpha: alpha,
-        }
+            alpha: alpha}
     }
 
-    /// Returns a vector of bytes representing the Rgba's RGBA values.
+    /// Returns a vector of bytes representing the Rgba values.
+    ///
+    /// Each channel gets converted from a float to a byte (which can represent numbers up to 255).
+    /// They are divided by the alpha value to 'factor out' colors being pre-multiplied (see method
+    /// Rgba::new() on pre-multiplied alpha).
     pub fn into_bytes(&self) -> Vec<u8> {
-        vec![(self.red * 255. / self.alpha) as u8,
-             (self.green * 255. / self.alpha) as u8,
-             (self.blue * 255. / self.alpha) as u8,
-             (self.alpha * 255.) as u8]
+        vec![
+             (self.red * 255. / self.alpha) as u8,  (self.green * 255. / self.alpha) as u8,
+             (self.blue * 255. / self.alpha) as u8, (self.alpha * 255.) as u8
+            ]
     }
 
     /// Modifies all RGBA values to be between 1.0 and 0.0.
-    /// Any value greater than 1.0 resets to 1.0, any value lower than 0.0 resets to 0.0.
-    fn correct(&mut self) {
+    /// Any value greater than 1.0 resets to 1.0, any value lower than 0.0 resets to 0.0.  This is
+    /// not a feature of color theory, but of Cairo (it also corrects bad Rgba values without
+    /// throwing errors).
+    pub fn correct(&mut self) {
+        // Because Rgba is pre-multiplied by the alpha value, if alpha is zero or less then all
+        // channels are zero.
         if self.alpha < 0. {
             self.red = 0.;
             self.green = 0.;
             self.blue = 0.;
             self.alpha = 0.;
         } else {
+            // Bound every channel between 0 and 1
             self.red = self.red.min(1.).max(0.);
             self.green = self.green.min(1.).max(0.);
             self.blue = self.blue.min(1.).max(0.);
@@ -88,8 +101,8 @@ impl Rgba {
 
 impl PartialEq for Rgba {
     fn eq(&self, other: &Rgba) -> bool {
-        self.red == other.red && self.green == other.green && self.blue == other.blue &&
-        self.alpha == other.alpha
+        self.red == other.red && self.green == other.green &&
+        self.blue == other.blue && self.alpha == other.alpha
     }
 }
 
