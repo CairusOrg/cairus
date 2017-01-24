@@ -41,7 +41,7 @@
 //! to utilize and preserve the Cairo drawing model while providing the benefits of a native Rust
 //! implementation.
 
-// Private modules
+
 #[allow(dead_code)]
 pub mod operators;
 
