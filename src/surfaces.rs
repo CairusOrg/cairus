@@ -33,17 +33,31 @@
  *
  */
 
+//! # Overview
+//! Cairo surfaces are basically raster (bitmap) containers.  They 'receive' operations performed
+//! on them by contexts.  They are the 'canvas' of Cairus.
+
 use std::slice::{IterMut, Iter};
 use std::vec::IntoIter;
 use types::Rgba;
 
+/// A surface needs to hold pixels (Rgba's) and its width and height.  The width and height
+/// will be used in rendering to images and calculating clipping, and the pixels will be the things
+/// that actually are operated on by stroke or paint operations.  See the
+/// `test_image_surface_with_operator` test case below for an example of what that might look like.
 pub struct ImageSurface {
+    // base is just a collection of pixels
     base: Vec<Rgba>,
     width: usize,
     height: usize,
 }
 
+
+/// ImageSurface provides iter(), into_iter(), and iter_mut() so that when a Cairus context calls
+/// paint, it can simply iterate through the pixels in the image surface and use a image
+/// compositing operator to operate on them.  See `operators.rs` for those operations.
 impl ImageSurface {
+    // Analagous to cairo_create(), you pass in a width and height and get in a surface in exchange.
     fn create(width: usize, height: usize) -> ImageSurface {
         ImageSurface {
             base: vec![Rgba::new(0., 0., 0., 0.); width * height],
@@ -144,9 +158,12 @@ mod tests {
     #[test]
     fn test_image_surface_with_operator() {
         // Demonstrates usage with an operator
+        //
+        // Our goal here is to take a surface and paint it red.  We use the the surface's iter_mut
+        // function because operators modify the image's pixels in-place.
 
         // Create our source Rgba, destination, and choose an operator
-        let source_rgba = Rgba::new(1., 1., 1., 1.);
+        let source_rgba = Rgba::new(1., 0., 0., 1.);
         let mut destination = ImageSurface::create(100, 100);
         let op = Operator::Over;
 
@@ -156,7 +173,8 @@ mod tests {
             operator(&source_rgba, pixel);
         }
 
-        let expected = Rgba::new(1., 1., 1., 1.);
+        // Check that the resulting pixels in destination are red RGBA(1, 0, 0, 1)
+        let expected = Rgba::new(1., 0., 0., 1.);
         for pixel in destination {
             assert_eq!(pixel, expected);
         }
