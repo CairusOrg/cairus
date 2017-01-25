@@ -30,6 +30,8 @@
  *
  * Contributor(s):
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
+ *  Evan Smelser <evanjsmelser@gmail.com>
+ *  Kyle Kneitinger <kneit@pdx.edu>
  *
  */
 
@@ -40,6 +42,50 @@
 use std::slice::{IterMut, Iter};
 use std::vec::IntoIter;
 use types::Rgba;
+
+
+//Format enum descriptors for the surface object
+//These are specifically the format types copied from the C implementation,
+//some may not be necessary
+#[allow(non_camel_case_types)]
+pub enum Format {
+    Invalid,
+    ARGB32,
+    RGB24,
+    A8,
+    A1,
+    RGB16_565,
+    RGB30,
+}
+
+/// Analogous to cairo_surface_type_t, indicates target drawing type
+pub enum Type {
+    Image,
+    Pdf,
+    Ps,
+    Xlib,
+    Xcb,
+    Glitz,
+    Quartz,
+    Win32,
+    Beos,
+    Directfb,
+    Svg,
+    Os2,
+    Win32Printing,
+    QuartzImage,
+    Script,
+    Qt,
+    Recording,
+    Vg,
+    Gl,
+    Drm,
+    Tee,
+    Xml,
+    Skia,
+    Subsurface,
+    Cogl,
+}
 
 /// A surface needs to hold pixels (Rgba's) and its width and height.  The width and height
 /// will be used in rendering to images and calculating clipping, and the pixels will be the things
