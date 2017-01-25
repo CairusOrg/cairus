@@ -87,7 +87,6 @@ pub enum Type {
     Cogl,
 }
 
-struct ImageSurface {
 /// A surface needs to hold pixels (Rgba's) and its width and height.  The width and height
 /// will be used in rendering to images and calculating clipping, and the pixels will be the things
 /// that actually are operated on by stroke or paint operations.  See the
