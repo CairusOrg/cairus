@@ -31,6 +31,7 @@
  * Contributor(s):
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
  *  Evan Smelser <evanjsmelser@gmail.com>
+ *  Kyle Kneitinger <kneit@pdx.edu>
  *
  */
 
