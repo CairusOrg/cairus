@@ -35,6 +35,12 @@
  *
  */
 
+//! # Overview
+//! Cairo surfaces are basically raster (bitmap) containers.  They 'receive' operations performed
+//! on them by contexts.  They are the 'canvas' of Cairus.
+
+use std::slice::{IterMut, Iter};
+use std::vec::IntoIter;
 use types::Rgba;
 
 
@@ -82,24 +88,42 @@ pub enum Type {
 }
 
 struct ImageSurface {
+/// A surface needs to hold pixels (Rgba's) and its width and height.  The width and height
+/// will be used in rendering to images and calculating clipping, and the pixels will be the things
+/// that actually are operated on by stroke or paint operations.  See the
+/// `test_image_surface_with_operator` test case below for an example of what that might look like.
+pub struct ImageSurface {
+    // base is just a collection of pixels
     base: Vec<Rgba>,
     width: usize,
     height: usize,
 }
 
+/// ImageSurface provides iter(), into_iter(), and iter_mut() so that when a Cairus context calls
+/// paint, it can simply iterate through the pixels in the image surface and use a image
+/// compositing operator to operate on them.  See `operators.rs` for those operations.
 impl ImageSurface {
-    fn new(width: usize, height: usize) -> ImageSurface {
-        ImageSurface{
+    // Analagous to cairo_create(), you pass in a width and height and get in a surface in exchange.
+    fn create(width: usize, height: usize) -> ImageSurface {
+        ImageSurface {
             base: vec![Rgba::new(0., 0., 0., 0.); width * height],
             width: width,
-            height: height
+            height: height,
         }
+    }
+
+    fn iter(&self) -> Iter<Rgba> {
+        self.base.iter()
+    }
+
+    fn iter_mut(&mut self) -> IterMut<Rgba> {
+        self.base.iter_mut()
     }
 }
 
 impl IntoIterator for ImageSurface {
     type Item = Rgba;
-    type IntoIter = ::std::vec::IntoIter<Rgba>;
+    type IntoIter = IntoIter<Rgba>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.base.into_iter()
@@ -110,14 +134,99 @@ impl IntoIterator for ImageSurface {
 mod tests {
     use types::Rgba;
     use surfaces::ImageSurface;
+    use operators::{Operator, fetch_operator};
 
     #[test]
-    fn test_image_surface_default() {
-        // Test that ImageSurface's iterator is functioning correctly
-        let default_rgba = Rgba::new(0., 0., 0., 0.);
-        let surface = ImageSurface::new(100, 100);
+    fn test_image_surface_create() {
+        // Test that ImageSurface's IntoIterator is functioning correctly by comparing every pixel
+        // in the surface to the default (which is transparent).
+        let transparent_pixel = Rgba::new(0., 0., 0., 0.);
+        let surface = ImageSurface::create(100, 100);
         for pixel in surface {
-            assert_eq!(pixel, default_rgba);
+            assert_eq!(pixel, transparent_pixel);
+        }
+    }
+
+    #[test]
+    fn test_image_surface_into_iter() {
+        // Test that the explicit into_iter() call functions correctly.
+        let transparent_pixel = Rgba::new(0., 0., 0., 0.);
+        let surface = ImageSurface::create(100, 100);
+        for pixel in surface.into_iter() {
+            assert_eq!(pixel, transparent_pixel);
+        }
+    }
+
+    // TODO: test into_iter().map()
+
+    #[test]
+    fn test_image_surface_iter() {
+        // Passes if ImageSurface::iter() functions properly
+        let surface = ImageSurface::create(100, 100);
+
+        // Leave pixel.red to default (0.0), change all other hcannels to 1.0
+        let result = surface.iter()
+            .map(|&pixel| {
+                Rgba {
+                    red: pixel.red,
+                    green: 1.,
+                    blue: 1.,
+                    alpha: 1.,
+                }
+            })
+            .collect::<Vec<Rgba>>();
+
+        let expected = Rgba {
+            red: 0.,
+            green: 1.,
+            blue: 1.,
+            alpha: 1.,
+        };
+
+        for pixel in result.into_iter() {
+            // Red is 0. because it is the default, the others got set to 1.
+            assert_eq!(pixel, expected);
+        }
+    }
+
+    #[test]
+    fn test_image_surface_iter_mut() {
+        // Passes if ImageSurface::iter_mut() functions properly
+        let mut surface = ImageSurface::create(100, 100);
+        let expected = Rgba::new(1., 0., 0., 1.);
+
+        for mut pixel in surface.iter_mut() {
+            pixel.alpha = expected.alpha;
+            pixel.red = expected.red;
+        }
+
+        for pixel in surface {
+            assert_eq!(pixel, expected);
+        }
+    }
+
+    #[test]
+    fn test_image_surface_with_operator() {
+        // Demonstrates usage with an operator
+        //
+        // Our goal here is to take a surface and paint it red.  We use the the surface's iter_mut
+        // function because operators modify the image's pixels in-place.
+
+        // Create our source Rgba, destination, and choose an operator
+        let source_rgba = Rgba::new(1., 0., 0., 1.);
+        let mut destination = ImageSurface::create(100, 100);
+        let op = Operator::Over;
+
+        // Using fetch_operator and the Operator enum.
+        let operator = fetch_operator(&op);
+        for mut pixel in destination.iter_mut() {
+            operator(&source_rgba, pixel);
+        }
+
+        // Check that the resulting pixels in destination are red RGBA(1, 0, 0, 1)
+        let expected = Rgba::new(1., 0., 0., 1.);
+        for pixel in destination {
+            assert_eq!(pixel, expected);
         }
     }
 }

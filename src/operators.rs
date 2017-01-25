@@ -33,14 +33,21 @@
  *
  */
 
-//! This module defines image compositing operations.
+//! # Overview
+//!
+//! This module allows Cairus to take one pixel and blend it with another pixel.  By
+//! the time this module is reached, Cairus will already have figured out what pixels in the context
+//! to blend with what pixels in the destination.  The purpose of this module is to provide
+//! the pixel-by-pixel blending operations used in that process.
+//!
+//! Cairus operators are equivalent to the Porter Duff operators (See references at the bottom of
+//! this page).
 //!
 //! # Supported Operators:
 //! * Over - Cairus's default operator.  Blends a source onto a destination, similar to overlapping
 //!          two semi-transparent slides.  If the source is opaque, the over operation will make
 //!          the destination opaque as well.
-//!
-//! Descriptions/formulas for Cairo operators:  [Cairo Operators](https://www.cairographics.org/operators/)
+
 use types::Rgba;
 
 // Image Compositing Operations
@@ -61,7 +68,9 @@ pub enum Operator {
 ///
 /// This function maps an enum to its function, allowing for dynamic determination of the operator
 /// function.  This is likely a good way for a context to fetch the correct function just by having
-/// an Operator enum.
+/// an Operator enum, instead of it having to use a match statement to find the correct operator,
+/// or having this fetch function implemented in the context module (away from the rest of the
+/// operator definitions).
 ///
 /// # Arguments
 /// * `op` - Reference to an enum `Operator` that matches the desired operation.
@@ -72,11 +81,15 @@ pub enum Operator {
 /// // Fetch and use the operator
 /// let compose = fetch_operator(&op_enum);
 /// compose(&source, &mut destination1);
-fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
+pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     match *op {
         Operator::Over => over,
     }
 }
+
+/// # Operator Formulas
+/// The following functions are implementations of the Porter Duff operator formulas. (See below
+/// for the Porter Duff paper in the references section, or the Cairo operator documentation page).
 
 /// Composites `source` over `destination`.
 ///
@@ -86,33 +99,18 @@ fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
 ///
 /// Over is Cairus's default operator.  If the source is semi-transparent, the over operation will
 /// blend the source and the destination.  If the source is opaque, it will cover the destination
-/// without blending.
+/// without blending.  Assumes pre-multiplied alpha.
 fn over(source: &Rgba, destination: &mut Rgba) {
-    let alpha = over_alpha(&source.alpha, &destination.alpha);
-    let (red, green, blue) = (
-        over_color(&source.red, &destination.red, &source.alpha, &destination.alpha, &alpha),
-        over_color(&source.green, &destination.green, &source.alpha, &destination.alpha, &alpha),
-        over_color(&source.blue, &destination.blue, &source.alpha, &destination.alpha, &alpha),
-    );
-
-    destination.red = red;
-    destination.green = green;
-    destination.blue = blue;
-    destination.alpha = alpha;
+    destination.alpha = source.alpha + destination.alpha * (1. - source.alpha);
+    destination.red = source.red + destination.red * (1. - source.alpha);
+    destination.green = source.green + destination.green * (1. - source.alpha);
+    destination.blue = source.blue + destination.blue * (1. - source.alpha);
 }
 
-fn over_color(source_color: &f32, destination_color: &f32,
-              source_alpha: &f32, destination_alpha: &f32,
-              new_alpha: &f32) -> f32 {
-    (
-        (source_color * source_alpha) +
-        (destination_color * destination_alpha * (1. - source_alpha))
-    ) / new_alpha
-}
-
-fn over_alpha(source: &f32, destination: &f32) -> f32 {
-    source + (destination * (1. - source))
-}
+/// # References
+/// [Porter Duff]: https://keithp.com/~keithp/porterduff/p253-porter.pdf).
+/// [Nvidia]: https://developer.nvidia.com/content/alpha-blending-pre-or-not-pre
+/// [Cairo Operators]: https://www.cairographics.org/operators/
 
 #[cfg(test)]
 mod tests {
@@ -149,16 +147,53 @@ mod tests {
     }
 
     #[test]
+    fn test_rgba_into_bytes_all_ones() {
+        let color = Rgba::new(1., 1., 1., 1.);
+        let expected = vec![255, 255, 255, 255];
+        assert_eq!(color.into_bytes(), expected);
+    }
+
+    #[test]
+    fn test_rgba_into_bytes_all_zeroes() {
+        let color = Rgba::new(0., 0., 0., 0.);
+        let expected = vec![0, 0, 0, 0];
+        assert_eq!(color.into_bytes(), expected);
+    }
+
+    #[test]
+    fn test_rgba_into_bytes_all_half() {
+        let color = Rgba::new(0.5, 0.5, 0.5, 0.5);
+        let expected = vec![127, 127, 127, 127];
+        assert_eq!(color.into_bytes(), expected);
+    }
+
+    #[test]
+    fn test_rgba_corrects_large_values() {
+        let mut color = Rgba::new(3., 3., 3., 3.);
+        color.correct();
+        assert_eq!(color, Rgba::new(1., 1., 1., 1.));
+    }
+
+    #[test]
+    fn test_rgba_corrects_small_values() {
+        let mut color = Rgba::new(-3., -3., -3., -3.);
+        color.correct();
+        assert_eq!(color, Rgba::new(0., 0., 0., 0.));
+    }
+
+    #[test]
     fn test_fetch_operator() {
         let source = Rgba::new(1., 0., 0., 0.5);
         let mut destination = Rgba::new(0., 1., 0., 0.5);
+        let mut expected = Rgba::new(0., 1., 0., 0.5);
 
         let myop = Operator::Over;
         let operator = fetch_operator(&myop);
         operator(&source, &mut destination);
+        over(&source, &mut expected);
 
         // This result was computed manually to be correct, and then modified to match Rust's
         // default floating point decimal place rounding.
-        assert_eq!(destination, Rgba::new(0.6666667, 0.33333334, 0.0, 0.75));
+        assert_eq!(destination, expected);
     }
 }
