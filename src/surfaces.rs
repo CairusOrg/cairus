@@ -52,7 +52,6 @@ pub struct ImageSurface {
     height: usize,
 }
 
-
 /// ImageSurface provides iter(), into_iter(), and iter_mut() so that when a Cairus context calls
 /// paint, it can simply iterate through the pixels in the image surface and use a image
 /// compositing operator to operate on them.  See `operators.rs` for those operations.
@@ -91,22 +90,22 @@ mod tests {
     use operators::{Operator, fetch_operator};
 
     #[test]
-    fn test_image_surface_new() {
-        // Test that ImageSurface's IntoIterator is functioning correctly
-        let default_rgba = Rgba::new(0., 0., 0., 0.);
+    fn test_image_surface_create() {
+        // Test that ImageSurface's IntoIterator is functioning correctly by comparing every pixel
+        // in the surface to the default (which is transparent).
+        let transparent_pixel = Rgba::new(0., 0., 0., 0.);
         let surface = ImageSurface::create(100, 100);
-        for pixel in surface.base {
-            assert_eq!(pixel, default_rgba);
+        for pixel in surface {
+            assert_eq!(pixel, transparent_pixel);
         }
     }
 
     #[test]
     fn test_image_surface_into_iter() {
-        // Test that ImageSurface's IntoIterator is functioning correctly
-        let default_rgba = Rgba::new(0., 0., 0., 0.);
+        let transparent_pixel = Rgba::new(0., 0., 0., 0.);
         let surface = ImageSurface::create(100, 100);
         for pixel in surface.into_iter() {
-            assert_eq!(pixel, default_rgba);
+            assert_eq!(pixel, transparent_pixel);
         }
     }
 
