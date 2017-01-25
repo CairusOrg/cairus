@@ -102,12 +102,15 @@ mod tests {
 
     #[test]
     fn test_image_surface_into_iter() {
+        // Test that the explicit into_iter() call functions correctly.
         let transparent_pixel = Rgba::new(0., 0., 0., 0.);
         let surface = ImageSurface::create(100, 100);
         for pixel in surface.into_iter() {
             assert_eq!(pixel, transparent_pixel);
         }
     }
+
+    // TODO: test into_iter().map()
 
     #[test]
     fn test_image_surface_iter() {
@@ -132,6 +135,7 @@ mod tests {
             blue: 1.,
             alpha: 1.,
         };
+
         for pixel in result.into_iter() {
             // Red is 0. because it is the default, the others got set to 1.
             assert_eq!(pixel, expected);

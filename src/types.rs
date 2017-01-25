@@ -37,9 +37,7 @@
 //! Currently the only types here are for representing color.
 
 /// Represents color with red, green, blue, and alpha channels.
-#[derive(Debug)]
-#[derive(Clone)]
-#[derive(Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Rgba {
     pub red: f32,
     pub green: f32,
@@ -58,11 +56,12 @@ impl Rgba {
         // gives the correct result, and post multiplying sometimes doesn't.
         //
         // Note: All compositing operations in Cairus assume that the Rgba is pre-multiplied.
-        Rgba{
+        Rgba {
             red: red * alpha,
             green: green * alpha,
             blue: blue * alpha,
-            alpha: alpha}
+            alpha: alpha
+        }
     }
 
     /// Returns a vector of bytes representing the Rgba values.
@@ -144,5 +143,4 @@ mod tests {
         color.correct();
         assert_eq!(color, Rgba::new(0., 0., 0., 0.));
     }
-
 }
