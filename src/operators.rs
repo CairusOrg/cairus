@@ -62,6 +62,42 @@ use types::Rgba;
 pub enum Operator {
     /// Cairus's default operator.  Draws source layer on top of destination layer.
     Over,
+    ///Needed for stroke implementation. Draw source layer where there was destination layer.
+    In,
+
+    ///Remaining operators enumerated for later implementation
+    ///options pulled from Cairo Graphics Library
+    ///reference: 
+    ///https://www.cairographics.org/manual/cairo-cairo-t.html#CAIRO-OPERATOR-OVER:CAPS
+/*
+    Clear,
+    Source,
+    Out,
+    Atop,
+    Dest,
+    DestOver,
+    DestIn,
+    DestOut,
+    DestAtop,
+    Xor,
+    Add,
+    Saturate,
+    Multiply,
+    Screen,
+    Overlay,
+    Darken,
+    Lighten,
+    ColorDodge,
+    ColorBurn,
+    HardLight,
+    SoftLight,
+    Difference,
+    Exclusion,
+    HSLHue,
+    HSLSaturation,
+    HSLColor,
+    HSLLuminosity,
+*/  
 }
 
 /// Returns an image compositing function that corresponds to an Operator enum.
@@ -83,7 +119,8 @@ pub enum Operator {
 /// compose(&source, &mut destination1);
 pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     match *op {
-        Operator::Over => over,
+        Operator::Over  => over,
+        Operator::In    => opIn,
     }
 }
 
@@ -105,6 +142,18 @@ fn over(source: &Rgba, destination: &mut Rgba) {
     destination.red = source.red + destination.red * (1. - source.alpha);
     destination.green = source.green + destination.green * (1. - source.alpha);
     destination.blue = source.blue + destination.blue * (1. - source.alpha);
+}
+
+///This is Cairus' in operator. The destination object is removed and the source object is only
+///drawn where the destination was.
+///Note: The transparency of the first object is still taken in to account.
+///The effect of the IN operator depends on the interpretation of the source.
+///This operator is unbounded. Assumes pre-multiplied alpha.
+fn opIn(source: &Rgba, destination: &mut Rgba) {
+    destination.alpha = source.alpha * destination.alpha;
+    destination.red = source.red;
+    destination.green = source.green;
+    destination.blue = source.blue;
 }
 
 /// # References
