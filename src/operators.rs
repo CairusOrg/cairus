@@ -30,7 +30,7 @@
  *
  * Contributor(s):
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
- *
+ *  Evan Smelser <evanjsmelser@gmail.com>
  */
 
 //! # Overview
@@ -119,8 +119,8 @@ pub enum Operator {
 /// compose(&source, &mut destination1);
 pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     match *op {
-        Operator::Over  => over,
-        Operator::In    => opIn,
+        Operator::Over  => operator_over,
+        Operator::In    => operator_in,
     }
 }
 
@@ -137,7 +137,7 @@ pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
 /// Over is Cairus's default operator.  If the source is semi-transparent, the over operation will
 /// blend the source and the destination.  If the source is opaque, it will cover the destination
 /// without blending.  Assumes pre-multiplied alpha.
-fn over(source: &Rgba, destination: &mut Rgba) {
+fn operator_over(source: &Rgba, destination: &mut Rgba) {
     destination.alpha = source.alpha + destination.alpha * (1. - source.alpha);
     destination.red = source.red + destination.red * (1. - source.alpha);
     destination.green = source.green + destination.green * (1. - source.alpha);
@@ -148,8 +148,10 @@ fn over(source: &Rgba, destination: &mut Rgba) {
 ///drawn where the destination was.
 ///Note: The transparency of the first object is still taken in to account.
 ///The effect of the IN operator depends on the interpretation of the source.
-///This operator is unbounded. Assumes pre-multiplied alpha.
-fn opIn(source: &Rgba, destination: &mut Rgba) {
+///This operator is unbounded. 
+///This function currently assumes post-multiplied alpha values, the alpha value
+///must be factored out 
+fn operator_in(source: &Rgba, destination: &mut Rgba) {
     destination.alpha = source.alpha * destination.alpha;
     destination.red = source.red;
     destination.green = source.green;
