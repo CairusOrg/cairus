@@ -80,7 +80,7 @@ pub struct cairo_t{
 
 impl cairo_t{
 
-    fn new(status: Status)->cairo_t{
+    fn new(status: Status, )->cairo_t{
 
         cairo_t{
             status: status,
