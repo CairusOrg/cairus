@@ -41,11 +41,12 @@
 //! to utilize and preserve the Cairo drawing model while providing the benefits of a native Rust
 //! implementation.
 
-// Private modules
-//
-// We allow dead code because warnings will be thrown until in-module private functions get used
-// by some public function.  We should remove these compiler flags once cairus's upper level API is
-// complete.
+/// ### Top-level Design
+/// ## Stroke Implementation
+///
+
+/// When we get down to the level of pixels, they are blended together by operations
+/// defined in the operators module.
 #[allow(dead_code)]
 pub mod operators;
 
