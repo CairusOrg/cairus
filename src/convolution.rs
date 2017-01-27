@@ -77,4 +77,13 @@ mod tests {
         assert_eq!(Polygon::angle_sum(3), 180.);
 
     }
+
+    #[test]
+    fn test_polygon_angle() {
+        let diameter = 2.0;
+        let vertices = polygon_vertices(diameter, 0.1);
+        let polygon = Polygon::new(diameter, vertices);
+        assert_eq!(polygon.angle, 1080.);
+    }
+
 }
