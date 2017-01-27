@@ -22,10 +22,21 @@ fn polygon_vertices(width: f32, flatness: f32) -> i32 {
 }
 
 struct Polygon {
-    empty: ()
+    diameter: f32,
+    vertices: i32,
+    angle: f32,
 }
 
 impl Polygon {
+    // Returns a new Polygon
+    fn new(diameter: f32, vertices: i32) -> Polygon {
+        Polygon {
+            diameter: diameter,
+            vertices: vertices,
+            angle: Polygon::angle_sum(vertices),
+        }
+    }
+
     // Returns sum of each angle of a polygon of `vertices`
     //
     // Example:  A triangle (3 vertices) angle sum is 180 degrees
@@ -33,7 +44,8 @@ impl Polygon {
     // assert_eq!(angel_sum(3), 180); // true
     // ```
     fn angle_sum(vertices: i32) -> f32 {
-        180. + (180. * ((vertices as f32) - 3.))
+        (((vertices) as f32) - 2.0) * 180.
+//        180. + (180. * ((vertices as f32) - 3.))
     }
 }
 
@@ -79,7 +91,7 @@ mod tests {
     }
 
     #[test]
-    fn test_polygon_angle() {
+    fn test_polygon_constructor_init_correct_angle() {
         let diameter = 2.0;
         let vertices = polygon_vertices(diameter, 0.1);
         let polygon = Polygon::new(diameter, vertices);
