@@ -24,7 +24,6 @@ fn polygon_vertices(width: f32, flatness: f32) -> i32 {
 struct Polygon {
     diameter: f32,
     vertices: i32,
-    angle: f32,
 }
 
 impl Polygon {
@@ -33,7 +32,6 @@ impl Polygon {
         Polygon {
             diameter: diameter,
             vertices: vertices,
-            angle: Polygon::angle_sum(vertices),
         }
     }
 
@@ -43,9 +41,8 @@ impl Polygon {
     // ```
     // assert_eq!(angel_sum(3), 180); // true
     // ```
-    fn angle_sum(vertices: i32) -> f32 {
-        (((vertices) as f32) - 2.0) * 180.
-//        180. + (180. * ((vertices as f32) - 3.))
+    fn interior_angle_sum(&self) -> f32 {
+        ((self.vertices - 2) * 180) as f32
     }
 }
 
@@ -84,9 +81,9 @@ mod tests {
         //let diameter = 2.0;
         //let vertices = polygon_vertices(diameter, 0.1);
         //let polygon = Polygon::new(diameter, vertices);
-        assert_eq!(Polygon::angle_sum(8), 1080.);
-        assert_eq!(Polygon::angle_sum(5), 540.);
-        assert_eq!(Polygon::angle_sum(3), 180.);
+        //assert_eq!(Polygon::interior_angle_sum(8), 1080.);
+        //assert_eq!(Polygon::interior_angle_sum(5), 540.);
+        //assert_eq!(Polygon::interior_angle_sum(3), 180.);
 
     }
 
@@ -95,7 +92,7 @@ mod tests {
         let diameter = 2.0;
         let vertices = polygon_vertices(diameter, 0.1);
         let polygon = Polygon::new(diameter, vertices);
-        assert_eq!(polygon.angle, 1080.);
+        assert_eq!(polygon.interior_angle_sum(), 1080.);
     }
 
 }
