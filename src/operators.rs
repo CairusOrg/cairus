@@ -39,6 +39,7 @@
 //! * Over - Cairus's default operator.  Blends a source onto a destination, similar to overlapping
 //!          two semi-transparent slides.  If the source is opaque, the over operation will make
 //!          the destination opaque as well.
+//! * Source - Overwrites the destination with the source. Result color & alpha is equal to source.
 //!
 //! Descriptions/formulas for Cairo operators:
 //! [Cairo Operators](https://www.cairographics.org/operators/)
@@ -56,7 +57,7 @@ use types::Rgba;
 /// The supported image compositing operators in Cairus.
 pub enum Operator {
     /// Cairus's default operator.  Draws source layer on top of destination layer.
-    Over,
+    Over, Source,
 }
 
 /// Returns an image compositing function that corresponds to an Operator enum.
@@ -77,6 +78,7 @@ pub enum Operator {
 pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     match *op {
         Operator::Over => over,
+        Operator::Source => operator_source,
     }
 }
 
@@ -96,10 +98,18 @@ fn over(source: &Rgba, destination: &mut Rgba) {
     destination.blue = source.blue + destination.blue * (1. - source.alpha);
 }
 
+fn operator_source(source: &Rgba, destination: &mut Rgba) {
+    destination.alpha = source.alpha;
+    destination.red = source.red;
+    destination.green = source.green;
+    destination.blue = source.blue;
+}
+
 #[cfg(test)]
 mod tests {
     use super::Operator;
     use super::over;
+    use super::operator_source;
     use super::fetch_operator;
     use types::Rgba;
 
@@ -128,6 +138,30 @@ mod tests {
         let mut destination = Rgba::new(0., 1., 0., 1.);
         over(&source, &mut destination);
         assert_eq!(destination, Rgba::new(0., 0.5, 0.5, 1.0));
+    }
+    #[test]
+    fn test_source_operator_semi_transparent_source() {
+        let source = Rgba::new(1., 0., 0., 0.5);
+        let mut destination = Rgba::new(0., 1., 0.5, 0.8);
+        operator_source(&source, &mut destination);
+
+        assert_eq!(destination, Rgba::new(1., 0., 0., 0.5));
+    }
+
+    #[test]
+    fn test_source_operator_opaque_source() {
+        let source = Rgba::new(1., 0., 0., 1.0);
+        let mut destination = Rgba::new(0., 1., 1., 0.5);
+        operator_source(&source, &mut destination);
+        assert_eq!(destination, Rgba::new(1., 0., 0., 1.0));
+    }
+
+    #[test]
+    fn test_source_operator_opaque_destination() {
+        let source = Rgba::new(0., 0., 1., 0.5);
+        let mut destination = Rgba::new(0., 1., 0., 1.);
+        operator_source(&source, &mut destination);
+        assert_eq!(destination, Rgba::new(0., 0., 1., 0.5));
     }
 
     #[test]
