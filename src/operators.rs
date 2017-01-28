@@ -177,7 +177,7 @@ fn operator_in(source: &Rgba, destination: &mut Rgba) {
 #[cfg(test)]
 mod tests {
     use super::Operator;
-    use super::over;
+    use super::operator_over;
     use super::fetch_operator;
     use types::Rgba;
 
@@ -185,7 +185,7 @@ mod tests {
     fn test_over_operator_semi_transparent_source() {
         let source = Rgba::new(1., 0., 0., 0.5);
         let mut destination = Rgba::new(0., 1., 0., 0.5);
-        over(&source, &mut destination);
+        operator_over(&source, &mut destination);
 
         // This result was computed manually to be correct, and then modified to match Rust's
         // default floating point decimal place rounding.
@@ -196,7 +196,7 @@ mod tests {
     fn test_over_operator_opaque_source() {
         let source = Rgba::new(1., 0., 0., 1.0);
         let mut destination = Rgba::new(0., 1., 1., 0.5);
-        over(&source, &mut destination);
+        operator_over(&source, &mut destination);
         assert_eq!(destination, Rgba::new(1., 0., 0., 1.0));
     }
 
@@ -204,7 +204,7 @@ mod tests {
     fn test_over_operator_opaque_destination() {
         let source = Rgba::new(0., 0., 1., 0.5);
         let mut destination = Rgba::new(0., 1., 0., 1.);
-        over(&source, &mut destination);
+        operator_over(&source, &mut destination);
         assert_eq!(destination, Rgba::new(0., 0.5, 0.5, 1.0));
     }
 
@@ -252,7 +252,7 @@ mod tests {
         let myop = Operator::Over;
         let operator = fetch_operator(&myop);
         operator(&source, &mut destination);
-        over(&source, &mut expected);
+        operator_over(&source, &mut expected);
 
         // This result was computed manually to be correct, and then modified to match Rust's
         // default floating point decimal place rounding.
