@@ -64,14 +64,16 @@ pub enum Operator {
     Over,
     ///Needed for stroke implementation. Draw source layer where there was destination layer.
     In,
+    //Source will be the next operator to implement. It replaces the destination later.
+    //Source,
 
-    ///Remaining operators enumerated for later implementation
-    ///options pulled from Cairo Graphics Library
-    ///reference: 
-    ///https://www.cairographics.org/manual/cairo-cairo-t.html#CAIRO-OPERATOR-OVER:CAPS
+
+
+    //Remaining operators enumerated for later implementation
+    //options pulled from Cairo Graphics Library
+    //reference: https://www.cairographics.org/manual/cairo-cairo-t.html#CAIRO-OPERATOR-OVER:CAPS
 /*
     Clear,
-    Source,
     Out,
     Atop,
     Dest,
@@ -124,6 +126,7 @@ pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     }
 }
 
+
 /// # Operator Formulas
 /// The following functions are implementations of the Porter Duff operator formulas. (See below
 /// for the Porter Duff paper in the references section, or the Cairo operator documentation page).
@@ -157,6 +160,14 @@ fn operator_in(source: &Rgba, destination: &mut Rgba) {
     destination.green = source.green;
     destination.blue = source.blue;
 }
+
+///Cairus' Source operator
+///The source object is drawn as if nothing were below it.
+///
+///
+
+
+
 
 /// # References
 /// [Porter Duff]: https://keithp.com/~keithp/porterduff/p253-porter.pdf).
