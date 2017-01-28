@@ -37,7 +37,7 @@
 
 use surfaces::ImageSurface;
 use types::Rgba;
-
+use operators::Operator;
 
 
 /*struct cairo_array{
