@@ -71,6 +71,14 @@ impl Line {
         let delta_y = self.second_endpoint.y - self.first_endpoint.y;
         delta_y / delta_x
     }
+
+    fn get_midpoint(&self) -> Point {
+        let mid_x = self.first_endpoint.x + (self.second_endpoint.x - self.first_endpoint.x) / 2.;
+        Point {
+            x: mid_x,
+            y: self.first_endpoint.y + (mid_x * self.get_slope() ),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -97,5 +105,11 @@ mod tests {
     fn line_get_slope() {
         let line = Line::new(0., 0., 1., 1.);
         assert_eq!(line.get_slope(), 1.);
+    }
+
+    #[test]
+    fn line_midpoint() {
+        let line = Line::new(0., 0., 2., 2.);
+        assert_eq!(line.get_midpoint(), Point{x: 1., y: 1.});
     }
 }
