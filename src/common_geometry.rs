@@ -65,6 +65,12 @@ impl Line {
             second_endpoint: second_endpoint,
         }
     }
+
+    fn get_slope(&self) -> f32 {
+        let delta_x = self.second_endpoint.x - self.first_endpoint.x;
+        let delta_y = self.second_endpoint.y - self.first_endpoint.y;
+        delta_y / delta_x
+    }
 }
 
 #[cfg(test)]
@@ -87,4 +93,9 @@ mod tests {
         assert_eq!(line.second_endpoint, Point{x: 1., y: 1.});
     }
 
+    #[test]
+    fn line_get_slope() {
+        let line = Line::new(0., 0., 1., 1.);
+        assert_eq!(line.get_slope(), 1.);
+    }
 }
