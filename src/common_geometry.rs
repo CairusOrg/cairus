@@ -90,22 +90,22 @@ struct Vector {
 }
 
 impl Vector {
-    fn new(x: f32, y: f32) -> Vector {
+    pub fn new(x: f32, y: f32) -> Vector {
         Vector {
             x: x,
             y: y,
         }
     }
 
-    fn dot_product(&self, rhs: &Vector) -> f32 {
+    pub fn dot_product(&self, rhs: &Vector) -> f32 {
         (self.x * rhs.x) + (self.y * rhs.y)
     }
 
-    fn get_magnitude(&self) -> f32 {
+    pub fn get_magnitude(&self) -> f32 {
         (self.x.powi(2) + self.y.powi(2)).sqrt()
     }
 
-    fn angle_between(&self, rhs: &Vector) -> f32 {
+    pub fn angle_between(&self, rhs: &Vector) -> f32 {
         (
             self.dot_product(rhs) / (self.get_magnitude() * rhs.get_magnitude())
         ).acos()
