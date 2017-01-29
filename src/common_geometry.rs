@@ -57,39 +57,39 @@ impl PartialEq for Point {
 /// Defines a line by two points.
 #[derive(Debug, Copy, Clone)]
 pub struct Line {
-    first_endpoint: Point,
-    second_endpoint: Point,
+    point1: Point,
+    point2: Point,
 }
 
 impl Line {
     // Returns a line.  Constructed by (x,y)-coordinates of two points.
     pub fn new(first_x: f32, first_y: f32, second_x: f32, second_y: f32) -> Line {
         Line {
-            first_endpoint: Point{x: first_x, y: first_y},
-            second_endpoint: Point{x: second_x, y: second_y}
+            point1: Point{x: first_x, y: first_y},
+            point2: Point{x: second_x, y: second_y}
         }
     }
 
     // Returns a line.  Constructed from two points.
-    pub fn from_points(first_endpoint: Point, second_endpoint: Point) -> Line {
+    pub fn from_points(point1: Point, point2: Point) -> Line {
         Line {
-            first_endpoint: first_endpoint,
-            second_endpoint: second_endpoint,
+            point1: point1,
+            point2: point2,
         }
     }
 
     pub fn get_slope(&self) -> f32 {
-        let delta_x = self.second_endpoint.x - self.first_endpoint.x;
-        let delta_y = self.second_endpoint.y - self.first_endpoint.y;
+        let delta_x = self.point2.x - self.point1.x;
+        let delta_y = self.point2.y - self.point1.y;
         delta_y / delta_x
     }
 
     // Returns a Point, the midpoint between the two endpoints of self.
     pub fn get_midpoint(&self) -> Point {
-        let mid_x = self.first_endpoint.x + (self.second_endpoint.x - self.first_endpoint.x) / 2.;
+        let mid_x = self.point1.x + (self.point2.x - self.point1.x) / 2.;
         Point {
             x: mid_x,
-            y: self.first_endpoint.y + (mid_x * self.get_slope() ),
+            y: self.point1.y + (mid_x * self.get_slope() ),
         }
     }
 }
@@ -152,8 +152,8 @@ mod tests {
     #[test]
     fn line_new() {
         let line = Line::new(0., 0., 1., 1.);
-        assert_eq!(line.first_endpoint, Point{x: 0., y: 0.});
-        assert_eq!(line.second_endpoint, Point{x: 1., y: 1.});
+        assert_eq!(line.point1, Point{x: 0., y: 0.});
+        assert_eq!(line.point2, Point{x: 1., y: 1.});
     }
 
     #[test]
@@ -161,8 +161,8 @@ mod tests {
         let p1 = Point{x: 0., y: 0.};
         let p2 = Point{x: 1., y: 1.};
         let line = Line::from_points(p1, p2);
-        assert_eq!(line.first_endpoint, Point{x: 0., y: 0.});
-        assert_eq!(line.second_endpoint, Point{x: 1., y: 1.});
+        assert_eq!(line.point1, Point{x: 0., y: 0.});
+        assert_eq!(line.point2, Point{x: 1., y: 1.});
     }
 
     #[test]
