@@ -261,7 +261,6 @@ mod tests {
         assert_eq!(trap.b, b);
         assert_eq!(trap.c, c);
         assert_eq!(trap.d, d);
-
     }
 
     #[test]
@@ -275,6 +274,5 @@ mod tests {
         assert_eq!(trap.b, b);
         assert_eq!(trap.c, c);
         assert_eq!(trap.d, d);
-
     }
 }

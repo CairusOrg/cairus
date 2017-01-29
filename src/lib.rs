@@ -59,6 +59,8 @@ mod surfaces;
 #[allow(dead_code)]
 mod common_geometry;
 
+#[allow(dead_code)]
+mod trapezoid_rasterizer;
 
 #[cfg(test)]
 mod tests {
