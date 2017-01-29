@@ -33,7 +33,9 @@
  *
  */
 
- #[derive(Debug)]
+use std::ops::Add;
+
+ #[derive(Debug, Copy, Clone)]
 pub struct Point {
     x: f32,
     y: f32,
@@ -45,7 +47,7 @@ impl PartialEq for Point {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Line {
     first_endpoint: Point,
     second_endpoint: Point,
@@ -81,6 +83,7 @@ impl Line {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 struct Vector {
     x: f32,
     y: f32,
@@ -92,6 +95,27 @@ impl Vector {
             x: x,
             y: y,
         }
+    }
+
+    fn dot_product(&self, rhs: &Vector) -> f32 {
+        self.x * rhs.x + self.y * rhs.y
+    }
+}
+
+impl Add for Vector {
+    type Output = Vector;
+
+    fn add(self, other: Vector) -> Vector {
+        Vector {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+
+impl PartialEq for Vector {
+    fn eq(&self, other: &Vector) -> bool {
+        self.x == other.x && self.y == other.y
     }
 }
 
@@ -132,5 +156,21 @@ mod tests {
         let vec = Vector::new(1., 1.);
         assert_eq!(vec.x, 1.);
         assert_eq!(vec.y, 1.);
+    }
+
+    #[test]
+    fn vector_add() {
+        let a = Vector::new(0., 0.);
+        let b = Vector::new(1., 1.);
+        let c = a + b;
+        assert_eq!(c, b);
+    }
+
+    #[test]
+    fn vector_dot_product() {
+        let a = Vector::new(0., 0.);
+        let b = Vector::new(1., 1.);
+        let c = a.dot_product(&b);
+        assert_eq!(c, 0.);
     }
 }
