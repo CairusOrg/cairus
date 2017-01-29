@@ -145,38 +145,6 @@ impl PartialEq for Vector {
     }
 }
 
-/// ## Trapezoid
-///
-/// Defines a trapezoid as four points.
-struct Trapezoid {
-    a: Point,
-    b: Point,
-    c: Point,
-    d: Point,
-}
-
-impl Trapezoid {
-    // Returns a new Trapezoid defined by coordinates.
-    fn new(ax: f32, ay: f32, bx: f32, by: f32, cx: f32, cy: f32, dx: f32, dy: f32) -> Trapezoid {
-        Trapezoid {
-            a: Point {x: ax, y: ay},
-            b: Point {x: bx, y: by},
-            c: Point {x: cx, y: cy},
-            d: Point {x: dx, y: dy},
-        }
-    }
-
-    // Returns a new Trapezoid defined by points.
-    fn from_points(a: Point, b: Point, c: Point, d: Point) -> Trapezoid {
-        Trapezoid {
-            a: a,
-            b: b,
-            c: c,
-            d: d,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::{Line, Point, Vector, Trapezoid};
@@ -243,38 +211,5 @@ mod tests {
         let a = Vector::new(1., 0.);
         let b = Vector::new(1., 1.);
         assert_eq!(a.angle_between(&b).to_degrees(), 45.)
-    }
-
-    #[test]
-    fn trapezoid_new() {
-        let trap = Trapezoid::new(0., 0.,
-                                  0., 1.,
-                                  1., 0.,
-                                  1., 1.);
-
-        let a = Point{x: 0., y: 0.};
-        let b = Point{x: 0., y: 1.};
-        let c = Point{x: 1., y: 0.};
-        let d = Point{x: 1., y: 1.};
-
-        assert_eq!(trap.a, a);
-        assert_eq!(trap.b, b);
-        assert_eq!(trap.c, c);
-        assert_eq!(trap.d, d);
-
-    }
-
-    #[test]
-    fn trapezoid_from_points() {
-        let a = Point{x: 0., y: 0.};
-        let b = Point{x: 0., y: 1.};
-        let c = Point{x: 1., y: 0.};
-        let d = Point{x: 1., y: 1.};
-        let trap = Trapezoid::from_points(a, b, c, d);
-        assert_eq!(trap.a, a);
-        assert_eq!(trap.b, b);
-        assert_eq!(trap.c, c);
-        assert_eq!(trap.d, d);
-
     }
 }
