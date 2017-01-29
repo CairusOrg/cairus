@@ -74,7 +74,7 @@ impl<'a> Context<'a>{
 
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
-            surface: surface
+            surface: surface,
         }
     }
 
@@ -86,6 +86,36 @@ impl<'a> Context<'a>{
         self.rgba.alpha = alpha;
 
     }
+
+}
+
+mod tests{
+
+    use types::Rgba;
+    use surfaces::ImageSurface;
+    use context::Context;
+
+
+    #[test]
+    fn test_create_context(){
+
+        let surface = ImageSurface::create(100, 100);
+        let empty_context = Context::create(&surface);
+
+
+    }
+
+    #[test]
+    fn test_set_rgba(){
+
+        let surface = ImageSurface::create(100, 100);
+        let mut empty_context = Context::create(&surface);
+        let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
+    }
+
+
+
+
 
 }
 
