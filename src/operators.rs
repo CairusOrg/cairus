@@ -1,4 +1,4 @@
-/* court's test
+/*
  * Cairus - a reimplementation of the cairo graphics library in Rust
  *
  * Copyright © 2017 CairusOrg
