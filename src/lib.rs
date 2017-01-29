@@ -58,6 +58,8 @@ mod surfaces;
 
 mod context;
 
+mod decasteljau;
+
 #[cfg(test)]
 mod tests {
     #[test]
