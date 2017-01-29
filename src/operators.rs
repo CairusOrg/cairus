@@ -178,6 +178,7 @@ fn operator_in(source: &Rgba, destination: &mut Rgba) {
 mod tests {
     use super::Operator;
     use super::operator_over;
+    use super::operator_in;
     use super::fetch_operator;
     use types::Rgba;
 
@@ -207,6 +208,39 @@ mod tests {
         operator_over(&source, &mut destination);
         assert_eq!(destination, Rgba::new(0., 0.5, 0.5, 1.0));
     }
+
+    #[test]
+    fn test_in_operator_semi_transparent_source() {
+        let source = Rgba::new(0.5, 0.5, 0.5, 0.5);
+        let mut destination = Rgba::new(0., 1., 0., 0.5);
+        operator_in(&source, &mut destination);
+        assert_eq!(destination, Rgba::new(0.5, 0.5, 0.5, 0.25));
+        }
+
+    #[test]
+    fn test_in_operator_opaque_source() {
+        let source = Rgba::new(0.5, 0.5, 0.5, 1.);
+        let mut destination = Rgba::new(1., 1., 1., 0.5);
+        operator_in(&source, &mut destination);
+        assert_eq!(destination, Rgba::new(0.5, 0.5, 0.5, 0.5));
+    }
+
+    #[test]
+    fn test_in_operator_opaque_destination() {
+        let source = Rgba::new(0.25, 0.25, 0.25, 0.25);
+        let mut destination = Rgba::new(1.0, 1.0, 1.0, 1.0);
+        operator_in(&source, &mut destination);
+        assert_eq!(destination, Rgba::new(0.25, 0.25, 0.25, 0.25));
+    }
+
+    #[test]
+    fn test_in_operator_transparent_destination() {
+        let source = Rgba::new(0.5, 0.5, 0.5, 0.25);
+        let mut destination = Rgba::new(1.0, 1.0, 1.0, 0.0);
+        operator_in(&source, &mut destination);
+        assert_eq!(destination, Rgba::new(0.5, 0.5, 0.5, 0.0));
+    }
+
 
     #[test]
     fn test_rgba_into_bytes_all_ones() {
