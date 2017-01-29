@@ -147,7 +147,7 @@ impl PartialEq for Vector {
 
 #[cfg(test)]
 mod tests {
-    use super::{Line, Point, Vector, Trapezoid};
+    use super::{Line, Point, Vector};
 
     #[test]
     fn line_new() {
