@@ -70,7 +70,7 @@ pub struct Context<'a>{
 
 impl<'a> Context<'a>{
 
-    fn create(surface: &'a ImageSurface )-> Context {
+    pub fn create(surface: &'a ImageSurface )-> Context {
 
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
@@ -78,7 +78,7 @@ impl<'a> Context<'a>{
         }
     }
 
-    fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
+    pub fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
 
         self.rgba.red = red;
         self.rgba.green = green;
