@@ -100,6 +100,10 @@ impl Vector {
     fn dot_product(&self, rhs: &Vector) -> f32 {
         self.x * rhs.x + self.y * rhs.y
     }
+
+    fn get_magnitude(&self) -> f32 {
+        (self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
 }
 
 impl Add for Vector {
@@ -172,5 +176,11 @@ mod tests {
         let b = Vector::new(1., 1.);
         let c = a.dot_product(&b);
         assert_eq!(c, 0.);
+    }
+
+    #[test]
+    fn vector_magnitude() {
+        let b = Vector::new(3., 4.);
+        assert_eq!(b.get_magnitude(), 5.);
     }
 }
