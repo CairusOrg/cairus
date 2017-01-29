@@ -34,7 +34,7 @@
  */
 
  #[derive(Debug)]
-struct Point {
+pub struct Point {
     x: f32,
     y: f32,
 }
@@ -46,33 +46,33 @@ impl PartialEq for Point {
 }
 
 #[derive(Debug)]
-struct Line {
+pub struct Line {
     first_endpoint: Point,
     second_endpoint: Point,
 }
 
 impl Line {
-    fn new(first_x: f32, first_y: f32, second_x: f32, second_y: f32) -> Line {
+    pub fn new(first_x: f32, first_y: f32, second_x: f32, second_y: f32) -> Line {
         Line {
             first_endpoint: Point{x: first_x, y: first_y},
             second_endpoint: Point{x: second_x, y: second_y}
         }
     }
 
-    fn from_points(first_endpoint: Point, second_endpoint: Point) -> Line {
+    pub fn from_points(first_endpoint: Point, second_endpoint: Point) -> Line {
         Line {
             first_endpoint: first_endpoint,
             second_endpoint: second_endpoint,
         }
     }
 
-    fn get_slope(&self) -> f32 {
+    pub fn get_slope(&self) -> f32 {
         let delta_x = self.second_endpoint.x - self.first_endpoint.x;
         let delta_y = self.second_endpoint.y - self.first_endpoint.y;
         delta_y / delta_x
     }
 
-    fn get_midpoint(&self) -> Point {
+    pub fn get_midpoint(&self) -> Point {
         let mid_x = self.first_endpoint.x + (self.second_endpoint.x - self.first_endpoint.x) / 2.;
         Point {
             x: mid_x,
@@ -81,9 +81,23 @@ impl Line {
     }
 }
 
+struct Vector {
+    x: f32,
+    y: f32,
+}
+
+impl Vector {
+    fn new(x: f32, y: f32) -> Vector {
+        Vector {
+            x: x,
+            y: y,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Line, Point};
+    use super::{Line, Point, Vector};
 
     #[test]
     fn line_new() {
@@ -111,5 +125,12 @@ mod tests {
     fn line_midpoint() {
         let line = Line::new(0., 0., 2., 2.);
         assert_eq!(line.get_midpoint(), Point{x: 1., y: 1.});
+    }
+
+    #[test]
+    fn vector_new() {
+        let vec = Vector::new(1., 1.);
+        assert_eq!(vec.x, 1.);
+        assert_eq!(vec.y, 1.);
     }
 }
