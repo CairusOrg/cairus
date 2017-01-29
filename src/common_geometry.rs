@@ -46,6 +46,16 @@ pub struct Point {
     pub y: f32,
 }
 
+impl Point {
+    fn x_less_than(&self, other: &Point) -> bool {
+        self.x < other.x
+    }
+
+    fn y_less_than(&self, other: &Point) -> bool {
+        self.y < other.y
+    }
+}
+
 impl PartialEq for Point {
     fn eq(&self, other: &Point) -> bool {
         self.x == other.x && self.y == other.y
@@ -57,8 +67,8 @@ impl PartialEq for Point {
 /// Defines a line by two points.
 #[derive(Debug, Copy, Clone)]
 pub struct Line {
-    point1: Point,
-    point2: Point,
+    pub point1: Point,
+    pub point2: Point,
 }
 
 impl Line {
@@ -149,6 +159,21 @@ impl PartialEq for Vector {
 #[cfg(test)]
 mod tests {
     use super::{Line, Point, Vector};
+
+    #[test]
+    fn point_lt() {
+        let p1 = Point{x: 0., y: 0.};
+        let p2 = Point{x: 1., y: 1.};
+        assert!(p1.x_less_than(&p2));
+    }
+
+    #[test]
+    #[should_panic]
+    fn point_lt2() {
+        let p1 = Point{x: 0., y: 0.};
+        let p2 = Point{x: 1., y: 1.};
+        assert!(p2.x_less_than(&p1));
+    }
 
     #[test]
     fn line_new() {

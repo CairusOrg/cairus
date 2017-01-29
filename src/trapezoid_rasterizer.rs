@@ -33,7 +33,7 @@
  *
  */
 
-use common_geometry::Point;
+use common_geometry::{Point, Line};
 
 /// ## Trapezoid
 ///
@@ -64,6 +64,16 @@ impl Trapezoid {
             c: c,
             d: d,
         }
+    }
+
+    // Returns a Vec<Line> of the four lines that make up this Trapezoid.
+    fn get_lines(&self) -> Vec<Line> {
+        vec![
+            Line::from_points(self.a, self.b),
+            Line::from_points(self.b, self.c),
+            Line::from_points(self.c, self.d),
+            Line::from_points(self.d, self.a),
+        ]
     }
 }
 
@@ -111,18 +121,16 @@ mod tests {
         let c = Point{x: 1., y: 0.};
         let d = Point{x: 1., y: 1.};
         let point_vec = vec![a, b, c, d];
-
         let trap = Trapezoid::from_points(a, b, c, d);
-        let lines = trap.get_lines();
 
-        assert_eq!(lines[0].point1, a);
-        assert_eq!(lines[0].point2, b);
-        assert_eq!(lines[1].point1, b);
-        assert_eq!(lines[1].point2, c);
-        assert_eq!(lines[2].point1, c);
-        assert_eq!(lines[2].point2, d);
-        assert_eq!(lines[3].point1, d);
-        assert_eq!(lines[3].point2, a);
+        let mut points = Vec::new();
+        for line in trap.get_lines() {
+            points.push(line.point1);
+            points.push(line.point2);
+        }
+
+        for point in point_vec {
+            assert!(points.contains(&point));
+        }
     }
-
 }
