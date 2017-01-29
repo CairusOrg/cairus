@@ -33,8 +33,13 @@
  *
  */
 
+//! This module defines geometric structs and methods common to algorithms used throughout Cairus.
+
 use std::ops::Add;
 
+/// ## Point
+///
+/// Defines a point by two floating points x and y.
  #[derive(Debug, Copy, Clone)]
 pub struct Point {
     x: f32,
@@ -47,6 +52,9 @@ impl PartialEq for Point {
     }
 }
 
+/// ## Line
+///
+/// Defines a line by two points.
 #[derive(Debug, Copy, Clone)]
 pub struct Line {
     first_endpoint: Point,
@@ -54,6 +62,7 @@ pub struct Line {
 }
 
 impl Line {
+    // Returns a line.  Constructed by (x,y)-coordinates of two points.
     pub fn new(first_x: f32, first_y: f32, second_x: f32, second_y: f32) -> Line {
         Line {
             first_endpoint: Point{x: first_x, y: first_y},
@@ -61,6 +70,7 @@ impl Line {
         }
     }
 
+    // Returns a line.  Constructed from two points.
     pub fn from_points(first_endpoint: Point, second_endpoint: Point) -> Line {
         Line {
             first_endpoint: first_endpoint,
@@ -74,6 +84,7 @@ impl Line {
         delta_y / delta_x
     }
 
+    // Returns a Point, the midpoint between the two endpoints of self.
     pub fn get_midpoint(&self) -> Point {
         let mid_x = self.first_endpoint.x + (self.second_endpoint.x - self.first_endpoint.x) / 2.;
         Point {
@@ -83,6 +94,9 @@ impl Line {
     }
 }
 
+/// ## Vector
+///
+/// Defines a vector by (x, y) direction.
 #[derive(Debug, Copy, Clone)]
 struct Vector {
     x: f32,
@@ -97,6 +111,7 @@ impl Vector {
         }
     }
 
+    // Returns the dot product of self and rhs.
     pub fn dot_product(&self, rhs: &Vector) -> f32 {
         (self.x * rhs.x) + (self.y * rhs.y)
     }
@@ -105,6 +120,7 @@ impl Vector {
         (self.x.powi(2) + self.y.powi(2)).sqrt()
     }
 
+    // Returns the angle between self and rhs.
     pub fn angle_between(&self, rhs: &Vector) -> f32 {
         (
             self.dot_product(rhs) / (self.get_magnitude() * rhs.get_magnitude())
@@ -129,9 +145,41 @@ impl PartialEq for Vector {
     }
 }
 
+/// ## Trapezoid
+///
+/// Defines a trapezoid as four points.
+struct Trapezoid {
+    a: Point,
+    b: Point,
+    c: Point,
+    d: Point,
+}
+
+impl Trapezoid {
+    // Returns a new Trapezoid defined by coordinates.
+    fn new(ax: f32, ay: f32, bx: f32, by: f32, cx: f32, cy: f32, dx: f32, dy: f32) -> Trapezoid {
+        Trapezoid {
+            a: Point {x: ax, y: ay},
+            b: Point {x: bx, y: by},
+            c: Point {x: cx, y: cy},
+            d: Point {x: dx, y: dy},
+        }
+    }
+
+    // Returns a new Trapezoid defined by points.
+    fn from_points(a: Point, b: Point, c: Point, d: Point) -> Trapezoid {
+        Trapezoid {
+            a: a,
+            b: b,
+            c: c,
+            d: d,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{Line, Point, Vector};
+    use super::{Line, Point, Vector, Trapezoid};
 
     #[test]
     fn line_new() {
@@ -195,5 +243,38 @@ mod tests {
         let a = Vector::new(1., 0.);
         let b = Vector::new(1., 1.);
         assert_eq!(a.angle_between(&b).to_degrees(), 45.)
+    }
+
+    #[test]
+    fn trapezoid_new() {
+        let trap = Trapezoid::new(0., 0.,
+                                  0., 1.,
+                                  1., 0.,
+                                  1., 1.);
+
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 0., y: 1.};
+        let c = Point{x: 1., y: 0.};
+        let d = Point{x: 1., y: 1.};
+
+        assert_eq!(trap.a, a);
+        assert_eq!(trap.b, b);
+        assert_eq!(trap.c, c);
+        assert_eq!(trap.d, d);
+
+    }
+
+    #[test]
+    fn trapezoid_from_points() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 0., y: 1.};
+        let c = Point{x: 1., y: 0.};
+        let d = Point{x: 1., y: 1.};
+        let trap = Trapezoid::from_points(a, b, c, d);
+        assert_eq!(trap.a, a);
+        assert_eq!(trap.b, b);
+        assert_eq!(trap.c, c);
+        assert_eq!(trap.d, d);
+
     }
 }
