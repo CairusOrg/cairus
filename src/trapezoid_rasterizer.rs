@@ -103,4 +103,26 @@ mod tests {
         assert_eq!(trap.c, c);
         assert_eq!(trap.d, d);
     }
+
+    #[test]
+    fn trapezoid_get_lines() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 0., y: 1.};
+        let c = Point{x: 1., y: 0.};
+        let d = Point{x: 1., y: 1.};
+        let point_vec = vec![a, b, c, d];
+
+        let trap = Trapezoid::from_points(a, b, c, d);
+        let lines = trap.get_lines();
+
+        assert_eq!(lines[0].point1, a);
+        assert_eq!(lines[0].point2, b);
+        assert_eq!(lines[1].point1, b);
+        assert_eq!(lines[1].point2, c);
+        assert_eq!(lines[2].point1, c);
+        assert_eq!(lines[2].point2, d);
+        assert_eq!(lines[3].point1, d);
+        assert_eq!(lines[3].point2, a);
+    }
+
 }
