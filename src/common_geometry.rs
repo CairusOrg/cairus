@@ -98,11 +98,17 @@ impl Vector {
     }
 
     fn dot_product(&self, rhs: &Vector) -> f32 {
-        self.x * rhs.x + self.y * rhs.y
+        (self.x * rhs.x) + (self.y * rhs.y)
     }
 
     fn get_magnitude(&self) -> f32 {
         (self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
+
+    fn angle_between(&self, rhs: &Vector) -> f32 {
+        (
+            self.dot_product(rhs) / (self.get_magnitude() * rhs.get_magnitude())
+        ).acos()
     }
 }
 
@@ -172,15 +178,22 @@ mod tests {
 
     #[test]
     fn vector_dot_product() {
-        let a = Vector::new(0., 0.);
+        let a = Vector::new(1., 0.);
         let b = Vector::new(1., 1.);
         let c = a.dot_product(&b);
-        assert_eq!(c, 0.);
+        assert_eq!(c, 1.);
     }
 
     #[test]
     fn vector_magnitude() {
         let b = Vector::new(3., 4.);
         assert_eq!(b.get_magnitude(), 5.);
+    }
+
+    #[test]
+    fn vector_angle_between() {
+        let a = Vector::new(1., 0.);
+        let b = Vector::new(1., 1.);
+        assert_eq!(a.angle_between(&b).to_degrees(), 45.)
     }
 }
