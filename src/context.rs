@@ -40,30 +40,13 @@ use types::Rgba;
 
 
 
-/*struct cairo_array{
-    size: u64,
-    num_elements: u64,
-    element_size: u64, //no need
-    elements: &char //DONT NEED IT FOR NOW
-}
-
-impl cairo_array{
-
-    fn new(size: u64, num_elements: u64, element_size: u64, elements: &char)->cairo_array{
-        cairo_array{size: size, num_elements: num_elements, element_size: element_size, elements: elements}
-    }
-}*/
-
 pub struct Context<'a>{
 
-    //hold a surface and an rgba or just rgba
+
     //holds a reference to another surface
 
-    //pub surface: &'a ImageSurface,
     pub rgba: Rgba,
-    //pub ref_count: u64, // no need
-    
-    //pub user_data_array: cairo_array
+
     surface: &'a ImageSurface,
 
 }
