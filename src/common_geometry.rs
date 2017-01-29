@@ -42,8 +42,8 @@ use std::ops::Add;
 /// Defines a point by two floating points x and y.
  #[derive(Debug, Copy, Clone)]
 pub struct Point {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 impl PartialEq for Point {
