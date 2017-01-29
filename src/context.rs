@@ -87,6 +87,11 @@ impl<'a> Context<'a>{
 
     }
 
+    /// Paints this context's Rgba on the destination surface with the over operator.
+    ///
+    /// This is a completely naive, and frankly useless implementation.  It is a place holder for
+    /// the real paint function to later be implemented.  It operates on every 'pixel' of the
+    /// destination surface.
     fn paint(&mut self) {
         let op = Operator::Over;
         let operator = fetch_operator(&op);
