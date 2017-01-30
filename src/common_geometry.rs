@@ -35,7 +35,7 @@
 
 //! This module defines geometric structs and methods common to algorithms used throughout Cairus.
 
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 /// ## Point
 ///
@@ -53,6 +53,20 @@ impl Point {
 
     fn y_less_than(&self, other: &Point) -> bool {
         self.y < other.y
+    }
+}
+
+impl Add for Point {
+    type Output = Point;
+    fn add(self, rhs: Point) -> Point {
+        Point{x: self.x + rhs.x, y: self.y + rhs.y}
+    }
+}
+
+impl Sub for Point {
+    type Output = Point;
+    fn sub(self, rhs: Point) -> Point {
+        Point{x: self.x - rhs.x, y: self.y - rhs.y}
     }
 }
 
@@ -211,6 +225,18 @@ mod tests {
         let p1 = Point{x: 0., y: 0.};
         let p2 = Point{x: 1., y: 1.};
         assert!(p2.x_less_than(&p1));
+    }
+
+    #[test]
+    fn point_add() {
+        let p = Point{x: 1., y: 1.};
+        assert_eq!(p + p, Point{x: 2., y: 2.});
+    }
+
+    #[test]
+    fn point_sub() {
+        let p = Point{x: 1., y: 1.};
+        assert_eq!(p - p, Point{x: 0., y: 0.});
     }
 
     #[test]
