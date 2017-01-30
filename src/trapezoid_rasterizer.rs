@@ -77,11 +77,22 @@ impl Trapezoid {
     }
 }
 
+/// Returns true if a ray running along the x-axis intersects the line `line`.
+fn ray_from_point_crosses_line(point: &Point, line: &Line) -> bool {
+    let p1 = line.point1 - *point;
+    let p2 = line.point2 - *point;
+    let point_is_on_vertex = p1 == *point && p2 == *point;
+    if point_is_on_vertex  {
+        true
+    } else {
+        p1.y.signum() != p2.y.signum()
+    }
+}
 
 #[cfg(test)]
 mod tests {
-    use super::{Trapezoid};
-    use common_geometry::Point;
+    use super::{Trapezoid, ray_from_point_crosses_line};
+    use common_geometry::{Point, Line};
 
     #[test]
     fn trapezoid_new() {
@@ -132,5 +143,21 @@ mod tests {
         for point in point_vec {
             assert!(points.contains(&point));
         }
+    }
+
+
+    #[test]
+    fn crossings_test() {
+        let p = Point{x: 1., y: 1.};
+        let line = Line::new(0., 0., 2., 2.);
+        assert!(ray_from_point_crosses_line(&p, &line));
+    }
+
+    #[test]
+    #[should_panic]
+    fn crossings_test2() {
+        let p = Point{x: 1., y: 1.};
+        let line = Line::new(2., 2., 3., 3.);
+        assert!(ray_from_point_crosses_line(&p, &line));
     }
 }
