@@ -36,6 +36,7 @@
 //! This module defines geometric structs and methods common to algorithms used throughout Cairus.
 
 use std::ops::{Add, Sub};
+use std::cmp::Ordering;
 
 /// ## Point
 ///
@@ -55,6 +56,32 @@ impl Point {
         self.y < other.y
     }
 }
+
+impl Ord for Point {
+    fn cmp(&self, other: &Point) -> Ordering {
+        if self.x < other.x {
+            Ordering::Less
+        } else if self.x == other.x {
+            if self.y < other.y {
+                Ordering::Less
+            } else if self.y == other.y {
+                Ordering::Equal
+            } else {
+                Ordering::Greater
+            }
+        } else {
+            Ordering::Greater
+        }
+    }
+}
+
+impl PartialOrd for Point {
+    fn partial_cmp(&self, other: &Point) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Eq for Point {}
 
 impl Add for Point {
     type Output = Point;
@@ -217,6 +244,13 @@ mod tests {
         let p1 = Point{x: 0., y: 0.};
         let p2 = Point{x: 1., y: 1.};
         assert!(p1.x_less_than(&p2));
+    }
+
+    #[test]
+    fn point_ordering_lt() {
+        let p1 = Point{x: 0., y: 0.};
+        let p2 = Point{x: 1., y: 1.};
+        assert!(p1 < p2);
     }
 
     #[test]

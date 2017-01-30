@@ -68,12 +68,24 @@ impl Trapezoid {
 
     // Returns a Vec<Line> of the four lines that make up this Trapezoid.
     fn get_lines(&self) -> Vec<Line> {
+        let mut ordered_points = vec![self.a, self.b, self.c, self.d];
+        ordered_points.sort();
         vec![
-            Line::from_points(self.a, self.b),
-            Line::from_points(self.b, self.c),
-            Line::from_points(self.c, self.d),
-            Line::from_points(self.d, self.a),
+            Line::from_points(ordered_points[0], ordered_points[1]),
+            Line::from_points(ordered_points[1], ordered_points[3]),
+            Line::from_points(ordered_points[3], ordered_points[2]),
+            Line::from_points(ordered_points[2], ordered_points[0]),
         ]
+    }
+
+    fn contains_point(&self, point: &Point) -> bool {
+        let mut crossing_count = 0;
+        for line in self.get_lines().iter() {
+            if ray_from_point_crosses_line(point, line) {
+                crossing_count += 1;
+            }
+        }
+        crossing_count % 2 != 0
     }
 }
 
@@ -81,11 +93,22 @@ impl Trapezoid {
 fn ray_from_point_crosses_line(point: &Point, line: &Line) -> bool {
     let p1 = line.point1 - *point;
     let p2 = line.point2 - *point;
-    let point_is_on_vertex = p1 == *point && p2 == *point;
+    let origin = Point{x: 0., y: 0.};
+    let point_is_on_vertex = p1 == origin || p2 == origin;
     if point_is_on_vertex  {
         true
+    } else if p1.y.signum() != p2.y.signum() {
+        if  p1.x > 0. && p2.x > 0. {
+            true
+        } else {
+            // Find sign of x-crossing of point's ray and line
+            let line_point = line.point1;
+            let b = line_point.y - line.get_slope() * line_point.x;
+            let x = (point.y - b) / line.get_slope();
+            x.is_sign_positive()
+        }
     } else {
-        p1.y.signum() != p2.y.signum()
+            false
     }
 }
 
@@ -145,7 +168,6 @@ mod tests {
         }
     }
 
-
     #[test]
     fn crossings_test() {
         let p = Point{x: 1., y: 1.};
@@ -159,5 +181,17 @@ mod tests {
         let p = Point{x: 1., y: 1.};
         let line = Line::new(2., 2., 3., 3.);
         assert!(ray_from_point_crosses_line(&p, &line));
+    }
+
+    #[test]
+    fn point_in_trapezoid() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 0., y: 2.};
+        let c = Point{x: 2., y: 0.};
+        let d = Point{x: 2., y: 2.};
+        let trap = Trapezoid::from_points(a, b, c, d);
+
+        let test_point = Point{x: 1., y: 1.};
+        assert!(trap.contains_point(&test_point));
     }
 }
