@@ -102,6 +102,30 @@ impl Line {
             y: self.point1.y + (mid_x * self.get_slope() ),
         }
     }
+
+    // Returns a Vector of coordinates indicating which pixels this line should color when
+    // rasterized.  The algorithm is a straight-forward DDA.
+    pub fn into_pixel_coordinates(&self) -> Vec<(i32, i32)> {
+        let slope = self.get_slope();
+        match slope <= 1. {
+            true => self.step_by_x_coordinates(),
+            false => self.step_by_x_coordinates()
+        }
+    }
+
+    fn step_by_x_coordinates(&self) -> Vec<(i32, i32)> {
+        let max_x = self.point1.x.max(self.point2.x) as i32;
+        let slope = self.get_slope();
+        let mut running_total_y = 0.;
+        let mut result = Vec::with_capacity(max_x as usize);
+        for x in 0..max_x {
+            running_total_y += slope;
+            let coordinate = (x, running_total_y.round() as i32);
+            result.push(coordinate);
+        }
+
+        result
+    }
 }
 
 /// ## Vector
@@ -202,6 +226,27 @@ mod tests {
         let line = Line::new(0., 0., 2., 2.);
         assert_eq!(line.get_midpoint(), Point{x: 1., y: 1.});
     }
+
+    #[test]
+    fn line_into_pixel_coordinates_slope_lt_one() {
+        // The following coordinates were calculated by hand to be known pixels in the defined
+        // line.
+        let line = Line::new(0., 0., 20., 5.);
+        let expected = vec![
+            (0, 0),
+            (1, 1),
+            (2, 1),
+            (3, 1),
+            (4, 1),
+            (5, 2),
+        ];
+
+        let pixel_coordinates = line.into_pixel_coordinates();
+        for coordinate in expected {
+            assert!(pixel_coordinates.contains(&coordinate));
+        }
+    }
+
 
     #[test]
     fn vector_new() {
