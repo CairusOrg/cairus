@@ -109,7 +109,7 @@ impl Line {
         let slope = self.get_slope();
         match slope <= 1. {
             true => self.step_by_x_coordinates(),
-            false => self.step_by_y_coordinates()
+            false => self.step_by_y_coordinates(),
         }
     }
 
@@ -128,7 +128,17 @@ impl Line {
     }
 
     fn step_by_y_coordinates(&self) -> Vec<(i32, i32)> {
-        vec![(0, 0)]
+        let max_y = self.point1.y.max(self.point2.y) as i32;
+        let slope = 1. / self.get_slope();
+        let mut running_total_x = 0.;
+        let mut result = Vec::with_capacity(max_y as usize);
+        for y in 0..max_y {
+            running_total_x += slope;
+            let coordinate = (running_total_x.round() as i32, y);
+            result.push(coordinate);
+        }
+
+        result
     }
 }
 
@@ -251,6 +261,25 @@ mod tests {
         }
     }
 
+    #[test]
+    fn line_into_pixel_coordinates_slope_gt_one() {
+        // The following coordinates were calculated by hand to be known pixels in the defined
+        // line.
+        let line = Line::new(0., 0., 5., 20.);
+        let expected = vec![
+            (0, 0),
+            (1, 1),
+            (1, 2),
+            (1, 3),
+            (1, 4),
+            (2, 5),
+        ];
+
+        let pixel_coordinates = line.into_pixel_coordinates();
+        for coordinate in expected {
+            assert!(pixel_coordinates.contains(&coordinate));
+        }
+    }
 
     #[test]
     fn vector_new() {
