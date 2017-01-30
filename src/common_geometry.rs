@@ -109,7 +109,7 @@ impl Line {
         let slope = self.get_slope();
         match slope <= 1. {
             true => self.step_by_x_coordinates(),
-            false => self.step_by_x_coordinates()
+            false => self.step_by_y_coordinates()
         }
     }
 
@@ -125,6 +125,10 @@ impl Line {
         }
 
         result
+    }
+
+    fn step_by_y_coordinates(&self) -> Vec<(i32, i32)> {
+        vec![(0, 0)]
     }
 }
 
