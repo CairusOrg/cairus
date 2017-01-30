@@ -31,6 +31,7 @@
  * Contributor(s):
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
  *  Evan Smelser <evanjsmelser@gmail.com>
+ *  Troy Routley <ptroutley@comcast.net>
  */
 
 //! # Overview
@@ -152,6 +153,8 @@ fn operator_over(source: &Rgba, destination: &mut Rgba) {
     destination.blue = source.blue + destination.blue * (1. - source.alpha);
 }
 
+/// Source operator. The destination object is overwritten with the source object. Result is
+/// equal to the source in both color values and alpha.
 fn operator_source(source: &Rgba, destination: &mut Rgba) {
     destination.alpha = source.alpha;
     destination.red = source.red;
