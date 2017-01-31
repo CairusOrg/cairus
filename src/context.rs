@@ -37,7 +37,7 @@
 
 use surfaces::ImageSurface;
 use types::Rgba;
-use operators::Operator;
+use operators::{Operator, fetch_operator};
 
 
 /*struct cairo_array{
@@ -62,15 +62,14 @@ pub struct Context<'a>{
     //pub surface: &'a ImageSurface,
     pub rgba: Rgba,
     //pub ref_count: u64, // no need
-       
     //pub user_data_array: cairo_array
-    surface: &'a ImageSurface,
+    surface: &'a mut ImageSurface,
 
 }
 
 impl<'a> Context<'a>{
 
-    fn create(surface: &'a ImageSurface )-> Context {
+    fn create(surface: &'a mut ImageSurface )-> Context {
 
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
@@ -87,7 +86,17 @@ impl<'a> Context<'a>{
 
     }
 
+    /// Paints this context's Rgba on the destination surface with the over operator.
+    ///
+    /// This is a completely naive, and frankly useless implementation.  It is a place holder for
+    /// the real paint function to later be implemented.  It operates on every 'pixel' of the
+    /// destination surface.
+    pub fn paint(&mut self) {
+        let op = Operator::Over;
+        let operator = fetch_operator(&op);
+        for mut pixel in self.surface.iter_mut() {
+            operator(&self.rgba, pixel);
+        }
+    }
+
 }
-
-
-
