@@ -53,36 +53,36 @@ impl PartialEq for Point {
     }
 }
 
-/// ## Line
+/// ## LineSegment
 ///
 /// Defines a line by two points.
 #[derive(Debug, Copy, Clone)]
-pub struct Line {
+pub struct LineSegment {
     point1: Point,
     point2: Point,
 }
 
-impl Line {
+impl LineSegment {
     // Returns a line.  Constructed by (x,y)-coordinates of two points.
-    pub fn new(first_x: f32, first_y: f32, second_x: f32, second_y: f32) -> Line {
-        Line {
+    pub fn new(first_x: f32, first_y: f32, second_x: f32, second_y: f32) -> LineSegment {
+        LineSegment {
             point1: Point{x: first_x, y: first_y},
             point2: Point{x: second_x, y: second_y}
         }
     }
 
     // Returns a line.  Constructed from two points.
-    pub fn from_points(point1: Point, point2: Point) -> Line {
-        Line {
+    pub fn from_points(point1: Point, point2: Point) -> LineSegment {
+        LineSegment {
             point1: point1,
             point2: point2,
         }
     }
 
-    /// Returns the slope of this Line.
+    /// Returns the slope of this LineSegment.
     ///
     /// If the slope is completely vertical, this function will return f32::INFINITY, otherwise
-    /// it will return any valid f32 (assuming valid points form this Line).
+    /// it will return any valid f32 (assuming valid points form this LineSegment).
     ///
     /// One of the ways Cairo C implements slope comparision is using the following formula:
     ///     `(adx * bdy) ? (bdx * ady)`, where `?` is the comparison operator.
@@ -170,11 +170,11 @@ impl PartialEq for Vector {
 
 #[cfg(test)]
 mod tests {
-    use super::{Line, Point, Vector};
+    use super::{LineSegment, Point, Vector};
 
     #[test]
     fn line_new() {
-        let line = Line::new(0., 0., 1., 1.);
+        let line = LineSegment::new(0., 0., 1., 1.);
         assert_eq!(line.point1, Point{x: 0., y: 0.});
         assert_eq!(line.point2, Point{x: 1., y: 1.});
     }
@@ -183,65 +183,65 @@ mod tests {
     fn line_from_points() {
         let p1 = Point{x: 0., y: 0.};
         let p2 = Point{x: 1., y: 1.};
-        let line = Line::from_points(p1, p2);
+        let line = LineSegment::from_points(p1, p2);
         assert_eq!(line.point1, Point{x: 0., y: 0.});
         assert_eq!(line.point2, Point{x: 1., y: 1.});
     }
 
     #[test]
     fn line_slope() {
-        let line = Line::new(0., 0., 1., 1.);
+        let line = LineSegment::new(0., 0., 1., 1.);
         assert_eq!(line.slope(), 1.);
     }
 
     #[test]
     fn line_midpoint() {
-        let line = Line::new(0., 0., 2., 2.);
+        let line = LineSegment::new(0., 0., 2., 2.);
         assert_eq!(line.midpoint(), Point{x: 1., y: 1.});
     }
 
     #[test]
     fn line_opposite_direction_midpoint() {
-        let line = Line::new(2., 2., 0., 0.);
+        let line = LineSegment::new(2., 2., 0., 0.);
         assert_eq!(line.midpoint(), Point{x: 1., y: 1.});
     }
 
     #[test]
     fn line_negative_slope_midpoint() {
-        let line = Line::new(0., 0., 2., -2.);
+        let line = LineSegment::new(0., 0., 2., -2.);
         assert_eq!(line.midpoint(), Point{x: 1., y: -1.});
     }
 
     #[test]
     fn vertical_line_midpoint() {
-        let line = Line::new(0., 0., 0., 2.);
+        let line = LineSegment::new(0., 0., 0., 2.);
         assert_eq!(line.midpoint(), Point{x: 0., y: 1.});
     }
 
     #[test]
     fn vertical_negative_slope_midpoint() {
-        let line = Line::new(0., 0., 0., -2.);
+        let line = LineSegment::new(0., 0., 0., -2.);
         assert_eq!(line.midpoint(), Point{x: 0., y: -1.});
     }
 
     #[test]
     fn vertical_slope_gt_positive() {
-        let vertical = Line::new(0., 0., 0., 1.);
-        let positive = Line::new(0., 0., 1., 1.);
+        let vertical = LineSegment::new(0., 0., 0., 1.);
+        let positive = LineSegment::new(0., 0., 1., 1.);
         assert!(vertical.slope() > positive.slope());
     }
 
     #[test]
     fn vertical_slope_gt_negative() {
-        let vertical = Line::new(0., 0., 0., 1.);
-        let negative = Line::new(0., 0., 1., -1.);
+        let vertical = LineSegment::new(0., 0., 0., 1.);
+        let negative = LineSegment::new(0., 0., 1., -1.);
         assert!(vertical.slope() > negative.slope());
     }
 
     #[test]
     fn vertical_slope_eq_vertical() {
-        let vertical1 = Line::new(0., 0., 0., 1.);
-        let vertical2 = Line::new(2., 2., 2., -1.);
+        let vertical1 = LineSegment::new(0., 0., 0., 1.);
+        let vertical2 = LineSegment::new(2., 2., 2., -1.);
         assert_eq!(vertical1.slope(), vertical2.slope());
     }
 
