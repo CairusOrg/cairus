@@ -109,19 +109,10 @@ impl Line {
     }
 
     // Returns a Point, the midpoint between the two endpoints of self.
-    pub fn get_midpoint(&self) -> Point {
-        let slope = self.slope();
-        if self.point1.x == self.point2.x {
-            Point {
-                x: self.point1.x,
-                y: (self.point2.y - self.point1.y) / 2.
-            }
-        } else {
-            let mid_x = self.point1.x + (self.point2.x - self.point1.x) / 2.;
-            Point {
-                x: mid_x,
-                y: self.point1.y + (mid_x * slope),
-            }
+    pub fn midpoint(&self) -> Point {
+        Point {
+            x: (self.point1.x + self.point2.x) / 2.,
+            y: (self.point1.y + self.point2.y) / 2.,
         }
     }
 }
@@ -206,13 +197,31 @@ mod tests {
     #[test]
     fn line_midpoint() {
         let line = Line::new(0., 0., 2., 2.);
-        assert_eq!(line.get_midpoint(), Point{x: 1., y: 1.});
+        assert_eq!(line.midpoint(), Point{x: 1., y: 1.});
+    }
+
+    #[test]
+    fn line_opposite_direction_midpoint() {
+        let line = Line::new(2., 2., 0., 0.);
+        assert_eq!(line.midpoint(), Point{x: 1., y: 1.});
+    }
+
+    #[test]
+    fn line_negative_slope_midpoint() {
+        let line = Line::new(0., 0., 2., -2.);
+        assert_eq!(line.midpoint(), Point{x: 1., y: -1.});
     }
 
     #[test]
     fn vertical_line_midpoint() {
         let line = Line::new(0., 0., 0., 2.);
-        assert_eq!(line.get_midpoint(), Point{x: 0., y: 1.});
+        assert_eq!(line.midpoint(), Point{x: 0., y: 1.});
+    }
+
+    #[test]
+    fn vertical_negative_slope_midpoint() {
+        let line = Line::new(0., 0., 0., -2.);
+        assert_eq!(line.midpoint(), Point{x: 0., y: -1.});
     }
 
     #[test]
