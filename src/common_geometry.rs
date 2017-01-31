@@ -139,14 +139,14 @@ impl Vector {
         (self.x * rhs.x) + (self.y * rhs.y)
     }
 
-    pub fn get_magnitude(&self) -> f32 {
+    pub fn magnitude(&self) -> f32 {
         (self.x.powi(2) + self.y.powi(2)).sqrt()
     }
 
     // Returns the angle between self and rhs.
     pub fn angle_between(&self, rhs: &Vector) -> f32 {
         (
-            self.dot_product(rhs) / (self.get_magnitude() * rhs.get_magnitude())
+            self.dot_product(rhs) / (self.magnitude() * rhs.magnitude())
         ).acos()
     }
 }
@@ -286,7 +286,7 @@ mod tests {
     #[test]
     fn vector_magnitude() {
         let b = Vector::new(3., 4.);
-        assert_eq!(b.get_magnitude(), 5.);
+        assert_eq!(b.magnitude(), 5.);
     }
 
     // Tests Vector::angle_between()
