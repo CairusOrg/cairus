@@ -68,6 +68,3 @@ mod tests {
     }
 }
 
-mod test2 {
-    fn works() {}
-}
