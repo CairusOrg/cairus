@@ -87,10 +87,18 @@ impl<'a> Context<'a>{
 
     }
 
+    ///Set Operator function.
+    ///Changes the operator held by the context object to the passed in operator.
+    ///The operator passed in is just a copy of the enum which gives the context knowledge of the
+    ///current operator in use.
     fn set_operator(&mut self, operator: Operator){
         self.operator = operator;
     }
 
+    //Pretty sure this doesn't work because I am letting the self object go here...
+    //Seems like this is giving away ownership so I probably won't have access to the 
+    //context after this get function is called.
+    //WORK IN PROGRESS...
     fn get_operator(self)-> Operator{
         self.operator
     }
