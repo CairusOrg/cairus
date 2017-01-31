@@ -47,17 +47,17 @@ pub struct Context<'a>{
 
     pub rgba: Rgba,
 
-    surface: &'a ImageSurface,
+    target: &'a ImageSurface,
 
 }
 
 impl<'a> Context<'a>{
 
-    pub fn create(surface: &'a ImageSurface )-> Context {
+    pub fn create(target: &'a ImageSurface )-> Context {
 
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
-            surface: surface,
+            target: target,
         }
     }
 
