@@ -129,25 +129,53 @@ impl Line {
         }
     }
 
-    pub fn get_slope(&self) -> f32 {
+    pub fn get_slope(&self) -> Option<f32> {
         let delta_x = self.point2.x - self.point1.x;
         let delta_y = self.point2.y - self.point1.y;
-        delta_y / delta_x
+        match delta_x {
+            0. => None,
+            _ => Some(delta_y / delta_x)
+        }
     }
+
+    pub fn same_slope(&self, rhs: &Line) -> bool {
+        match self.get_slope() {
+                Some(slope1) => {
+                    match rhs.get_slope() {
+                        Some(slope2) => slope2 == slope1,
+                        None => false,
+                    }
+                },
+                None => {
+                    match rhs.get_slope() {
+                        Some(_) => false,
+                        None => true
+                    }
+                },
+            }
+        }
+
+    pub fn is_vertical(&self) -> bool {
+        match self.get_slope() {
+            Some(_) => false,
+            None => true,
+        }
+    }
+
 
     // Returns a Point, the midpoint between the two endpoints of self.
     pub fn get_midpoint(&self) -> Point {
         let mid_x = self.point1.x + (self.point2.x - self.point1.x) / 2.;
         Point {
             x: mid_x,
-            y: self.point1.y + (mid_x * self.get_slope() ),
+            y: self.point1.y + (mid_x * self.get_slope().unwrap() ),
         }
     }
 
     // Returns a Vector of coordinates indicating which pixels this line should color when
     // rasterized.  The algorithm is a straight-forward DDA.
     pub fn into_pixel_coordinates(&self) -> Vec<(i32, i32)> {
-        let slope = self.get_slope();
+        let slope = self.get_slope().unwrap();
         match slope <= 1. {
             true => self.step_by_x_coordinates(),
             false => self.step_by_y_coordinates(),
@@ -156,7 +184,7 @@ impl Line {
 
     fn step_by_x_coordinates(&self) -> Vec<(i32, i32)> {
         let max_x = self.point1.x.max(self.point2.x) as i32;
-        let slope = self.get_slope();
+        let slope = self.get_slope().unwrap();
         let mut running_total_y = 0.;
         let mut result = Vec::with_capacity(max_x as usize);
         for x in 0..max_x {
@@ -170,13 +198,25 @@ impl Line {
 
     fn step_by_y_coordinates(&self) -> Vec<(i32, i32)> {
         let max_y = self.point1.y.max(self.point2.y) as i32;
-        let slope = 1. / self.get_slope();
-        let mut running_total_x = 0.;
         let mut result = Vec::with_capacity(max_y as usize);
-        for y in 0..max_y {
-            running_total_x += slope;
-            let coordinate = (running_total_x.round() as i32, y);
-            result.push(coordinate);
+        match self.get_slope() {
+            Some(x) => {
+                let slope = 1. / x;
+                let mut running_total_x = 0.;
+                for y in 0..max_y {
+                    running_total_x += slope;
+                    let coordinate = (running_total_x.round() as i32, y);
+                    result.push(coordinate);
+                }
+            },
+
+            None => {
+                let mut result = Vec::with_capacity(max_y as usize);
+                for y in 0..max_y {
+                    let coordinate = (self.point1.x.round() as i32, y);
+                    result.push(coordinate);
+                }
+            }
         }
 
         result
@@ -292,7 +332,7 @@ mod tests {
     #[test]
     fn line_get_slope() {
         let line = Line::new(0., 0., 1., 1.);
-        assert_eq!(line.get_slope(), 1.);
+        assert_eq!(line.get_slope().unwrap(), 1.);
     }
 
     #[test]

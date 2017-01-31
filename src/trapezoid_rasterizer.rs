@@ -68,13 +68,68 @@ impl Trapezoid {
 
     // Returns a Vec<Line> of the four lines that make up this Trapezoid.
     fn get_lines(&self) -> Vec<Line> {
-        let mut ordered_points = vec![self.a, self.b, self.c, self.d];
-        ordered_points.sort();
+        // TODO: This algorithm is probably not general!!! research further...
+        let mut points = vec![self.a, self.b, self.c, self.d];
+        let mut all_possible_lines = Vec::with_capacity(4 * 4);
+
+        for p1 in points.iter() {
+            for p2 in points.iter() {
+                let temp = Line::from_points(*p1, *p2);
+                all_possible_lines.push(temp);
+            }
+        }
+
+        let mut parallel = Vec::new();
+        for l1 in all_possible_lines.iter() {
+            for l2 in all_possible_lines.iter() {
+                if l1.same_slope(&l2) {
+                    parallel.push((l1, l2));
+                    break;
+                }
+            }
+        }
+
+        let (line1, line2) = parallel.pop().unwrap();
+        match line1.get_slope() {
+            Some(slope) => {
+                if slope > 0. {
+                    let line1_least_x =
+                        if line1.point1.x < line1.point2.x {
+                            line1.point1
+                        } else {
+                            line1.point2
+                        };
+                    let line2_least_x =
+                        if line2.point1.x < line2.point2.x {
+                            line2.point1
+                        } else {
+                            line2.point2
+                        };
+                } else if slope >= 0. {
+
+                }
+            },
+            None => {
+                let line1_least_x =
+                    if line1.point1.x < line1.point2.x {
+                        line1.point1
+                    } else {
+                        line1.point2
+                    };
+                let line2_least_x =
+                    if line2.point1.x < line2.point2.x {
+                        line2.point1
+                    } else {
+                        line2.point2
+                    };
+            }
+        }
+
         vec![
-            Line::from_points(ordered_points[0], ordered_points[1]),
-            Line::from_points(ordered_points[1], ordered_points[3]),
-            Line::from_points(ordered_points[3], ordered_points[2]),
-            Line::from_points(ordered_points[2], ordered_points[0]),
+            Line::from_points(points[0], points[1]),
+            Line::from_points(points[1], points[3]),
+            Line::from_points(points[3], points[2]),
+            Line::from_points(points[2], points[0]),
         ]
     }
 
@@ -103,9 +158,16 @@ fn ray_from_point_crosses_line(point: &Point, line: &Line) -> bool {
         } else {
             // Find sign of x-crossing of point's ray and line
             let line_point = line.point1;
-            let b = line_point.y - line.get_slope() * line_point.x;
-            let x = (point.y - b) / line.get_slope();
-            x.is_sign_positive()
+            match line.get_slope() {
+                Some(slope) => {
+                    let b = line_point.y - slope * line_point.x;
+                    let x = (point.y - b) / slope;
+                    x.is_sign_positive()
+                },
+                None => {
+                    point.x.is_sign_positive()
+                },
+            }
         }
     } else {
             false
