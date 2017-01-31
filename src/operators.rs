@@ -31,6 +31,7 @@
  * Contributor(s):
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
  *  Evan Smelser <evanjsmelser@gmail.com>
+ *  Troy Routley <ptroutley@comcast.net>
  */
 
 //! # Overview
@@ -47,6 +48,10 @@
 //! * Over - Cairus's default operator.  Blends a source onto a destination, similar to overlapping
 //!          two semi-transparent slides.  If the source is opaque, the over operation will make
 //!          the destination opaque as well.
+//! * Source - Overwrites the destination with the source. Result color & alpha is equal to source.
+//!
+//! Descriptions/formulas for Cairo operators:
+//! [Cairo Operators](https://www.cairographics.org/operators/)
 
 use types::Rgba;
 
@@ -65,7 +70,7 @@ pub enum Operator {
     ///Needed for stroke implementation. Draw source layer where there was destination layer.
     In,
     //Source will be the next operator to implement. It replaces the destination later.
-    //Source,
+    Source,
 
 
 
@@ -99,7 +104,7 @@ pub enum Operator {
     HSLSaturation,
     HSLColor,
     HSLLuminosity,
-*/  
+*/
 }
 
 /// Returns an image compositing function that corresponds to an Operator enum.
@@ -123,6 +128,7 @@ pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     match *op {
         Operator::Over  => operator_over,
         Operator::In    => operator_in,
+        Operator::Source => operator_source,
     }
 }
 
@@ -147,13 +153,22 @@ fn operator_over(source: &Rgba, destination: &mut Rgba) {
     destination.blue = source.blue + destination.blue * (1. - source.alpha);
 }
 
+/// Source operator. The destination object is overwritten with the source object. Result is
+/// equal to the source in both color values and alpha.
+fn operator_source(source: &Rgba, destination: &mut Rgba) {
+    destination.alpha = source.alpha;
+    destination.red = source.red;
+    destination.green = source.green;
+    destination.blue = source.blue;
+}
+
 ///This is Cairus' in operator. The destination object is removed and the source object is only
 ///drawn where the destination was.
 ///Note: The transparency of the first object is still taken in to account.
 ///The effect of the IN operator depends on the interpretation of the source.
-///This operator is unbounded. 
+///This operator is unbounded.
 ///This function currently assumes post-multiplied alpha values, the alpha value
-///must be factored out 
+///must be factored out
 fn operator_in(source: &Rgba, destination: &mut Rgba) {
     destination.alpha = source.alpha * destination.alpha;
     destination.red = source.red;
@@ -179,6 +194,7 @@ mod tests {
     use super::Operator;
     use super::operator_over;
     use super::operator_in;
+    use super::operator_source;
     use super::fetch_operator;
     use types::Rgba;
 
@@ -208,13 +224,48 @@ mod tests {
         operator_over(&source, &mut destination);
         assert_eq!(destination, Rgba::new(0., 0.5, 0.5, 1.0));
     }
+    #[test]
+    fn test_source_operator_semi_transparent_source() {
+        let source = Rgba::new(1., 0., 0., 0.5);
+        let mut destination = Rgba::new(0., 1., 0.5, 0.8);
+        operator_source(&source, &mut destination);
+
+        assert_eq!(destination, Rgba::new(1., 0., 0., 0.5));
+    }
+
+    #[test]
+    fn test_source_operator_opaque_source() {
+        let source = Rgba::new(1., 0., 0., 1.0);
+        let mut destination = Rgba::new(0., 1., 1., 0.5);
+        operator_source(&source, &mut destination);
+        assert_eq!(destination, Rgba::new(1., 0., 0., 1.0));
+    }
+
+    #[test]
+    fn test_source_operator_opaque_destination() {
+        let source = Rgba::new(0., 0., 1., 0.5);
+        let mut destination = Rgba::new(0., 1., 0., 1.);
+        operator_source(&source, &mut destination);
+        assert_eq!(destination, Rgba::new(0., 0., 1., 0.5));
+    }
 
     #[test]
     fn test_in_operator_semi_transparent_source() {
-        let source = Rgba::new(0.5, 0.5, 0.5, 0.5);
+        let source = Rgba{
+            red:0.5, 
+            green:0.5, 
+            blue:0.5, 
+            alpha:0.5
+        };
         let mut destination = Rgba::new(0., 1., 0., 0.5);
         operator_in(&source, &mut destination);
-        assert_eq!(destination, Rgba::new(0.5, 0.5, 0.5, 0.25));
+        let testRgba = Rgba{
+            red:0.5,
+            green:0.5,
+            blue:0.5,
+            alpha:0.25
+        };
+        assert_eq!(destination, testRgba);
         }
 
     #[test]
@@ -222,23 +273,51 @@ mod tests {
         let source = Rgba::new(0.5, 0.5, 0.5, 1.);
         let mut destination = Rgba::new(1., 1., 1., 0.5);
         operator_in(&source, &mut destination);
-        assert_eq!(destination, Rgba::new(0.5, 0.5, 0.5, 0.5));
+        let testRgba =  Rgba{ 
+            red:0.5, 
+            green:0.5,
+            blue:0.5,
+            alpha:0.5
+        };
+        assert_eq!(destination, testRgba);
     }
 
     #[test]
     fn test_in_operator_opaque_destination() {
-        let source = Rgba::new(0.25, 0.25, 0.25, 0.25);
+        let source = Rgba{
+            red:0.25, 
+            green:0.25, 
+            blue:0.25, 
+            alpha:0.25
+        };
         let mut destination = Rgba::new(1.0, 1.0, 1.0, 1.0);
         operator_in(&source, &mut destination);
-        assert_eq!(destination, Rgba::new(0.25, 0.25, 0.25, 0.25));
+        let testRgba = Rgba{
+            red:0.25,
+            green:0.25,
+            blue:0.25,
+            alpha:0.25
+        };
+        assert_eq!(destination, testRgba);
     }
 
     #[test]
     fn test_in_operator_transparent_destination() {
-        let source = Rgba::new(0.5, 0.5, 0.5, 0.25);
+        let source = Rgba{
+            red:0.5, 
+            green:0.5, 
+            blue:0.5, 
+            alpha:0.25
+        };
         let mut destination = Rgba::new(1.0, 1.0, 1.0, 0.0);
         operator_in(&source, &mut destination);
-        assert_eq!(destination, Rgba::new(0.5, 0.5, 0.5, 0.0));
+        let testRgba = Rgba{
+            red:0.5,
+            green:0.5,
+            blue:0.5,
+            alpha:0.0
+        };
+        assert_eq!(destination, testRgba);
     }
 
 
