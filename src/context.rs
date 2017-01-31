@@ -64,16 +64,17 @@ pub struct Context<'a>{
     //pub ref_count: u64, // no need
     //pub user_data_array: cairo_array
     surface: &'a mut ImageSurface,
-
+    operator: Operator,
 }
 
 impl<'a> Context<'a>{
 
-    fn create(surface: &'a mut ImageSurface )-> Context {
+    fn create(surface: &'a mut ImageSurface, operator: Operator)-> Context {
 
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
-            surface: surface
+            surface: surface,
+            operator: operator,
         }
     }
 
@@ -84,6 +85,14 @@ impl<'a> Context<'a>{
         self.rgba.blue = blue;
         self.rgba.alpha = alpha;
 
+    }
+
+    fn set_operator(&mut self, operator: Operator){
+        self.operator = operator;
+    }
+
+    fn get_operator(self)-> Operator{
+        self.operator
     }
 
     /// Paints this context's Rgba on the destination surface with the over operator.
