@@ -172,6 +172,7 @@ impl PartialEq for Vector {
 mod tests {
     use super::{LineSegment, Point, Vector};
 
+    // Tests that LineSegment's constructor is working.
     #[test]
     fn line_new() {
         let line = LineSegment::new(0., 0., 1., 1.);
@@ -179,6 +180,7 @@ mod tests {
         assert_eq!(line.point2, Point{x: 1., y: 1.});
     }
 
+    // Tests that LineSegment's `from_points` alternative constructor is working
     #[test]
     fn line_from_points() {
         let p1 = Point{x: 0., y: 0.};
@@ -188,42 +190,49 @@ mod tests {
         assert_eq!(line.point2, Point{x: 1., y: 1.});
     }
 
+    // Tests that the simple case for LineSegment::slope() is working.
     #[test]
     fn line_slope() {
         let line = LineSegment::new(0., 0., 1., 1.);
         assert_eq!(line.slope(), 1.);
     }
 
+    // Tests that the simple case for LineSegment::midpoint() is working.
     #[test]
     fn line_midpoint() {
         let line = LineSegment::new(0., 0., 2., 2.);
         assert_eq!(line.midpoint(), Point{x: 1., y: 1.});
     }
 
+    // Tests that LineSegment::midpoint() is working when point2's x-value is less than point1's.
     #[test]
     fn line_opposite_direction_midpoint() {
         let line = LineSegment::new(2., 2., 0., 0.);
         assert_eq!(line.midpoint(), Point{x: 1., y: 1.});
     }
 
+    // Tests that midpoint works for lines with negative slope
     #[test]
     fn line_negative_slope_midpoint() {
         let line = LineSegment::new(0., 0., 2., -2.);
         assert_eq!(line.midpoint(), Point{x: 1., y: -1.});
     }
 
+    // Tests that midpoint works for vertical lines
     #[test]
     fn vertical_line_midpoint() {
         let line = LineSegment::new(0., 0., 0., 2.);
         assert_eq!(line.midpoint(), Point{x: 0., y: 1.});
     }
 
+    // Tests that midpoint works for negative vertical lines
     #[test]
     fn vertical_negative_slope_midpoint() {
         let line = LineSegment::new(0., 0., 0., -2.);
         assert_eq!(line.midpoint(), Point{x: 0., y: -1.});
     }
 
+    // Tests greater than slope comparison
     #[test]
     fn vertical_slope_gt_positive() {
         let vertical = LineSegment::new(0., 0., 0., 1.);
@@ -231,6 +240,7 @@ mod tests {
         assert!(vertical.slope() > positive.slope());
     }
 
+    // Tests greater than slope comparison with one negative slope
     #[test]
     fn vertical_slope_gt_negative() {
         let vertical = LineSegment::new(0., 0., 0., 1.);
@@ -238,6 +248,7 @@ mod tests {
         assert!(vertical.slope() > negative.slope());
     }
 
+    // Tests equality of slopes
     #[test]
     fn vertical_slope_eq_vertical() {
         let vertical1 = LineSegment::new(0., 0., 0., 1.);
@@ -245,6 +256,7 @@ mod tests {
         assert_eq!(vertical1.slope(), vertical2.slope());
     }
 
+    // Tests Vector::new()
     #[test]
     fn vector_new() {
         let vec = Vector::new(1., 1.);
@@ -252,6 +264,7 @@ mod tests {
         assert_eq!(vec.y, 1.);
     }
 
+    // Tests overloaded Vector addition operator
     #[test]
     fn vector_add() {
         let a = Vector::new(0., 0.);
@@ -260,6 +273,7 @@ mod tests {
         assert_eq!(c, b);
     }
 
+    // Tests Vector::dot_product()
     #[test]
     fn vector_dot_product() {
         let a = Vector::new(1., 0.);
@@ -268,12 +282,14 @@ mod tests {
         assert_eq!(c, 1.);
     }
 
+    // Tests Vector::magnitude()
     #[test]
     fn vector_magnitude() {
         let b = Vector::new(3., 4.);
         assert_eq!(b.get_magnitude(), 5.);
     }
 
+    // Tests Vector::angle_between()
     #[test]
     fn vector_angle_between() {
         let a = Vector::new(1., 0.);
