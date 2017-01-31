@@ -49,7 +49,8 @@
 //!          two semi-transparent slides.  If the source is opaque, the over operation will make
 //!          the destination opaque as well.
 //! * Source - Overwrites the destination with the source. Result color & alpha is equal to source.
-//!
+//! * In - The destination object is removed and the source object is only drawn where the
+//! destination was. 
 //! Descriptions/formulas for Cairo operators:
 //! [Cairo Operators](https://www.cairographics.org/operators/)
 
@@ -69,7 +70,7 @@ pub enum Operator {
     Over,
     ///Needed for stroke implementation. Draw source layer where there was destination layer.
     In,
-    //Source will be the next operator to implement. It replaces the destination later.
+    ///Source will be the next operator to implement. It replaces the destination later.
     Source,
 
 
@@ -126,9 +127,9 @@ pub enum Operator {
 /// compose(&source, &mut destination1);
 pub fn fetch_operator(op: &Operator) -> fn(&Rgba, &mut Rgba) {
     match *op {
-        Operator::Over  => operator_over,
-        Operator::In    => operator_in,
-        Operator::Source => operator_source,
+        Operator::Over      => operator_over,
+        Operator::In        => operator_in,
+        Operator::Source    => operator_source,
     }
 }
 
@@ -175,14 +176,6 @@ fn operator_in(source: &Rgba, destination: &mut Rgba) {
     destination.green = source.green;
     destination.blue = source.blue;
 }
-
-///Cairus' Source operator
-///The source object is drawn as if nothing were below it.
-///
-///
-
-
-
 
 /// # References
 /// [Porter Duff]: https://keithp.com/~keithp/porterduff/p253-porter.pdf).
@@ -266,7 +259,7 @@ mod tests {
             alpha:0.25
         };
         assert_eq!(destination, testRgba);
-        }
+    }
 
     #[test]
     fn test_in_operator_opaque_source() {
