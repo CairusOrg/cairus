@@ -58,8 +58,8 @@ impl PartialEq for Point {
 /// Defines a line by two points.
 #[derive(Debug, Copy, Clone)]
 pub struct LineSegment {
-    point1: Point,
-    point2: Point,
+    pub point1: Point,
+    pub point2: Point,
 }
 
 impl LineSegment {
