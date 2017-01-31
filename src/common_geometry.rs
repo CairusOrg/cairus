@@ -36,6 +36,7 @@
 //! This module defines geometric structs and methods common to algorithms used throughout Cairus.
 
 use std::ops::Add;
+use std::f32;
 
 /// ## Point
 ///
@@ -78,18 +79,49 @@ impl Line {
         }
     }
 
-    pub fn get_slope(&self) -> f32 {
+    /// Returns the slope of this Line.
+    ///
+    /// If the slope is completely vertical, this function will return f32::INFINITY, otherwise
+    /// it will return any valid f32 (assuming valid points form this Line).
+    ///
+    /// One of the ways Cairo C implements slope comparision is using the following formula:
+    ///     `(adx * bdy) ? (bdx * ady)`, where `?` is the comparison operator.
+    ///
+    /// Using this equation, any line with a slope of `delta x == 0` (divide by zero for the
+    /// common rise/run slope equation) will zero out one side of the equation.  This means that
+    /// any vertical line has a greater slope than any other non-vertical line.
+    ///
+    /// Fortunately, this logic is exactly equivalent to Rust's f32 implementation, and so the following
+    /// slope implementation simply leverages f32's native comparison operations.  The only change
+    /// is to make negative infinity a positive infinity, so that all vertical lines have equal
+    /// slope, regardless of the direction from point1 to point2.
+    pub fn slope(&self) -> f32 {
         let delta_x = self.point2.x - self.point1.x;
         let delta_y = self.point2.y - self.point1.y;
-        delta_y / delta_x
+        let result = delta_y / delta_x;
+
+        // Slope of negative infinity should be equal to positive infinity.
+        if result.is_infinite() && result.is_sign_negative() {
+            f32::INFINITY
+        } else {
+            result
+        }
     }
 
     // Returns a Point, the midpoint between the two endpoints of self.
     pub fn get_midpoint(&self) -> Point {
-        let mid_x = self.point1.x + (self.point2.x - self.point1.x) / 2.;
-        Point {
-            x: mid_x,
-            y: self.point1.y + (mid_x * self.get_slope() ),
+        let slope = self.slope();
+        if self.point1.x == self.point2.x {
+            Point {
+                x: self.point1.x,
+                y: (self.point2.y - self.point1.y) / 2.
+            }
+        } else {
+            let mid_x = self.point1.x + (self.point2.x - self.point1.x) / 2.;
+            Point {
+                x: mid_x,
+                y: self.point1.y + (mid_x * slope),
+            }
         }
     }
 }
@@ -166,15 +198,42 @@ mod tests {
     }
 
     #[test]
-    fn line_get_slope() {
+    fn line_slope() {
         let line = Line::new(0., 0., 1., 1.);
-        assert_eq!(line.get_slope(), 1.);
+        assert_eq!(line.slope(), 1.);
     }
 
     #[test]
     fn line_midpoint() {
         let line = Line::new(0., 0., 2., 2.);
         assert_eq!(line.get_midpoint(), Point{x: 1., y: 1.});
+    }
+
+    #[test]
+    fn vertical_line_midpoint() {
+        let line = Line::new(0., 0., 0., 2.);
+        assert_eq!(line.get_midpoint(), Point{x: 0., y: 1.});
+    }
+
+    #[test]
+    fn vertical_slope_gt_positive() {
+        let vertical = Line::new(0., 0., 0., 1.);
+        let positive = Line::new(0., 0., 1., 1.);
+        assert!(vertical.slope() > positive.slope());
+    }
+
+    #[test]
+    fn vertical_slope_gt_negative() {
+        let vertical = Line::new(0., 0., 0., 1.);
+        let negative = Line::new(0., 0., 1., -1.);
+        assert!(vertical.slope() > negative.slope());
+    }
+
+    #[test]
+    fn vertical_slope_eq_vertical() {
+        let vertical1 = Line::new(0., 0., 0., 1.);
+        let vertical2 = Line::new(2., 2., 2., -1.);
+        assert_eq!(vertical1.slope(), vertical2.slope());
     }
 
     #[test]
