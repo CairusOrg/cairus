@@ -33,7 +33,7 @@
  *
  */
 
-use common_geometry::{Point, Line};
+use common_geometry::{Point, LineSegment};
 
 /// ## Trapezoid
 ///
@@ -66,70 +66,16 @@ impl Trapezoid {
         }
     }
 
-    // Returns a Vec<Line> of the four lines that make up this Trapezoid.
-    fn get_lines(&self) -> Vec<Line> {
+    // Returns a Vec<LineSegment> of the four lines that make up this Trapezoid.
+    fn get_lines(&self) -> Vec<LineSegment> {
         // TODO: This algorithm is probably not general!!! research further...
         let mut points = vec![self.a, self.b, self.c, self.d];
-        let mut all_possible_lines = Vec::with_capacity(4 * 4);
-
-        for p1 in points.iter() {
-            for p2 in points.iter() {
-                let temp = Line::from_points(*p1, *p2);
-                all_possible_lines.push(temp);
-            }
-        }
-
-        let mut parallel = Vec::new();
-        for l1 in all_possible_lines.iter() {
-            for l2 in all_possible_lines.iter() {
-                if l1.same_slope(&l2) {
-                    parallel.push((l1, l2));
-                    break;
-                }
-            }
-        }
-
-        let (line1, line2) = parallel.pop().unwrap();
-        match line1.get_slope() {
-            Some(slope) => {
-                if slope > 0. {
-                    let line1_least_x =
-                        if line1.point1.x < line1.point2.x {
-                            line1.point1
-                        } else {
-                            line1.point2
-                        };
-                    let line2_least_x =
-                        if line2.point1.x < line2.point2.x {
-                            line2.point1
-                        } else {
-                            line2.point2
-                        };
-                } else if slope >= 0. {
-
-                }
-            },
-            None => {
-                let line1_least_x =
-                    if line1.point1.x < line1.point2.x {
-                        line1.point1
-                    } else {
-                        line1.point2
-                    };
-                let line2_least_x =
-                    if line2.point1.x < line2.point2.x {
-                        line2.point1
-                    } else {
-                        line2.point2
-                    };
-            }
-        }
 
         vec![
-            Line::from_points(points[0], points[1]),
-            Line::from_points(points[1], points[3]),
-            Line::from_points(points[3], points[2]),
-            Line::from_points(points[2], points[0]),
+            LineSegment::from_points(points[0], points[1]),
+            LineSegment::from_points(points[1], points[3]),
+            LineSegment::from_points(points[3], points[2]),
+            LineSegment::from_points(points[2], points[0]),
         ]
     }
 
@@ -145,7 +91,7 @@ impl Trapezoid {
 }
 
 /// Returns true if a ray running along the x-axis intersects the line `line`.
-fn ray_from_point_crosses_line(point: &Point, line: &Line) -> bool {
+fn ray_from_point_crosses_line(point: &Point, line: &LineSegment) -> bool {
     let p1 = line.point1 - *point;
     let p2 = line.point2 - *point;
     let origin = Point{x: 0., y: 0.};
@@ -158,7 +104,7 @@ fn ray_from_point_crosses_line(point: &Point, line: &Line) -> bool {
         } else {
             // Find sign of x-crossing of point's ray and line
             let line_point = line.point1;
-            match line.get_slope() {
+            match line.slope() {
                 Some(slope) => {
                     let b = line_point.y - slope * line_point.x;
                     let x = (point.y - b) / slope;
@@ -177,7 +123,7 @@ fn ray_from_point_crosses_line(point: &Point, line: &Line) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{Trapezoid, ray_from_point_crosses_line};
-    use common_geometry::{Point, Line};
+    use common_geometry::{Point, LineSegment};
 
     #[test]
     fn trapezoid_new() {
@@ -233,7 +179,7 @@ mod tests {
     #[test]
     fn crossings_test() {
         let p = Point{x: 1., y: 1.};
-        let line = Line::new(0., 0., 2., 2.);
+        let line = LineSegment::new(0., 0., 2., 2.);
         assert!(ray_from_point_crosses_line(&p, &line));
     }
 
@@ -241,7 +187,7 @@ mod tests {
     #[should_panic]
     fn crossings_test2() {
         let p = Point{x: 1., y: 1.};
-        let line = Line::new(2., 2., 3., 3.);
+        let line = LineSegment::new(2., 2., 3., 3.);
         assert!(ray_from_point_crosses_line(&p, &line));
     }
 
