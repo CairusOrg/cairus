@@ -45,6 +45,17 @@ struct Trapezoid {
     d: Point,
 }
 
+// A TrapezoidBase is always two parallel line segments
+// If a trapezoid is a rectangle, it has two base pairs, otherwise just one
+struct TrapezoidBasePair(LineSegment, LineSegment);
+
+impl PartialEq for TrapezoidBasePair {
+    fn eq(&self, other: &TrapezoidBasePair) -> bool {
+        (self.0 == other.0 && self.1 == other.1) ||
+        (self.0 == other.1 && self.1 == other.0)
+    }
+}
+
 impl Trapezoid {
     // Returns a new Trapezoid defined by coordinates.
     fn new(ax: f32, ay: f32, bx: f32, by: f32, cx: f32, cy: f32, dx: f32, dy: f32) -> Trapezoid {
@@ -69,44 +80,42 @@ impl Trapezoid {
     // Returns a Vec<LineSegment> of the four lines that make up this Trapezoid.
     fn get_lines(&self) -> Vec<LineSegment> {
         // TODO: This algorithm is probably not general!!! research further...
-
         let mut points = vec![self.a, self.b, self.c, self.d];
         points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
-
-        // Get first set pair of parallel lines
-        let mut possible_lines = Vec::new();
-        for (outer_idx, p1) in points.iter().enumerate() {
-            for (inner_idx, p2) in points.iter().enumerate() {
-                if inner_idx != outer_idx &&
-                   !possible_lines.contains(&LineSegment::from_points(*p2, *p1))
-                {
-                    possible_lines.push(LineSegment::from_points(*p1, *p2));
-                }
-            }
-        }
-
-
-        println!("\n\nSTARTING--------------");
-
-        let mut parallel_lines = Vec::new();
-        for (outer_idx, line1) in possible_lines.iter().enumerate() {
-            for (inner_idx, line2) in possible_lines.iter().enumerate() {
-                if line1.slope() == line2.slope() && outer_idx != inner_idx {
-                   parallel_lines.push((line1, line2));
-                   println!("{:?}", (line1, line2));
-                }
-            }
-        }
-
-        println!("ENDING--------------\n\n");
-
-
         vec![
             LineSegment::from_points(points[0], points[1]),
             LineSegment::from_points(points[1], points[3]),
             LineSegment::from_points(points[3], points[2]),
             LineSegment::from_points(points[2], points[0]),
         ]
+    }
+
+    fn bases(&self) -> Vec<TrapezoidBasePair> {
+        let mut points = vec![self.a, self.b, self.c, self.d];
+        points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
+
+        let mut possible_lines = Vec::new();
+        for outer in 0..points.len() {
+            for inner in (outer+1)..points.len() {
+                let line = LineSegment::from_points(points[outer], points[inner]);
+                 possible_lines.push(line);
+            }
+        }
+
+
+        let mut base_pairs = Vec::new();
+        for outer in 0..possible_lines.len() {
+            for inner in (outer+1)..possible_lines.len() {
+                let line1 = possible_lines[inner];
+                let line2 = possible_lines[outer];
+                if line1.slope() == line2.slope() {
+                    let base_pair = TrapezoidBasePair(line1, line2);
+                    base_pairs.push(base_pair);
+                }
+            }
+        }
+
+        base_pairs
     }
 
     fn contains_point(&self, point: &Point) -> bool {
@@ -146,7 +155,7 @@ fn ray_from_point_crosses_line(point: &Point, line: &LineSegment) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{Trapezoid, ray_from_point_crosses_line};
+    use super::{Trapezoid, TrapezoidBasePair, ray_from_point_crosses_line};
     use common_geometry::{Point, LineSegment};
 
     #[test]
@@ -181,26 +190,6 @@ mod tests {
     }
 
     #[test]
-    fn trapezoid_get_lines() {
-        let a = Point{x: 0., y: 0.};
-        let b = Point{x: 0., y: 1.};
-        let c = Point{x: 1., y: 0.};
-        let d = Point{x: 1., y: 1.};
-        let point_vec = vec![a, b, c, d];
-        let trap = Trapezoid::from_points(a, b, c, d);
-
-        let mut points = Vec::new();
-        for line in trap.get_lines() {
-            points.push(line.point1);
-            points.push(line.point2);
-        }
-
-        for point in point_vec {
-            assert!(points.contains(&point));
-        }
-    }
-
-    #[test]
     fn crossings_test() {
         let p = Point{x: 1., y: 1.};
         let line = LineSegment::new(0., 0., 2., 2.);
@@ -225,5 +214,21 @@ mod tests {
 
         let test_point = Point{x: 1., y: 1.};
         assert!(trap.contains_point(&test_point));
+    }
+
+
+    #[test]
+    fn trapezoid_bases() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 4., y: 0.};
+        let c = Point{x: 2., y: 2.};
+        let d = Point{x: 3., y: 2.};
+        let trap = Trapezoid::from_points(a, b, c, d);
+        let bases = trap.bases();
+
+        let base1 = LineSegment::from_points(a, b);
+        let base2 = LineSegment::from_points(c, d);
+        let base_pair = TrapezoidBasePair(base1, base2);
+        assert!(bases.contains(&base_pair));
     }
 }
