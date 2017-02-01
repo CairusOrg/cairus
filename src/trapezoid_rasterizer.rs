@@ -204,7 +204,7 @@ impl Trapezoid {
 
 /// # Extent
 ///
-/// An extent is the smallest possible rectangle that could surround a given Trapezoid
+/// An extent is the smallest possible rectangle that could surround a given Trapezoid.
 /// Points go in counter-clockwise order.  `a` is least x and least y, b is most x and least y, etc...
 struct Extent {
     a: Point,
