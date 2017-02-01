@@ -35,7 +35,7 @@
 
 //! This module defines geometric structs and methods common to algorithms used throughout Cairus.
 
-use std::ops::Add;
+use std::ops::{Add, Sub};
 use std::f32;
 
 /// ## Point
@@ -50,6 +50,14 @@ pub struct Point {
 impl PartialEq for Point {
     fn eq(&self, other: &Point) -> bool {
         self.x == other.x && self.y == other.y
+    }
+}
+
+impl Sub for Point {
+    type Output = Point;
+
+    fn sub(self, other: Point) -> Point {
+        Point{x: self.x - other.x, y: self.y - other.y}
     }
 }
 
@@ -117,6 +125,14 @@ impl LineSegment {
     }
 }
 
+impl PartialEq for LineSegment {
+    fn eq(&self, other: &LineSegment) -> bool {
+        (self.point1 == other.point1 && self.point2 == other.point2) ||
+        (self.point1 == other.point2 && self.point2 == other.point1)
+    }
+}
+
+
 /// ## Vector
 ///
 /// Defines a vector by (x, y) direction.
@@ -172,6 +188,14 @@ impl PartialEq for Vector {
 mod tests {
     use super::{LineSegment, Point, Vector};
 
+    // Tests that point subtraction is working.
+    #[test]
+    fn point_subtraction() {
+        let p1 = Point{x: 0., y: 0.};
+        let p2 = Point{x: 1., y: 1.};
+        assert_eq!(p1 - p2, Point{x: -1., y: -1.});
+    }
+
     // Tests that LineSegment's constructor is working.
     #[test]
     fn line_new() {
@@ -188,6 +212,28 @@ mod tests {
         let line = LineSegment::from_points(p1, p2);
         assert_eq!(line.point1, Point{x: 0., y: 0.});
         assert_eq!(line.point2, Point{x: 1., y: 1.});
+    }
+
+    // Tests that LineSegment Eq implementation is working
+    #[test]
+    fn line_eq() {
+        let p1 = Point{x: 0., y: 0.};
+        let p2 = Point{x: 1., y: 1.};
+        let line1 = LineSegment::from_points(p1, p2);
+        let line2 = LineSegment::from_points(p1, p2);
+
+        assert_eq!(line1, line2);
+    }
+
+    // Tests that lines are equal even when the endpoints are swithced
+    #[test]
+    fn line_eq_opposite() {
+        let p1 = Point{x: 0., y: 0.};
+        let p2 = Point{x: 1., y: 1.};
+        let line1 = LineSegment::from_points(p1, p2);
+        let line2 = LineSegment::from_points(p2, p1);
+
+        assert_eq!(line1, line2);
     }
 
     // Tests that the simple case for LineSegment::slope() is working.

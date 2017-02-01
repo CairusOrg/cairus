@@ -69,7 +69,37 @@ impl Trapezoid {
     // Returns a Vec<LineSegment> of the four lines that make up this Trapezoid.
     fn get_lines(&self) -> Vec<LineSegment> {
         // TODO: This algorithm is probably not general!!! research further...
+
         let mut points = vec![self.a, self.b, self.c, self.d];
+        points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
+
+        // Get first set pair of parallel lines
+        let mut possible_lines = Vec::new();
+        for (outer_idx, p1) in points.iter().enumerate() {
+            for (inner_idx, p2) in points.iter().enumerate() {
+                if inner_idx != outer_idx &&
+                   !possible_lines.contains(&LineSegment::from_points(*p2, *p1))
+                {
+                    possible_lines.push(LineSegment::from_points(*p1, *p2));
+                }
+            }
+        }
+
+
+        println!("\n\nSTARTING--------------");
+
+        let mut parallel_lines = Vec::new();
+        for (outer_idx, line1) in possible_lines.iter().enumerate() {
+            for (inner_idx, line2) in possible_lines.iter().enumerate() {
+                if line1.slope() == line2.slope() && outer_idx != inner_idx {
+                   parallel_lines.push((line1, line2));
+                   println!("{:?}", (line1, line2));
+                }
+            }
+        }
+
+        println!("ENDING--------------\n\n");
+
 
         vec![
             LineSegment::from_points(points[0], points[1]),
@@ -103,17 +133,11 @@ fn ray_from_point_crosses_line(point: &Point, line: &LineSegment) -> bool {
             true
         } else {
             // Find sign of x-crossing of point's ray and line
+            let slope = line.slope();
             let line_point = line.point1;
-            match line.slope() {
-                Some(slope) => {
-                    let b = line_point.y - slope * line_point.x;
-                    let x = (point.y - b) / slope;
-                    x.is_sign_positive()
-                },
-                None => {
-                    point.x.is_sign_positive()
-                },
-            }
+            let b = line_point.y - slope * line_point.x;
+            let x = (point.y - b) / slope;
+            x.is_sign_positive()
         }
     } else {
             false
