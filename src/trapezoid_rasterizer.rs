@@ -168,7 +168,73 @@ impl Trapezoid {
 
         crossing_count % 2 != 0
     }
+
+    fn extent(&self) -> Extent {
+        let mut smallest_x = self.a.x;
+        let mut biggest_x = self.a.x;
+        let mut smallest_y = self.a.y;
+        let mut biggest_y = self.a.y;
+        let points = vec![self.a, self.b, self.c, self.d];
+        for point in points {
+            if point.x < smallest_x {
+                smallest_x = point.x;
+            }
+
+            if point.x > biggest_x {
+                biggest_x = point.x;
+            }
+
+            if point.y < smallest_y {
+                smallest_y = point.y;
+            }
+
+            if point.y > biggest_y {
+                biggest_y = point.y;
+            }
+        }
+
+        let top_left = Point{x: smallest_x, y: biggest_y};
+        let bottom_right = Point{x: biggest_x, y: smallest_y};
+        Extent::new(top_left, bottom_right)
+    }
 }
+
+
+/// # Extent
+///
+/// An extent is the smallest possible rectangle that could surround a given Trapezoid
+struct Extent {
+    top_left: Point,
+    bottom_right: Point,
+}
+
+impl Extent {
+    fn new(top_left: Point, bottom_right: Point) -> Extent {
+        Extent {
+            top_left: top_left,
+            bottom_right: bottom_right,
+        }
+    }
+
+    fn width(&self) -> f32 {
+        (self.top_left.x - self.bottom_right.x).abs()
+    }
+
+    fn height(&self) -> f32 {
+        (self.top_left.y - self.bottom_right.y).abs()
+    }
+
+    fn top_left(&self) -> &Point {
+        &self.top_left
+    }
+
+    fn bottom_right(&self) -> &Point {
+        &self.bottom_right
+    }
+
+
+}
+
 
 /// Returns true if a ray running along the x-axis intersects the line `line`.
 fn ray_from_point_crosses_line(point: &Point, line: &LineSegment) -> bool {
@@ -350,5 +416,52 @@ mod tests {
         let base2 = LineSegment::from_points(c, d);
         let base_pair = TrapezoidBasePair(base1, base2);
         assert_eq!(base_pair.slope(), 1.);
+    }
+
+
+    #[test]
+    fn trapezoid_extent_width() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 1., y: 0.};
+        let c = Point{x: 1., y: 1.};
+        let d = Point{x: 0., y: 1.};
+        let trap = Trapezoid::from_points(a, b, c, d);
+        let extent = trap.extent();
+        assert_eq!(extent.width(), 1.);
+    }
+
+
+    #[test]
+    fn trapezoid_extent_height() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 1., y: 0.};
+        let c = Point{x: 1., y: 1.};
+        let d = Point{x: 0., y: 1.};
+        let trap = Trapezoid::from_points(a, b, c, d);
+        let extent = trap.extent();
+        assert_eq!(extent.height(), 1.);
+    }
+
+
+    #[test]
+    fn trapezoid_extent_top_left() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 1., y: 0.};
+        let c = Point{x: 1., y: 1.};
+        let d = Point{x: 0., y: 1.};
+        let trap = Trapezoid::from_points(a, b, c, d);
+        let extent = trap.extent();
+        assert_eq!(*extent.top_left(), d);
+    }
+
+    #[test]
+    fn trapezoid_extent_bottom_right() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 1., y: 0.};
+        let c = Point{x: 1., y: 1.};
+        let d = Point{x: 0., y: 1.};
+        let trap = Trapezoid::from_points(a, b, c, d);
+        let extent = trap.extent();
+        assert_eq!(*extent.bottom_right(), b);
     }
 }
