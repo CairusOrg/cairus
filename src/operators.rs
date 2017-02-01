@@ -59,6 +59,7 @@ use types::Rgba;
 // to any context via `fetch_operator`.
 
 /// The supported image compositing operators in Cairus.
+#[derive(Debug)]
 pub enum Operator {
     /// Cairus's default operator.  Draws source layer on top of destination layer.
     Over,
