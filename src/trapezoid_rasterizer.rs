@@ -90,6 +90,11 @@ impl Trapezoid {
         ]
     }
 
+    /// Returns self's base line segments.
+    ///
+    /// A Trapezoid's base line segments are the parallel lines that form the Trapezoid.
+    /// If the returned Vec is of length 1, it is a normal trapezoid.
+    /// If the returned Vec is of length 2, it is a rectangle.
     fn bases(&self) -> Vec<TrapezoidBasePair> {
         let mut points = vec![self.a, self.b, self.c, self.d];
         points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
@@ -101,7 +106,6 @@ impl Trapezoid {
                  possible_lines.push(line);
             }
         }
-
 
         let mut base_pairs = Vec::new();
         for outer in 0..possible_lines.len() {
@@ -125,6 +129,7 @@ impl Trapezoid {
                 crossing_count += 1;
             }
         }
+
         crossing_count % 2 != 0
     }
 }
