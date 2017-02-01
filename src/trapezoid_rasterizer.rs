@@ -34,6 +34,7 @@
  */
 
 use common_geometry::{Point, LineSegment};
+use std::f32;
 
 // Defines the a collection for holding a Trapezoid's bases.
 //
@@ -98,6 +99,31 @@ impl Trapezoid {
         if bases.len() == 2 {
             vec![bases[0].0, bases[0].1, bases[1].0, bases[1].1]
         } else {
+            let mut lines = vec![bases[0].0, bases[0].1];
+            let slope = bases[0].slope();
+            if slope == f32::INFINITY {
+                let (highest_from_base0, lowest_from_base0) =
+                    if lines[0].point1.y > lines[0].point2.y {
+                        (lines[0].point1, lines[0].point2)
+                    } else {
+                        (lines[0].point2, lines[0].point1)
+                };
+
+                let (highest_from_base1, lowest_from_base1) =
+                    if lines[1].point1.y > lines[1].point2.y {
+                        (lines[1].point1, lines[1].point2)
+                    } else {
+                        (lines[1].point2, lines[1].point1)
+                };
+
+                let top_leg = LineSegment::from_points(highest_from_base0, highest_from_base1);
+                let bottom_leg = LineSegment::from_points(lowest_from_base0, lowest_from_base1);
+                lines.push(top_leg);
+                lines.push(bottom_leg);
+
+            } else {
+
+            }
 
             let mut points = vec![self.a, self.b, self.c, self.d];
             points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
@@ -183,6 +209,9 @@ mod tests {
     use super::{Trapezoid, TrapezoidBasePair, ray_from_point_crosses_line};
     use common_geometry::{Point, LineSegment};
 
+
+    ///TODO: Test what happens with bad point values
+
     #[test]
     fn trapezoid_new() {
         let trap = Trapezoid::new(0., 0.,
@@ -231,6 +260,27 @@ mod tests {
 
 
     #[test]
+    fn trapezoid_vertical_bases_get_lines() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 2., y: 1.};
+        let c = Point{x: 2., y: 2.};
+        let d = Point{x: 0., y: 3.};
+        let ab = LineSegment::from_points(a, b);
+        let bc = LineSegment::from_points(b, c);
+        let cd = LineSegment::from_points(a, b);
+        let da = LineSegment::from_points(b, c);
+
+        let trap = Trapezoid::from_points(a, b, c, d);
+        let lines = trap.lines();
+        assert!(lines.contains(&ab));
+        assert!(lines.contains(&bc));
+        assert!(lines.contains(&cd));
+        assert!(lines.contains(&da));
+        assert_eq!(lines.len(), 4);
+    }
+
+
+    #[test]
     fn trapezoid_rectangle_get_lines() {
         let a = Point{x: 0., y: 0.};
         let b = Point{x: 2., y: 0.};
@@ -247,6 +297,7 @@ mod tests {
         assert!(lines.contains(&bc));
         assert!(lines.contains(&cd));
         assert!(lines.contains(&da));
+        assert_eq!(lines.len(), 4);
     }
 
 
@@ -262,7 +313,6 @@ mod tests {
         assert!(trap.contains_point(&test_point));
     }
 
-
     #[test]
     fn trapezoid_bases() {
         let a = Point{x: 0., y: 0.};
@@ -271,7 +321,7 @@ mod tests {
         let d = Point{x: 3., y: 2.};
         let trap = Trapezoid::from_points(a, b, c, d);
         let bases = trap.bases();
-
+        
         let base1 = LineSegment::from_points(a, b);
         let base2 = LineSegment::from_points(c, d);
         let base_pair = TrapezoidBasePair(base1, base2);
