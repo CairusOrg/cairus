@@ -34,7 +34,7 @@
  */
 
 use common_geometry::{Point, LineSegment};
-use std::f32;
+use std::{f32, i32};
 
 // Defines the a collection for holding a Trapezoid's bases.
 //
@@ -239,8 +239,63 @@ impl Extent {
             d: d,
         }
     }
+
+    fn raster_range(&self) -> PixelGridIterator {
+        let mut smallest_x = i32::MAX;
+        let mut biggest_x = i32::MIN;
+        let mut smallest_y = i32::MAX;
+        let mut biggest_y = i32::MIN;
+
+        for line in self.lines() {
+            for (x, y) in line.into_pixel_coordinates() {
+                if x < smallest_x {
+                    smallest_x = x;
+                }
+
+                if x > biggest_x {
+                    biggest_x = x;
+                }
+
+                if y < smallest_y {
+                    smallest_y = y;
+                }
+
+                if y > biggest_y {
+                    biggest_y = y;
+                }
+            }
+        }
+
+        let start = (smallest_x, smallest_y);
+        let end = (biggest_x, biggest_y);
+        PixelGridIterator{current: start, end: end, width: biggest_x - smallest_x}
+    }
 }
 
+struct PixelGridIterator {
+    current: (i32, i32),
+    end: (i32, i32),
+    width: i32,
+}
+
+impl Iterator for PixelGridIterator {
+    type Item = (i32, i32);
+
+    fn next(&mut self) -> Option<(i32, i32)> {
+        if self.current == self.end {
+            return None
+        }
+
+        let result = self.current;
+        if self.current.0 < self.width {
+            self.current = (self.current.0 + 1, self.current.1);
+        } else {
+            self.current = (0, self.current.1 + 1);
+        }
+
+        Some(result)
+    }
+}
 
 /// Returns true if a ray running along the x-axis intersects the line `line`.
 fn ray_from_point_crosses_line(point: &Point, line: &LineSegment) -> bool {
