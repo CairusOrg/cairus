@@ -123,6 +123,38 @@ impl LineSegment {
             y: (self.point1.y + self.point2.y) / 2.,
         }
     }
+
+    pub fn highest_point(&self) -> Point {
+        if self.point1.y > self.point2.y {
+            self.point1
+        } else {
+            self.point2
+        }
+    }
+
+    pub fn lowest_point(&self) -> Point {
+        if self.point1.y < self.point2.y {
+            self.point1
+        } else {
+            self.point2
+        }
+    }
+
+    pub fn leftmost_point(&self) -> Point {
+        if self.point1.x < self.point2.x {
+            self.point1
+        } else {
+            self.point2
+        }
+    }
+
+    pub fn rightmost_point(&self) -> Point {
+        if self.point1.x > self.point2.x {
+            self.point1
+        } else {
+            self.point2
+        }
+    }
 }
 
 impl PartialEq for LineSegment {
@@ -212,6 +244,18 @@ mod tests {
         let line = LineSegment::from_points(p1, p2);
         assert_eq!(line.point1, Point{x: 0., y: 0.});
         assert_eq!(line.point2, Point{x: 1., y: 1.});
+    }
+
+    // Tests that LineSegment's  highest/lowest/leftmost/rightmost point functions work
+    #[test]
+    fn line_query_functions() {
+        let p1 = Point{x: 0., y: 0.};
+        let p2 = Point{x: 1., y: 1.};
+        let line = LineSegment::from_points(p1, p2);
+        assert_eq!(line.leftmost_point(), p1);
+        assert_eq!(line.lowest_point(), p1);
+        assert_eq!(line.rightmost_point(), p2);
+        assert_eq!(line.highest_point(), p2);
     }
 
     // Tests that LineSegment Eq implementation is working

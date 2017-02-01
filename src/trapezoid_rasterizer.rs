@@ -92,8 +92,6 @@ impl Trapezoid {
 
     // Returns a Vec<LineSegment> of the four lines that make up this Trapezoid.
     fn lines(&self) -> Vec<LineSegment> {
-        // TODO: This algorithm is probably not general!!! research further...
-        //       MAKE USE OF bases() to figure out legs
         // TODO: Organize lines to be returned in counter-clockwise order
         let bases = self.bases();
         if bases.len() == 2 {
