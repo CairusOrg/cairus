@@ -90,17 +90,24 @@ impl Trapezoid {
     }
 
     // Returns a Vec<LineSegment> of the four lines that make up this Trapezoid.
-    fn get_lines(&self) -> Vec<LineSegment> {
+    fn lines(&self) -> Vec<LineSegment> {
         // TODO: This algorithm is probably not general!!! research further...
         //       MAKE USE OF bases() to figure out legs
-        let mut points = vec![self.a, self.b, self.c, self.d];
-        points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
-        vec![
-            LineSegment::from_points(points[0], points[1]),
-            LineSegment::from_points(points[1], points[3]),
-            LineSegment::from_points(points[3], points[2]),
-            LineSegment::from_points(points[2], points[0]),
-        ]
+
+        let bases = self.bases();
+        if bases.len() == 2 {
+            vec![bases[0].0, bases[0].1, bases[1].0, bases[1].1]
+        } else {
+
+            let mut points = vec![self.a, self.b, self.c, self.d];
+            points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
+            vec![
+                LineSegment::from_points(points[0], points[1]),
+                LineSegment::from_points(points[1], points[3]),
+                LineSegment::from_points(points[3], points[2]),
+                LineSegment::from_points(points[2], points[0]),
+            ]
+        }
     }
 
     /// Returns self's base line segments.
@@ -137,7 +144,7 @@ impl Trapezoid {
 
     fn contains_point(&self, point: &Point) -> bool {
         let mut crossing_count = 0;
-        for line in self.get_lines().iter() {
+        for line in self.lines().iter() {
             if ray_from_point_crosses_line(point, line) {
                 crossing_count += 1;
             }
@@ -221,6 +228,27 @@ mod tests {
         let line = LineSegment::new(2., 2., 3., 3.);
         assert!(ray_from_point_crosses_line(&p, &line));
     }
+
+
+    #[test]
+    fn trapezoid_rectangle_get_lines() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 2., y: 0.};
+        let c = Point{x: 2., y: 2.};
+        let d = Point{x: 0., y: 2.};
+        let ab = LineSegment::from_points(a, b);
+        let bc = LineSegment::from_points(b, c);
+        let cd = LineSegment::from_points(a, b);
+        let da = LineSegment::from_points(b, c);
+
+        let trap = Trapezoid::from_points(a, b, c, d);
+        let lines = trap.lines();
+        assert!(lines.contains(&ab));
+        assert!(lines.contains(&bc));
+        assert!(lines.contains(&cd));
+        assert!(lines.contains(&da));
+    }
+
 
     #[test]
     fn point_in_trapezoid() {
