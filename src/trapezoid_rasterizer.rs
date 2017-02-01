@@ -97,42 +97,24 @@ impl Trapezoid {
         if bases.len() == 2 {
             vec![bases[0].0, bases[0].1, bases[1].0, bases[1].1]
         } else {
-            let mut lines = vec![bases[0].0, bases[0].1];
-            let slope = bases[0].slope();
+            let base = &bases[0];
+            let mut lines = vec![base.0, base.1];
+            let slope = bases[0].slope(); // TrapezoidBasePair, not a LineSegment
             if slope == f32::INFINITY {
-                let (highest_from_base0, lowest_from_base0) =
-                    if lines[0].point1.y > lines[0].point2.y {
-                        (lines[0].point1, lines[0].point2)
-                    } else {
-                        (lines[0].point2, lines[0].point1)
-                };
-
-                let (highest_from_base1, lowest_from_base1) =
-                    if lines[1].point1.y > lines[1].point2.y {
-                        (lines[1].point1, lines[1].point2)
-                    } else {
-                        (lines[1].point2, lines[1].point1)
-                };
+                let highest_from_base0 = base.0.highest_point();
+                let lowest_from_base0 = base.0.lowest_point();
+                let highest_from_base1 = base.1.highest_point();
+                let lowest_from_base1 = base.1.lowest_point();
 
                 let top_leg = LineSegment::from_points(highest_from_base0, highest_from_base1);
                 let bottom_leg = LineSegment::from_points(lowest_from_base0, lowest_from_base1);
                 lines.push(top_leg);
                 lines.push(bottom_leg);
-
             } else {
-                let (leftmost_from_base0, rightmost_from_base0) =
-                    if lines[0].point1.x < lines[0].point2.x {
-                        (lines[0].point1, lines[0].point2)
-                    } else {
-                        (lines[0].point2, lines[0].point1)
-                };
-
-                let (leftmost_from_base1, rightmost_from_base1) =
-                    if lines[1].point1.x < lines[1].point2.x {
-                        (lines[1].point1, lines[1].point2)
-                    } else {
-                        (lines[1].point2, lines[1].point1)
-                };
+                let leftmost_from_base0 = base.0.leftmost_point();
+                let rightmost_from_base0 = base.0.rightmost_point();
+                let leftmost_from_base1 = base.1.leftmost_point();
+                let rightmost_from_base1 = base.1.rightmost_point();
 
                 let left_leg = LineSegment::from_points(leftmost_from_base0, leftmost_from_base1);
                 let right_leg = LineSegment::from_points(rightmost_from_base0, rightmost_from_base1);
