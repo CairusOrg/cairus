@@ -94,7 +94,7 @@ impl Trapezoid {
     fn lines(&self) -> Vec<LineSegment> {
         // TODO: This algorithm is probably not general!!! research further...
         //       MAKE USE OF bases() to figure out legs
-
+        // TODO: Organize lines to be returned in counter-clockwise order
         let bases = self.bases();
         if bases.len() == 2 {
             vec![bases[0].0, bases[0].1, bases[1].0, bases[1].1]
@@ -122,17 +122,27 @@ impl Trapezoid {
                 lines.push(bottom_leg);
 
             } else {
+                let (leftmost_from_base0, rightmost_from_base0) =
+                    if lines[0].point1.x < lines[0].point2.x {
+                        (lines[0].point1, lines[0].point2)
+                    } else {
+                        (lines[0].point2, lines[0].point1)
+                };
 
+                let (leftmost_from_base1, rightmost_from_base1) =
+                    if lines[1].point1.x < lines[1].point2.x {
+                        (lines[1].point1, lines[1].point2)
+                    } else {
+                        (lines[1].point2, lines[1].point1)
+                };
+
+                let left_leg = LineSegment::from_points(leftmost_from_base0, leftmost_from_base1);
+                let right_leg = LineSegment::from_points(rightmost_from_base0, rightmost_from_base1);
+                lines.push(left_leg);
+                lines.push(right_leg);
             }
 
-            let mut points = vec![self.a, self.b, self.c, self.d];
-            points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
-            vec![
-                LineSegment::from_points(points[0], points[1]),
-                LineSegment::from_points(points[1], points[3]),
-                LineSegment::from_points(points[3], points[2]),
-                LineSegment::from_points(points[2], points[0]),
-            ]
+            lines
         }
     }
 
@@ -302,6 +312,27 @@ mod tests {
 
 
     #[test]
+    fn trapezoid_horizontal_base_lines() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 4., y: 0.};
+        let c = Point{x: 2., y: 2.};
+        let d = Point{x: 1., y: 2.};
+        let ab = LineSegment::from_points(a, b);
+        let bc = LineSegment::from_points(b, c);
+        let cd = LineSegment::from_points(a, b);
+        let da = LineSegment::from_points(b, c);
+
+        let trap = Trapezoid::from_points(a, b, c, d);
+        let lines = trap.lines();
+        assert!(lines.contains(&ab));
+        assert!(lines.contains(&bc));
+        assert!(lines.contains(&cd));
+        assert!(lines.contains(&da));
+        assert_eq!(lines.len(), 4);
+    }
+
+
+    #[test]
     fn point_in_trapezoid() {
         let a = Point{x: 0., y: 0.};
         let b = Point{x: 0., y: 2.};
@@ -321,7 +352,7 @@ mod tests {
         let d = Point{x: 3., y: 2.};
         let trap = Trapezoid::from_points(a, b, c, d);
         let bases = trap.bases();
-        
+
         let base1 = LineSegment::from_points(a, b);
         let base2 = LineSegment::from_points(c, d);
         let base_pair = TrapezoidBasePair(base1, base2);
