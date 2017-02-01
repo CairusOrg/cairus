@@ -35,6 +35,29 @@
 
 use common_geometry::{Point, LineSegment};
 
+// Defines the a collection for holding a Trapezoid's bases.
+//
+// A Trapezoid's base line segments are always parallel.
+// If a trapezoid is a rectangle, it has two base pairs, otherwise just one
+//
+// Warning! -  TrapezoidBasePair doesn't check for parallelity, it assumes it is being passed
+//             parallel line segments.
+struct TrapezoidBasePair(LineSegment, LineSegment);
+
+// Returns true if TrapezoidBasePairs have the same LineSegments, disregarding order.
+impl PartialEq for TrapezoidBasePair {
+    fn eq(&self, other: &TrapezoidBasePair) -> bool {
+        (self.0 == other.0 && self.1 == other.1) ||
+        (self.0 == other.1 && self.1 == other.0)
+    }
+}
+
+impl TrapezoidBasePair {
+    fn slope(&self) -> f32 {
+        self.0.slope()
+    }
+}
+
 /// ## Trapezoid
 ///
 /// Defines a trapezoid as four points.
@@ -43,17 +66,6 @@ struct Trapezoid {
     b: Point,
     c: Point,
     d: Point,
-}
-
-// A TrapezoidBase is always two parallel line segments
-// If a trapezoid is a rectangle, it has two base pairs, otherwise just one
-struct TrapezoidBasePair(LineSegment, LineSegment);
-
-impl PartialEq for TrapezoidBasePair {
-    fn eq(&self, other: &TrapezoidBasePair) -> bool {
-        (self.0 == other.0 && self.1 == other.1) ||
-        (self.0 == other.1 && self.1 == other.0)
-    }
 }
 
 impl Trapezoid {
@@ -235,5 +247,18 @@ mod tests {
         let base2 = LineSegment::from_points(c, d);
         let base_pair = TrapezoidBasePair(base1, base2);
         assert!(bases.contains(&base_pair));
+    }
+
+    #[test]
+    fn trapezoid_base_pair_slope() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 1., y: 1.};
+        let c = Point{x: 1., y: 0.};
+        let d = Point{x: 2., y: 1.};
+
+        let base1 = LineSegment::from_points(a, b);
+        let base2 = LineSegment::from_points(c, d);
+        let base_pair = TrapezoidBasePair(base1, base2);
+        assert_eq!(base_pair.slope(), 1.);
     }
 }
