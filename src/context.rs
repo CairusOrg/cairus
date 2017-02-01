@@ -95,10 +95,6 @@ impl<'a> Context<'a>{
         self.operator = operator;
     }
 
-    //Pretty sure this doesn't work because I am letting the self object go here...
-    //Seems like this is giving away ownership so I probably won't have access to the 
-    //context after this get function is called.
-    //WORK IN PROGRESS...
     fn get_operator(&self)-> &Operator{
         &self.operator
     }
@@ -117,3 +113,37 @@ impl<'a> Context<'a>{
     }
 
 }
+
+
+/// # References
+/// [Cairo Operators]: https://www.cairographics.org/operators/
+
+#[cfg(test)]
+mod tests{
+    use surfaces::ImageSurface;
+    use types::Rgba;
+    use operators::{Operator, fetch_operator};
+    use super::Context;
+    use super::paint;
+    use super::set_operator;
+    use super::get_operator;
+    use super::create;
+    use super::set_source_rgba;
+
+    #[test]
+    fn test_get_default_operator(){
+        let context = Context::create(
+            ImageSurface::create(255, 255),
+            Operator::
+            );
+    }
+
+    #[test]
+    fn test_set_get_operator(){
+
+    }
+
+
+
+}
+
