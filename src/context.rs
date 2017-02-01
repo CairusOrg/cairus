@@ -68,13 +68,14 @@ pub struct Context<'a>{
 }
 
 impl<'a> Context<'a>{
-
-    fn create(surface: &'a mut ImageSurface, operator: Operator)-> Context {
+    //Pretty certain the default operator is defined as Over so we don't need to pass it in.
+    //But I'm open to discuss for sure.
+    fn create(surface: &'a mut ImageSurface)-> Context {
 
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
             surface: surface,
-            operator: operator,
+            operator: Operator::Over 
         }
     }
 
@@ -124,23 +125,21 @@ mod tests{
     use types::Rgba;
     use operators::{Operator, fetch_operator};
     use super::Context;
-    use super::paint;
-    use super::set_operator;
-    use super::get_operator;
-    use super::create;
-    use super::set_source_rgba;
 
-    #[test]
+#[test]
     fn test_get_default_operator(){
         let context = Context::create(
-            ImageSurface::create(255, 255),
-            Operator::
+            &mut ImageSurface::create(255, 255),
             );
+        assert_eq!( Operator::Over, context.get_operator() );
     }
 
     #[test]
     fn test_set_get_operator(){
-
+       //My intent here is to instantiate a context and then set the operator to another
+       //operator and check to see that it was actually changed. However, I only have the
+       //Over operator implemented in this branch so there really isn't anything to change
+       //it to here.
     }
 
 
