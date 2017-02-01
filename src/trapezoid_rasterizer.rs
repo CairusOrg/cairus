@@ -92,6 +92,7 @@ impl Trapezoid {
     // Returns a Vec<LineSegment> of the four lines that make up this Trapezoid.
     fn get_lines(&self) -> Vec<LineSegment> {
         // TODO: This algorithm is probably not general!!! research further...
+        //       MAKE USE OF bases() to figure out legs
         let mut points = vec![self.a, self.b, self.c, self.d];
         points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
         vec![
