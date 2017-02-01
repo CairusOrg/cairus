@@ -99,8 +99,8 @@ impl<'a> Context<'a>{
     //Seems like this is giving away ownership so I probably won't have access to the 
     //context after this get function is called.
     //WORK IN PROGRESS...
-    fn get_operator(self)-> Operator{
-        self.operator
+    fn get_operator(&self)-> &Operator{
+        &self.operator
     }
 
     /// Paints this context's Rgba on the destination surface with the over operator.
