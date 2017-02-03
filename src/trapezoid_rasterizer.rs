@@ -88,24 +88,22 @@ impl TrapezoidBasePair {
 ///        Pixel                                           Subpixel grid
 ///
 /// +--------------------------+                   X--X -X--X---X---X---X--X--X
-/// |                          |                   X  X  X  X   X   X   X  X  X
 /// |                          |                   |                          |
+/// |                          |                   X  X  X  X   X   X   X  X  X
 /// |                          |    into point     |                          |
 /// |                          |    sample         X  X  X  X   X   X   X  X  X
 /// |                          |    grid           |                          |
 /// |                          |   +------------>  X  X  X  X   X   X   X  X  X
 /// |                          |                   |                          |
-/// |                          |                   |                          |
 /// |                          |                   X  X  X  X   X   X   X  X  X
+/// |                          |                   |                          |
 /// |                          |                   X  X  X  X   X   X   X  X  X
 /// |                          |                   |                          |
 /// +--------------------------+                   X--X -X--X---X---X---X--X--X
 ///
-///                                            note: This isn't a uniform distribution, it is just
-///                                                  illustrative of sampling points.
 ///
 ///     Cairus iterates through each X in the Subpixel grid above, and checks if that X point is
-/// inside the trapezoid.  If it is, the opacity of that pixel will increase.
+/// inside the trapezoid.  If it is, the opacity of the original pixel will increase.
 ///
 ///  See the `fn Pixel::sample_points()` function for the implementation.
 ///
