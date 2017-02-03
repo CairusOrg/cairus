@@ -64,6 +64,15 @@ impl TrapezoidBasePair {
 /// ## Trapezoid
 ///
 /// Defines a trapezoid as four points.
+///
+/// TODO: Refactor
+/// TODO: Test edge-cases
+/// TODO: Implement `fn from_bases(LineSegment, LineSegment)`
+/// TODO: Implement checking for constructors
+/// TODO: Change Struct to be represented by base LineSegments instead of points
+/// TODO: Implement `fn points()` or `fn a()`, `fn b()` , etc...
+/// TODO: Test/verify degenerate Trapezoid (a triangle) is still valid
+/// TODO: Investigate optimizing and benching rasterization
 struct Trapezoid {
     a: Point,
     b: Point,
@@ -72,6 +81,8 @@ struct Trapezoid {
 }
 
 impl Trapezoid {
+
+
     // Returns a new Trapezoid defined by coordinates.
     fn new(ax: f32, ay: f32, bx: f32, by: f32, cx: f32, cy: f32, dx: f32, dy: f32) -> Trapezoid {
         Trapezoid {
