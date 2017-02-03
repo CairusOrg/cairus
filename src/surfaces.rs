@@ -130,7 +130,7 @@ impl ImageSurface {
     }
 
     fn calculate_position(width: usize, x: usize, y: usize) -> usize {
-        (x * width + y).wrapping_sub(1)
+        y * width +x
     }
 }
 

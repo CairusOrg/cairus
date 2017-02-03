@@ -628,5 +628,8 @@ mod tests {
         let mask = mask_from_trapezoids(&trapezoids, 10, 10);
         let rgba = mask.get(2, 1);
         assert!(rgba.unwrap().alpha > 0.);
+
+        let rgba = mask.get(1, 9);
+        assert!(rgba.unwrap().alpha == 0.);
     }
 }
