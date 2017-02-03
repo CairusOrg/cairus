@@ -94,8 +94,8 @@ pub enum Type {
 pub struct ImageSurface {
     // base is just a collection of pixels
     base: Vec<Rgba>,
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
 }
 
 /// ImageSurface provides iter(), into_iter(), and iter_mut() so that when a Cairus context calls
@@ -103,7 +103,7 @@ pub struct ImageSurface {
 /// compositing operator to operate on them.  See `operators.rs` for those operations.
 impl ImageSurface {
     // Analagous to cairo_create(), you pass in a width and height and get in a surface in exchange.
-    fn create(width: usize, height: usize) -> ImageSurface {
+    pub fn create(width: usize, height: usize) -> ImageSurface {
         ImageSurface {
             base: vec![Rgba::new(0., 0., 0., 0.); width * height],
             width: width,
@@ -111,12 +111,26 @@ impl ImageSurface {
         }
     }
 
-    fn iter(&self) -> Iter<Rgba> {
+    pub fn iter(&self) -> Iter<Rgba> {
         self.base.iter()
     }
 
-    fn iter_mut(&mut self) -> IterMut<Rgba> {
+    pub fn iter_mut(&mut self) -> IterMut<Rgba> {
         self.base.iter_mut()
+    }
+
+    pub fn get(&self, x: usize, y: usize) -> Option<&Rgba> {
+        let position = ImageSurface::calculate_position(self.width, x, y);
+        self.base.get(position)
+    }
+
+    pub fn get_mut(&mut self, x: usize, y: usize) -> &mut Rgba {
+        let position = ImageSurface::calculate_position(self.width, x, y);
+        &mut self.base[position]
+    }
+
+    fn calculate_position(width: usize, x: usize, y: usize) -> usize {
+        (x * width + y).wrapping_sub(1)
     }
 }
 
@@ -227,5 +241,12 @@ mod tests {
         for pixel in destination {
             assert_eq!(pixel, expected);
         }
+    }
+
+    #[test]
+    fn image_surface_index() {
+        let destination = ImageSurface::create(100, 100);
+        let transparent_pixel = Rgba::new(0., 0., 0., 0.);
+        assert_eq!(*destination.get(0, 0).unwrap(), transparent_pixel);
     }
 }
