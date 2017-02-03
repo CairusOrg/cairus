@@ -61,6 +61,91 @@ impl TrapezoidBasePair {
     }
 }
 
+
+
+/// # Algorithms
+///
+/// ## Rasterization
+///     When we take a trapezoid and map it onto pixels, we need to decide which pixels the trapezoid
+/// actually covers.  Additionally, trapezoids will often only cover a part of a pixel but not the
+/// full pixel itself.  In these cases, we need to figure out how much of the pixel is covered by
+/// the trapezoid.  If we were to simply fill in every pixel that the trapezoid touches, the result
+/// would be full of 'jaggies', it would look very pixelated.  Instead, we need to find those
+/// pixels that the trapezoid only partially covers, and instead make them more transparent.
+/// This will make the trapezoid's edges look much smoother (this is anti-aliasing).
+///
+///     In order to decide the degree to which a trapezoid covers any given pixel, we need to
+/// divide that pixel into smaller parts.  For every smaller part that the trapezoid covers,
+/// we can increase the amount that the trapezoid is considered to cover that pixel.  These smaller
+/// parts are 'subpixel' or 'sampling points'.  The more subpixel points that are covered by the
+/// trapezoid, the more opaque that pixel will be.  This is called point-sampling anti-aliasing.
+///
+///     The way we divide a pixel is into a 17x15 uniform grid.
+///
+///     For example, a single pixel goes from image on the left, to that on the right.
+///
+///
+///        Pixel                                           Subpixel grid
+///
+/// +--------------------------+                   X--X -X--X---X---X---X--X--X
+/// |                          |                   X  X  X  X   X   X   X  X  X
+/// |                          |                   |                          |
+/// |                          |    into point     |                          |
+/// |                          |    sample         X  X  X  X   X   X   X  X  X
+/// |                          |    grid           |                          |
+/// |                          |   +------------>  X  X  X  X   X   X   X  X  X
+/// |                          |                   |                          |
+/// |                          |                   |                          |
+/// |                          |                   X  X  X  X   X   X   X  X  X
+/// |                          |                   X  X  X  X   X   X   X  X  X
+/// |                          |                   |                          |
+/// +--------------------------+                   X--X -X--X---X---X---X--X--X
+///
+///                                            note: This isn't a uniform distribution, it is just
+///                                                  illustrative of sampling points.
+///
+///     Cairus iterates through each X in the Subpixel grid above, and checks if that X point is
+/// inside the trapezoid.  If it is, the opacity of that pixel will increase.
+///
+///  See the `fn Pixel::sample_points()` function for the implementation.
+///
+///  # Checking If A Point Is In A Trapezoid
+///
+///     The algorithm used is a ray intersection algorithm and takes advantage of the even-odd
+///  rule. The idea is that if you take a point and make a ray that runs in the positive x-axis
+///  direction, it will intersect any given polygon an odd number of times or an even number
+///  of times.  If it intersects an *odd* number of times, the point is inside the polygon.  If it
+///  intersects an *even* number of times, it is outside the polygon.  The diagram below shows
+///  two points, one inside and one outside of a trapezoid.
+///
+///  ^
+///  |
+///  |                                              Internal point crosses
+///  |                                              convex trapezoid only once (odd).
+///  |                         XXXXXXXXXXXX
+///  |                        X            X
+///  |    External point     X        +------------------------>
+///  |    crosses twice.    X                X
+///  |     (even)          X                  X
+///  |          +------------------------------------------------------------->
+///  |                   X                      X
+///  |                  XXXXXXXXXXXXXXXXXXXXXXXXXX
+///  |
+///  |
+///  +-------------------------------------------------------------------------------->
+///
+///     As Cairus iterates through a pixel's subpixel points, it uses this ray intersection
+/// technique to deterimine whether the subpixel is inside or outside of the trapezoid.  For every
+/// subpixel point that is inside the opacity of that pixel increases by 1/255.  Because it is
+/// a 17x15 subpixel grid, and 17 * 15 = 255, for a trapezoid to make a pixel fully opaque, it
+/// must cover every single subpixel point inside that pixel.  If it doesn't cover any subpixel,
+/// the pixel is left transparent.
+///
+/// TODO: Reference the DDA algorithm and its usage
+
+
+
+
 /// ## Trapezoid
 ///
 /// Defines a trapezoid as four points.
@@ -171,7 +256,14 @@ impl Trapezoid {
         base_pairs
     }
 
+
+
+
     fn contains_point(&self, point: &Point) -> bool {
+
+
+
+
         let mut crossing_count = 0;
         for line in self.lines().iter() {
             if ray_from_point_crosses_line(point, line) {
