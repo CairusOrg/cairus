@@ -82,7 +82,6 @@ struct Trapezoid {
 
 impl Trapezoid {
 
-
     // Returns a new Trapezoid defined by coordinates.
     fn new(ax: f32, ay: f32, bx: f32, by: f32, cx: f32, cy: f32, dx: f32, dy: f32) -> Trapezoid {
         Trapezoid {
@@ -224,37 +223,6 @@ impl Trapezoid {
 
         pixels
     }
-
-    fn extent(&self) -> Extent {
-        let mut smallest_x = self.a.x;
-        let mut biggest_x = self.a.x;
-        let mut smallest_y = self.a.y;
-        let mut biggest_y = self.a.y;
-        let points = vec![self.a, self.b, self.c, self.d];
-        for point in points {
-            if point.x < smallest_x {
-                smallest_x = point.x;
-            }
-
-            if point.x > biggest_x {
-                biggest_x = point.x;
-            }
-
-            if point.y < smallest_y {
-                smallest_y = point.y;
-            }
-
-            if point.y > biggest_y {
-                biggest_y = point.y;
-            }
-        }
-
-        let a = Point{x: smallest_x, y: smallest_y};
-        let b = Point{x: biggest_x, y: smallest_y};
-        let c = Point{x: biggest_x, y: biggest_y};
-        let d = Point{x: smallest_x, y: biggest_y};
-        Extent::from_points(a, b, c, d)
-    }
 }
 
 #[derive(Debug)]
@@ -282,102 +250,6 @@ impl Pixel {
         }
 
         points
-    }
-}
-
-
-/// # Extent
-///
-/// An extent is the smallest possible rectangle that could surround a given Trapezoid.
-/// Points go in counter-clockwise order.  `a` is least x and least y, b is most x and least y, etc...
-struct Extent {
-    a: Point,
-    b: Point,
-    c: Point,
-    d: Point,
-}
-
-impl Extent {
-    fn width(&self) -> f32 {
-        (self.a.x - self.b.x).abs()
-    }
-
-    fn height(&self) -> f32 {
-        (self.a.y - self.c.y).abs()
-    }
-
-    fn lines(&self) -> Vec<LineSegment> {
-        vec![
-            LineSegment::from_points(self.a, self.b),
-            LineSegment::from_points(self.b, self.c),
-            LineSegment::from_points(self.c, self.d),
-            LineSegment::from_points(self.d, self.a),
-        ]
-    }
-
-    fn from_points(a: Point, b: Point, c: Point, d: Point) -> Extent {
-        Extent {
-            a: a,
-            b: b,
-            c: c,
-            d: d,
-        }
-    }
-
-    fn raster_range(&self) -> PixelGridIterator {
-        let mut smallest_x = i32::MAX;
-        let mut biggest_x = i32::MIN;
-        let mut smallest_y = i32::MAX;
-        let mut biggest_y = i32::MIN;
-
-        for line in self.lines() {
-            for (x, y) in line.into_pixel_coordinates() {
-                if x < smallest_x {
-                    smallest_x = x;
-                }
-
-                if x > biggest_x {
-                    biggest_x = x;
-                }
-
-                if y < smallest_y {
-                    smallest_y = y;
-                }
-
-                if y > biggest_y {
-                    biggest_y = y;
-                }
-            }
-        }
-
-        let start = (smallest_x, smallest_y);
-        let end = (biggest_x, biggest_y);
-        PixelGridIterator{current: start, end: end, width: biggest_x - smallest_x}
-    }
-}
-
-struct PixelGridIterator {
-    current: (i32, i32),
-    end: (i32, i32),
-    width: i32,
-}
-
-impl Iterator for PixelGridIterator {
-    type Item = (i32, i32);
-
-    fn next(&mut self) -> Option<(i32, i32)> {
-        if self.current == self.end {
-            return None
-        }
-
-        let result = self.current;
-        if self.current.0 < self.width {
-            self.current = (self.current.0 + 1, self.current.1);
-        } else {
-            self.current = (0, self.current.1 + 1);
-        }
-
-        Some(result)
     }
 }
 
@@ -431,9 +303,6 @@ mod tests {
     use super::{Trapezoid, TrapezoidBasePair, ray_from_point_crosses_line, mask_from_trapezoids};
     use common_geometry::{Point, LineSegment};
 
-
-    ///TODO: Test what happens with bad point values
-
     #[test]
     fn trapezoid_new() {
         let trap = Trapezoid::new(0., 0.,
@@ -480,7 +349,6 @@ mod tests {
         assert!(ray_from_point_crosses_line(&p, &line));
     }
 
-
     #[test]
     fn trapezoid_vertical_bases_get_lines() {
         let a = Point{x: 0., y: 0.};
@@ -500,7 +368,6 @@ mod tests {
         assert!(lines.contains(&da));
         assert_eq!(lines.len(), 4);
     }
-
 
     #[test]
     fn trapezoid_rectangle_get_lines() {
@@ -522,7 +389,6 @@ mod tests {
         assert_eq!(lines.len(), 4);
     }
 
-
     #[test]
     fn trapezoid_horizontal_base_lines() {
         let a = Point{x: 0., y: 0.};
@@ -542,7 +408,6 @@ mod tests {
         assert!(lines.contains(&da));
         assert_eq!(lines.len(), 4);
     }
-
 
     #[test]
     fn point_in_trapezoid() {
@@ -582,46 +447,6 @@ mod tests {
         let base2 = LineSegment::from_points(c, d);
         let base_pair = TrapezoidBasePair(base1, base2);
         assert_eq!(base_pair.slope(), 1.);
-    }
-
-
-    #[test]
-    fn trapezoid_extent_width() {
-        let a = Point{x: 0., y: 0.};
-        let b = Point{x: 1., y: 0.};
-        let c = Point{x: 1., y: 1.};
-        let d = Point{x: 0., y: 1.};
-        let trap = Trapezoid::from_points(a, b, c, d);
-        let extent = trap.extent();
-        assert_eq!(extent.width(), 1.);
-    }
-
-
-    #[test]
-    fn trapezoid_extent_height() {
-        let a = Point{x: 0., y: 0.};
-        let b = Point{x: 1., y: 0.};
-        let c = Point{x: 1., y: 1.};
-        let d = Point{x: 0., y: 1.};
-        let trap = Trapezoid::from_points(a, b, c, d);
-        let extent = trap.extent();
-        assert_eq!(extent.height(), 1.);
-    }
-
-    #[test]
-    fn trapezoid_extent_lines() {
-        let a = Point{x: 0., y: 0.};
-        let b = Point{x: 1., y: 0.};
-        let c = Point{x: 1., y: 1.};
-        let d = Point{x: 0., y: 1.};
-        let trap = Trapezoid::from_points(a, b, c, d);
-        let extent = trap.extent();
-        let extent_lines = extent.lines();
-        let trap_lines = trap.lines();
-
-        for line in extent_lines {
-            assert!(trap_lines.contains(&line));
-        }
     }
 
     // Tests that a sample of pixels internal to the trapezoid are at least somewhat opaque
