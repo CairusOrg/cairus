@@ -73,6 +73,7 @@ impl TrapezoidBasePair {
 /// TODO: Implement `fn points()` or `fn a()`, `fn b()` , etc...
 /// TODO: Test/verify degenerate Trapezoid (a triangle) is still valid
 /// TODO: Investigate optimizing and benching rasterization
+/// TODO: Change tuple coordinates to Point struct for name clarity
 struct Trapezoid {
     a: Point,
     b: Point,
@@ -234,19 +235,15 @@ struct Pixel {
 impl Pixel {
     fn sample_points(&self) -> Vec<Point> {
         let mut points = Vec::new();
-        let x_increment = 1. / 18.;
-        let y_increment = 1. / 16.;
-        let mut x = self.x as f32 + x_increment;
-        let mut y = self.y as f32 + y_increment;
-        while x < (self.x as f32 + 1. - x_increment) as f32 {
-            for _ in 0..15 {
+        let x_increment = 1. / 16.;
+        let y_increment = 1. / 14.;
+        for subgrid_x in 0..17 {
+            let x = self.x as f32 + (subgrid_x as f32 * x_increment);
+            for subgrid_y in 0..15 {
+                let y =  self.y as f32 + (subgrid_y as f32 * y_increment);
                 let point = Point{x: x, y: y};
                 points.push(point);
-                y += y_increment;
             }
-
-            x += x_increment;
-            y = self.y as f32 + y_increment;
         }
 
         points
@@ -290,7 +287,11 @@ fn mask_from_trapezoids(trapezoids: &Vec<Trapezoid>, width: usize, height: usize
                 }
             }
 
-            rgba.alpha = successes as f32 / 255.;
+            if pixel.x == 3 && pixel.y == 3 {
+                println!("x, y = {}, {} --- successes: {}", pixel.x, pixel.y, successes);
+            }
+            rgba.alpha += successes as f32 / 255.;
+            rgba.alpha.max(1.);
          }
      }
 
@@ -475,5 +476,27 @@ mod tests {
             let rgba = mask.get(x, y).unwrap();
             assert_eq!(rgba.alpha, 0.);
         }
+    }
+
+    #[test]
+    fn adjacent_trapezoids_shared_line_is_opaque() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 5., y: 0.};
+
+        let c = Point{x: 4., y: 3.};
+        let d = Point{x: 2., y: 3.};
+        let trap1 = Trapezoid::from_points(a, b, c, d);
+
+        let trap2_point_e = Point{x: 0., y: 7.};
+        let trap2_point_f = Point{x: 5., y: 7.};
+        let trap2 = Trapezoid::from_points(d, c, trap2_point_f, trap2_point_e);
+
+        let trapezoids = vec![trap1, trap2];
+        let mask = mask_from_trapezoids(&trapezoids, 9, 9);
+
+        let rgba = mask.get(2, 3).unwrap();
+        assert_eq!(rgba.alpha, 1.);
+        let rgba = mask.get(3, 3).unwrap();
+        assert!(rgba.alpha > 0.9);
     }
 }
