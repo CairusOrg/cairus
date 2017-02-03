@@ -141,6 +141,9 @@ impl TrapezoidBasePair {
 /// must cover every single subpixel point inside that pixel.  If it doesn't cover any subpixel,
 /// the pixel is left transparent.
 ///
+///  See `fn ray_from_point_crosses_line` for ray intersection algorithm, and
+///  `fn Trapezoid::contains_point` for how it is used to determine if a point is in a trapezoid.
+///
 /// TODO: Reference the DDA algorithm and its usage
 
 
