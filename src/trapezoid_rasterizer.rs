@@ -624,10 +624,9 @@ mod tests {
         }
     }
 
-    // Tests that the returned ImageSurface is correct.
-    // This test assumes the Trapezoid::lines() is functioning correctly.
-    // We check that the pixels in between the outline of the Trapezoid (non-inclusive)
-    // have alpha values that are not zero.
+    // Tests that a sample of pixels internal to the trapezoid are at least somewhat opaque
+    // (i.e., alpha > 0), and that a sampling of pixels external to the trapezoid are transparent
+    // (i.e., alpha == 0).
     #[test]
     fn mask_from_single_trapezoid() {
         let a = Point{x: 0., y: 0.};
@@ -637,10 +636,19 @@ mod tests {
         let trap = Trapezoid::from_points(a, b, c, d);
         let trapezoids = vec![trap];
         let mask = mask_from_trapezoids(&trapezoids, 10, 10);
-        let rgba = mask.get(2, 1);
-        assert!(rgba.unwrap().alpha > 0.);
 
-        let rgba = mask.get(1, 9);
-        assert!(rgba.unwrap().alpha == 0.);
+        // filled_pixels is the coordinates for pixels that should be filled (or somewhat opaque)
+        let filled_pixels = vec![(2, 1), (8, 1), (5, 8), (7, 0)];
+        for (x, y) in filled_pixels {
+            let rgba = mask.get(x, y).unwrap();
+            assert!(rgba.alpha > 0.);
+        }
+
+        // transparent_pixels is the coordinates for pixels that should be transparent
+        let transparent_pixels = vec![(1, 9), (10, 2), (0, 2), (3, 9), (9, 9)];
+        for (x, y) in transparent_pixels {
+            let rgba = mask.get(x, y).unwrap();
+            assert_eq!(rgba.alpha, 0.);
+        }
     }
 }
