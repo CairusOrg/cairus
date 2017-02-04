@@ -33,118 +33,91 @@
  *
  */
 
+//! This module defines trapezoid rasterization structs and functions.
+//!
+//! # Algorithms
+//!
+//! ## Rasterization Overiew
+//!
+//!   When we take a trapezoid and map it onto pixels, we need to decide which pixels the trapezoid
+//! actually covers.  Additionally, trapezoids will often only cover a part of a pixel but not the
+//! full pixel itself.  In these cases, we need to figure out how much of the pixel is covered by
+//! the trapezoid.  If we were to simply fill in every pixel that the trapezoid touches, the result
+//! would be full of 'jaggies', it would look very pixelated.  We need to find these
+//! pixels that the trapezoid only partially covers, and instead make them more transparent.
+//! This will make the trapezoid's edges look much smoother (this is anti-aliasing).
+//!
+//!   In order to decide the degree to which a trapezoid covers any given pixel, we need to
+//! divide that pixel into smaller parts.  For every smaller part that the trapezoid covers,
+//! we can increase the amount that the trapezoid is considered to cover that pixel.  These smaller
+//! parts are 'subpixel' or 'sampling points'.  The more subpixel points that are covered by the
+//! trapezoid, the more opaque that pixel will be.  This is called point-sampling anti-aliasing.
+//!
+//!   The way we divide a pixel is into a 17x15 uniform grid.  For example, a single pixel goes
+//! from image on the left, to that on the right.
+//!
+//!
+//! Pixel                                          Subpixel grid
+//!
+//! +--------------------------+                   X--X -X--X---X---X---X--X--X
+//! |                          |                   |                          |
+//! |                          |                   X  X  X  X   X   X   X  X  X
+//! |                          |    into point     |                          |
+//! |                          |    sample         X  X  X  X   X   X   X  X  X
+//! |                          |    grid           |                          |
+//! |                          |   +------------>  X  X  X  X   X   X   X  X  X
+//! |                          |                   |                          |
+//! |                          |                   X  X  X  X   X   X   X  X  X
+//! |                          |                   |                          |
+//! |                          |                   X  X  X  X   X   X   X  X  X
+//! |                          |                   |                          |
+//! +--------------------------+                   X--X -X--X---X---X---X--X--X
+
+//! Cairus iterates through each X in the Subpixel grid above, and checks if that X point is
+//! inside the trapezoid.  If it is, the opacity of the original pixel will increase.
+//!
+//!  See the `fn Pixel::sample_points()` function for the implementation.
+//!
+//!  Checking If A Point Is In A Trapezoid
+//!
+//!  The algorithm used is a ray intersection algorithm and takes advantage of the even-odd
+//!  rule. The idea is that if you take a point and make a ray that runs in the positive x-axis
+//!  direction, it will intersect any given polygon an odd number of times or an even number
+//!  of times.  If it intersects an *odd* number of times, the point is inside the polygon.  If it
+//!  intersects an *even* number of times, it is outside the polygon.  The diagram below shows
+//!  two points, one inside and one outside of a trapezoid.
+//!
+//!  ^
+//!  |
+//!  |                                              Internal point crosses
+//!  |                                              convex trapezoid only once (odd).
+//!  |                         XXXXXXXXXXXX
+//!  |                        X            X
+//!  |    External point     X        +------------------------>
+//!  |    crosses twice.    X                X
+//!  |     (even)          X                  X
+//!  |          +------------------------------------------------------------->
+//!  |                   X                      X
+//!  |                  XXXXXXXXXXXXXXXXXXXXXXXXXX
+//!  |
+//!  |
+//!  +-------------------------------------------------------------------------------->
+//!
+//!  As Cairus iterates through a pixel's subpixel points, it uses this ray intersection
+//!  technique to deterimine whether the subpixel is inside or outside of the trapezoid.  For every
+//!  subpixel point that is inside the opacity of that pixel increases by 1/255.  Because it is
+//!  a 17x15 subpixel grid, and 17 * 15 = 255, for a trapezoid to make a pixel fully opaque, it
+//!  must cover every single subpixel point inside that pixel.  If it doesn't cover any subpixel,
+//!  the pixel is left transparent.
+//!
+//!  See `fn ray_from_point_crosses_line` for ray intersection algorithm, and
+//!  `fn Trapezoid::contains_point` for how it is used to determine if a point is in a trapezoid.
+
+
 use surfaces::ImageSurface;
 use common_geometry::{Point, LineSegment};
 use std::{f32, i32};
 use std::collections::HashMap;
-
-// Defines the a collection for holding a Trapezoid's bases.
-//
-// A Trapezoid's base line segments are always parallel.
-// If a trapezoid is a rectangle, it has two base pairs, otherwise just one
-//
-// Warning! -  TrapezoidBasePair doesn't check for parallelity, it assumes it is being passed
-//             parallel line segments.
-struct TrapezoidBasePair(LineSegment, LineSegment);
-
-// Returns true if TrapezoidBasePairs have the same LineSegments, disregarding order.
-impl PartialEq for TrapezoidBasePair {
-    fn eq(&self, other: &TrapezoidBasePair) -> bool {
-        (self.0 == other.0 && self.1 == other.1) ||
-        (self.0 == other.1 && self.1 == other.0)
-    }
-}
-
-impl TrapezoidBasePair {
-    fn slope(&self) -> f32 {
-        self.0.slope()
-    }
-}
-
-
-
-/// # Algorithms
-///
-/// ## Rasterization
-///     When we take a trapezoid and map it onto pixels, we need to decide which pixels the trapezoid
-/// actually covers.  Additionally, trapezoids will often only cover a part of a pixel but not the
-/// full pixel itself.  In these cases, we need to figure out how much of the pixel is covered by
-/// the trapezoid.  If we were to simply fill in every pixel that the trapezoid touches, the result
-/// would be full of 'jaggies', it would look very pixelated.  Instead, we need to find those
-/// pixels that the trapezoid only partially covers, and instead make them more transparent.
-/// This will make the trapezoid's edges look much smoother (this is anti-aliasing).
-///
-///     In order to decide the degree to which a trapezoid covers any given pixel, we need to
-/// divide that pixel into smaller parts.  For every smaller part that the trapezoid covers,
-/// we can increase the amount that the trapezoid is considered to cover that pixel.  These smaller
-/// parts are 'subpixel' or 'sampling points'.  The more subpixel points that are covered by the
-/// trapezoid, the more opaque that pixel will be.  This is called point-sampling anti-aliasing.
-///
-///     The way we divide a pixel is into a 17x15 uniform grid.
-///
-///     For example, a single pixel goes from image on the left, to that on the right.
-///
-///
-///        Pixel                                           Subpixel grid
-///
-/// +--------------------------+                   X--X -X--X---X---X---X--X--X
-/// |                          |                   |                          |
-/// |                          |                   X  X  X  X   X   X   X  X  X
-/// |                          |    into point     |                          |
-/// |                          |    sample         X  X  X  X   X   X   X  X  X
-/// |                          |    grid           |                          |
-/// |                          |   +------------>  X  X  X  X   X   X   X  X  X
-/// |                          |                   |                          |
-/// |                          |                   X  X  X  X   X   X   X  X  X
-/// |                          |                   |                          |
-/// |                          |                   X  X  X  X   X   X   X  X  X
-/// |                          |                   |                          |
-/// +--------------------------+                   X--X -X--X---X---X---X--X--X
-///
-///
-///     Cairus iterates through each X in the Subpixel grid above, and checks if that X point is
-/// inside the trapezoid.  If it is, the opacity of the original pixel will increase.
-///
-///  See the `fn Pixel::sample_points()` function for the implementation.
-///
-///  # Checking If A Point Is In A Trapezoid
-///
-///     The algorithm used is a ray intersection algorithm and takes advantage of the even-odd
-///  rule. The idea is that if you take a point and make a ray that runs in the positive x-axis
-///  direction, it will intersect any given polygon an odd number of times or an even number
-///  of times.  If it intersects an *odd* number of times, the point is inside the polygon.  If it
-///  intersects an *even* number of times, it is outside the polygon.  The diagram below shows
-///  two points, one inside and one outside of a trapezoid.
-///
-///  ^
-///  |
-///  |                                              Internal point crosses
-///  |                                              convex trapezoid only once (odd).
-///  |                         XXXXXXXXXXXX
-///  |                        X            X
-///  |    External point     X        +------------------------>
-///  |    crosses twice.    X                X
-///  |     (even)          X                  X
-///  |          +------------------------------------------------------------->
-///  |                   X                      X
-///  |                  XXXXXXXXXXXXXXXXXXXXXXXXXX
-///  |
-///  |
-///  +-------------------------------------------------------------------------------->
-///
-///     As Cairus iterates through a pixel's subpixel points, it uses this ray intersection
-/// technique to deterimine whether the subpixel is inside or outside of the trapezoid.  For every
-/// subpixel point that is inside the opacity of that pixel increases by 1/255.  Because it is
-/// a 17x15 subpixel grid, and 17 * 15 = 255, for a trapezoid to make a pixel fully opaque, it
-/// must cover every single subpixel point inside that pixel.  If it doesn't cover any subpixel,
-/// the pixel is left transparent.
-///
-///  See `fn ray_from_point_crosses_line` for ray intersection algorithm, and
-///  `fn Trapezoid::contains_point` for how it is used to determine if a point is in a trapezoid.
-///
-/// TODO: Reference the DDA algorithm and its usage
-
-
 
 
 /// ## Trapezoid
@@ -160,7 +133,7 @@ impl TrapezoidBasePair {
 /// TODO: Test/verify degenerate Trapezoid (a triangle) is still valid
 /// TODO: Investigate optimizing and benching rasterization
 /// TODO: Change tuple coordinates to Point struct for name clarity
-struct Trapezoid {
+pub struct Trapezoid {
     a: Point,
     b: Point,
     c: Point,
@@ -229,7 +202,8 @@ impl Trapezoid {
     ///
     /// A Trapezoid's base line segments are the parallel lines that form the Trapezoid.
     /// If the returned Vec is of length 1, it is a normal trapezoid.
-    /// If the returned Vec is of length 2, it is a rectangle.
+    /// If the returned Vec is of length 2, it is either a rectangle or a triangle (a degenerate
+    /// trapezoid with one base having a length of 0).
     fn bases(&self) -> Vec<TrapezoidBasePair> {
         let mut points = vec![self.a, self.b, self.c, self.d];
         points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
@@ -257,14 +231,8 @@ impl Trapezoid {
         base_pairs
     }
 
-
-
-
+    /// Returns true if this Trapezoid contains `point`, otherwise returns false
     fn contains_point(&self, point: &Point) -> bool {
-
-
-
-
         let mut crossing_count = 0;
         for line in self.lines().iter() {
             if ray_from_point_crosses_line(point, line) {
@@ -275,6 +243,10 @@ impl Trapezoid {
         crossing_count % 2 != 0
     }
 
+    /// Converts this trapezoid into a Vec of Pixels
+    ///
+    /// The returned pixels don't contain color or alpha information, they are just the coordinates
+    /// for the pixels that this trapezoid covers.
     fn into_pixels(&self) -> Vec<Pixel> {
         let outline = self.lines();
 
@@ -311,13 +283,39 @@ impl Trapezoid {
             for x in minmap[&y]..(maxmap[&y] + 1) {
                 let pixel = Pixel{x: x, y: y};
                 pixels.push(pixel);
-
             }
         }
 
         pixels
     }
 }
+
+
+
+// Defines the a collection for holding a Trapezoid's bases.
+//
+// A Trapezoid's base line segments are always parallel.
+// If a trapezoid is a rectangle, it has two base pairs, otherwise just one
+//
+// Warning! -  TrapezoidBasePair doesn't check for parallelity, it assumes it is being passed
+//             parallel line segments.
+struct TrapezoidBasePair(LineSegment, LineSegment);
+
+// Returns true if TrapezoidBasePairs have the same LineSegments, disregarding order.
+impl PartialEq for TrapezoidBasePair {
+    fn eq(&self, other: &TrapezoidBasePair) -> bool {
+        (self.0 == other.0 && self.1 == other.1) ||
+        (self.0 == other.1 && self.1 == other.0)
+    }
+}
+
+impl TrapezoidBasePair {
+    fn slope(&self) -> f32 {
+        self.0.slope()
+    }
+}
+
+
 
 #[derive(Debug)]
 struct Pixel {
@@ -326,6 +324,7 @@ struct Pixel {
 }
 
 impl Pixel {
+    /// Returns a Vec of Points whose coordinates are the points to be sampled for anti-aliasing.
     fn sample_points(&self) -> Vec<Point> {
         let mut points = Vec::new();
         let x_increment = 1. / 16.;
@@ -343,7 +342,7 @@ impl Pixel {
     }
 }
 
-/// Returns true if a ray running along the x-axis intersects the line `line`.
+/// Returns true if a ray running along the positive x-axis intersects the line `line`.
 fn ray_from_point_crosses_line(point: &Point, line: &LineSegment) -> bool {
     let p1 = line.point1 - *point;
     let p2 = line.point2 - *point;
@@ -366,7 +365,11 @@ fn ray_from_point_crosses_line(point: &Point, line: &LineSegment) -> bool {
     }
 }
 
-fn mask_from_trapezoids(trapezoids: &Vec<Trapezoid>, width: usize, height: usize) -> ImageSurface {
+/// Returns an ImageSurface mask from a Vec of Trapezoids.
+///
+/// The Rgba values will only have alpha values, as it is expected that this mask will only be
+/// used with the `operator_in` operator.
+pub fn mask_from_trapezoids(trapezoids: &Vec<Trapezoid>, width: usize, height: usize) -> ImageSurface {
     let mut mask = ImageSurface::create(width, height);
 
     for trapezoid in trapezoids {
@@ -397,6 +400,7 @@ mod tests {
     use super::{Trapezoid, TrapezoidBasePair, ray_from_point_crosses_line, mask_from_trapezoids};
     use common_geometry::{Point, LineSegment};
 
+    // Test that the trapezoid defaults work.
     #[test]
     fn trapezoid_new() {
         let trap = Trapezoid::new(0., 0.,
@@ -415,6 +419,7 @@ mod tests {
         assert_eq!(trap.d, d);
     }
 
+    // Test that you can construct a trapezoid from points
     #[test]
     fn trapezoid_from_points() {
         let a = Point{x: 0., y: 0.};
@@ -428,6 +433,7 @@ mod tests {
         assert_eq!(trap.d, d);
     }
 
+    // Test that the ray_from_point_crosses_line function performs the 'crossings_test'
     #[test]
     fn crossings_test() {
         let p = Point{x: 1., y: 1.};
@@ -435,6 +441,7 @@ mod tests {
         assert!(ray_from_point_crosses_line(&p, &line));
     }
 
+    // Test the negative of the 'crossings test'.
     #[test]
     #[should_panic]
     fn crossings_test2() {
@@ -443,6 +450,7 @@ mod tests {
         assert!(ray_from_point_crosses_line(&p, &line));
     }
 
+    // Test that the lines() method works for trapezoids with vertical bases.
     #[test]
     fn trapezoid_vertical_bases_get_lines() {
         let a = Point{x: 0., y: 0.};
@@ -463,8 +471,9 @@ mod tests {
         assert_eq!(lines.len(), 4);
     }
 
+    // Tests that the trapezoid lines() function returns the lines it should, and no more.
     #[test]
-    fn trapezoid_rectangle_get_lines() {
+    fn trapezoid_rectangle_lines() {
         let a = Point{x: 0., y: 0.};
         let b = Point{x: 2., y: 0.};
         let c = Point{x: 2., y: 2.};
@@ -483,6 +492,8 @@ mod tests {
         assert_eq!(lines.len(), 4);
     }
 
+    // Tests that the horizontal trapezoid's lines() function returns the lines it should, and
+    // no more.
     #[test]
     fn trapezoid_horizontal_base_lines() {
         let a = Point{x: 0., y: 0.};
@@ -503,6 +514,7 @@ mod tests {
         assert_eq!(lines.len(), 4);
     }
 
+    // Test that the trapezoid contains_point() method returns true for a valid point.
     #[test]
     fn point_in_trapezoid() {
         let a = Point{x: 0., y: 0.};
@@ -510,11 +522,11 @@ mod tests {
         let c = Point{x: 2., y: 0.};
         let d = Point{x: 2., y: 2.};
         let trap = Trapezoid::from_points(a, b, c, d);
-
         let test_point = Point{x: 1., y: 1.};
         assert!(trap.contains_point(&test_point));
     }
 
+    // Test that the bases() method returns the trapezoid's bases, and not its legs.
     #[test]
     fn trapezoid_bases() {
         let a = Point{x: 0., y: 0.};
@@ -530,6 +542,7 @@ mod tests {
         assert!(bases.contains(&base_pair));
     }
 
+    // Check that the TrapezoidBasePair::slope() function returns the correct slope.
     #[test]
     fn trapezoid_base_pair_slope() {
         let a = Point{x: 0., y: 0.};
@@ -571,6 +584,8 @@ mod tests {
         }
     }
 
+    /// Check that when two trapezoids share a line, that line gets rasterized when
+    /// `fn mask_from_trapezoids` is called.
     #[test]
     fn adjacent_trapezoids_shared_line_is_opaque() {
         let a = Point{x: 0., y: 0.};
