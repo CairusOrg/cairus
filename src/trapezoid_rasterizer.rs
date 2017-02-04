@@ -127,12 +127,8 @@ use std::collections::HashMap;
 /// ### Panics
 /// `fn Trapezoid::from_bases` will panic if the LineSegments are not parallel.
 ///
-/// TODO: Test edge-cases
-/// TODO: Change Struct to be represented by base LineSegments instead of points
 /// TODO: Implement `fn points()` or `fn a()`, `fn b()` , etc...
 /// TODO: Test/verify degenerate Trapezoid (a triangle) is still valid
-/// TODO: Investigate optimizing and benching rasterization
-/// TODO: Change tuple coordinates to Point struct for name clarity
 pub struct Trapezoid {
     lines: Vec<LineSegment>
 }
@@ -404,9 +400,9 @@ mod tests {
         assert!(hasd);
     }
 
-    // Test that trapezoid can be constructed from bases
+    // Passes if bases_from_points returns the correct bases pairs
     #[test]
-    fn trapezoid_from_bases() {
+    fn test_bases_from_points() {
         let a = Point{x: 0., y: 0.};
         let b = Point{x: 4., y: 0.};
         let c = Point{x: 2., y: 2.};
@@ -592,5 +588,19 @@ mod tests {
         assert_eq!(rgba.alpha, 1.);
         let rgba = mask.get(3, 3).unwrap();
         assert!(rgba.alpha > 0.9);
+    }
+
+    // Passes if a degenerate trapezoid (a triangle) functions correctly
+    #[test]
+    fn degenerate_trapezoid_works() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 4., y: 0.};
+        let base1 = LineSegment{point1: a, point2: b};
+
+        let c = Point{x: 3., y: 3.};
+        let d = Point{x: 3., y: 3.};
+        let base2 = LineSegment{point1: c, point2: d};
+
+        let trapezoid = Trapezoid::from_bases(base1, base2);
     }
 }
