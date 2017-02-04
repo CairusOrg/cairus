@@ -383,9 +383,6 @@ pub fn mask_from_trapezoids(trapezoids: &Vec<Trapezoid>, width: usize, height: u
                 }
             }
 
-            if pixel.x == 3 && pixel.y == 3 {
-                println!("x, y = {}, {} --- successes: {}", pixel.x, pixel.y, successes);
-            }
             rgba.alpha += successes as f32 / 255.;
             rgba.alpha.max(1.);
          }
