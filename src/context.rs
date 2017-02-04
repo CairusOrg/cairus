@@ -1,7 +1,7 @@
 /*
  * Cairus - a reimplementation of the cairo graphics library in Rust
  *
- * Copyright © 20XX CairusOrg
+ * Copyright © 2017 CairusOrg
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -33,20 +33,13 @@
  *
  */
 
-
-
 use surfaces::ImageSurface;
 use types::Rgba;
 
 
-
 pub struct Context<'a>{
 
-
-    //holds a reference to another surface
-
     pub rgba: Rgba,
-
     target: &'a ImageSurface,
 
 }
@@ -78,7 +71,6 @@ mod tests{
     use surfaces::ImageSurface;
     use context::Context;
 
-
     #[test]
     fn test_create_context(){
 
@@ -95,10 +87,6 @@ mod tests{
         let mut empty_context = Context::create(&surface);
         let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
     }
-
-
-
-
 
 }
 
