@@ -36,6 +36,8 @@
 //! This module defines trapezoid rasterization structs and functions.
 //!
 //! # Algorithms
+//!   The following section will descibe the important algorithms used in Cairus's rasterization
+//! sequence.
 //!
 //! ## Rasterization Overiew
 //!
@@ -113,122 +115,49 @@
 //!  See `fn ray_from_point_crosses_line` for ray intersection algorithm, and
 //!  `fn Trapezoid::contains_point` for how it is used to determine if a point is in a trapezoid.
 
-
 use surfaces::ImageSurface;
 use common_geometry::{Point, LineSegment};
 use std::{f32, i32};
 use std::collections::HashMap;
 
-
 /// ## Trapezoid
 ///
 /// Defines a trapezoid as four points.
 ///
-/// TODO: Refactor
+/// ### Panics
+/// `fn Trapezoid::from_bases` will panic if the LineSegments are not parallel.
+///
 /// TODO: Test edge-cases
-/// TODO: Implement `fn from_bases(LineSegment, LineSegment)`
-/// TODO: Implement checking for constructors
 /// TODO: Change Struct to be represented by base LineSegments instead of points
 /// TODO: Implement `fn points()` or `fn a()`, `fn b()` , etc...
 /// TODO: Test/verify degenerate Trapezoid (a triangle) is still valid
 /// TODO: Investigate optimizing and benching rasterization
 /// TODO: Change tuple coordinates to Point struct for name clarity
 pub struct Trapezoid {
-    a: Point,
-    b: Point,
-    c: Point,
-    d: Point,
+    lines: Vec<LineSegment>
 }
 
 impl Trapezoid {
 
-    // Returns a new Trapezoid defined by coordinates.
-    fn new(ax: f32, ay: f32, bx: f32, by: f32, cx: f32, cy: f32, dx: f32, dy: f32) -> Trapezoid {
-        Trapezoid {
-            a: Point {x: ax, y: ay},
-            b: Point {x: bx, y: by},
-            c: Point {x: cx, y: cy},
-            d: Point {x: dx, y: dy},
-        }
-    }
-
     // Returns a new Trapezoid defined by points.
     fn from_points(a: Point, b: Point, c: Point, d: Point) -> Trapezoid {
+        let bases = bases_from_points(a, b, c, d);
+        Trapezoid::from_bases(bases[0].0, bases[0].1)
+    }
+
+    // Returns a new Trapezoid from two bases
+    fn from_bases(base1: LineSegment, base2: LineSegment) -> Trapezoid {
+        if base1.slope() != base2.slope() {
+            panic!("Trapezoid::from_bases() can only be called on LineSegments with equal slope!");
+        }
+
         Trapezoid {
-            a: a,
-            b: b,
-            c: c,
-            d: d,
+            lines: lines_from_bases(base1, base2)
         }
     }
 
-    // Returns a Vec<LineSegment> of the four lines that make up this Trapezoid.
-    fn lines(&self) -> Vec<LineSegment> {
-        // TODO: Organize lines to be returned in counter-clockwise order
-        let bases = self.bases();
-        if bases.len() == 2 {
-            vec![bases[0].0, bases[0].1, bases[1].0, bases[1].1]
-        } else {
-            let base = &bases[0];
-            let mut lines = vec![base.0, base.1];
-            let slope = bases[0].slope(); // TrapezoidBasePair, not a LineSegment
-            if slope == f32::INFINITY {
-                let highest_from_base0 = base.0.highest_point();
-                let lowest_from_base0 = base.0.lowest_point();
-                let highest_from_base1 = base.1.highest_point();
-                let lowest_from_base1 = base.1.lowest_point();
-
-                let top_leg = LineSegment::from_points(highest_from_base0, highest_from_base1);
-                let bottom_leg = LineSegment::from_points(lowest_from_base0, lowest_from_base1);
-                lines.push(top_leg);
-                lines.push(bottom_leg);
-            } else {
-                let leftmost_from_base0 = base.0.leftmost_point();
-                let rightmost_from_base0 = base.0.rightmost_point();
-                let leftmost_from_base1 = base.1.leftmost_point();
-                let rightmost_from_base1 = base.1.rightmost_point();
-
-                let left_leg = LineSegment::from_points(leftmost_from_base0, leftmost_from_base1);
-                let right_leg = LineSegment::from_points(rightmost_from_base0, rightmost_from_base1);
-                lines.push(left_leg);
-                lines.push(right_leg);
-            }
-
-            lines
-        }
-    }
-
-    /// Returns self's base line segments.
-    ///
-    /// A Trapezoid's base line segments are the parallel lines that form the Trapezoid.
-    /// If the returned Vec is of length 1, it is a normal trapezoid.
-    /// If the returned Vec is of length 2, it is either a rectangle or a triangle (a degenerate
-    /// trapezoid with one base having a length of 0).
-    fn bases(&self) -> Vec<TrapezoidBasePair> {
-        let mut points = vec![self.a, self.b, self.c, self.d];
-        points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
-
-        let mut possible_lines = Vec::new();
-        for outer in 0..points.len() {
-            for inner in (outer+1)..points.len() {
-                let line = LineSegment::from_points(points[outer], points[inner]);
-                 possible_lines.push(line);
-            }
-        }
-
-        let mut base_pairs = Vec::new();
-        for outer in 0..possible_lines.len() {
-            for inner in (outer+1)..possible_lines.len() {
-                let line1 = possible_lines[inner];
-                let line2 = possible_lines[outer];
-                if line1.slope() == line2.slope() {
-                    let base_pair = TrapezoidBasePair(line1, line2);
-                    base_pairs.push(base_pair);
-                }
-            }
-        }
-
-        base_pairs
+    fn lines(&self) -> &Vec<LineSegment> {
+        &self.lines
     }
 
     /// Returns true if this Trapezoid contains `point`, otherwise returns false
@@ -248,10 +177,8 @@ impl Trapezoid {
     /// The returned pixels don't contain color or alpha information, they are just the coordinates
     /// for the pixels that this trapezoid covers.
     fn into_pixels(&self) -> Vec<Pixel> {
-        let outline = self.lines();
-
         let mut outline_pixels = Vec::new();
-        for line in outline {
+        for line in self.lines() {
             for pixel in line.into_pixel_coordinates() {
                 outline_pixels.push(pixel);
             }
@@ -290,12 +217,9 @@ impl Trapezoid {
     }
 }
 
-
-
-// Defines the a collection for holding a Trapezoid's bases.
+// Defines a collection for holding a Trapezoid's bases.
 //
 // A Trapezoid's base line segments are always parallel.
-// If a trapezoid is a rectangle, it has two base pairs, otherwise just one
 //
 // Warning! -  TrapezoidBasePair doesn't check for parallelity, it assumes it is being passed
 //             parallel line segments.
@@ -310,12 +234,56 @@ impl PartialEq for TrapezoidBasePair {
 }
 
 impl TrapezoidBasePair {
+    // Returns the slope of the bases
     fn slope(&self) -> f32 {
         self.0.slope()
     }
 }
 
+/// Returns base line segments constructed from points.
+///
+/// A Trapezoid's base line segments are the parallel lines that form the Trapezoid.
+fn bases_from_points(a: Point, b: Point, c: Point, d: Point) -> Vec<TrapezoidBasePair> {
+    let mut points = vec![a, b, c, d];
+    points.sort_by(|&a, &b| { a.x.partial_cmp(&b.x).unwrap() });
 
+    let mut possible_lines = Vec::new();
+    for outer in 0..points.len() {
+        for inner in (outer+1)..points.len() {
+            let line = LineSegment::from_points(points[outer], points[inner]);
+             possible_lines.push(line);
+        }
+    }
+
+    let mut base_pairs = Vec::new();
+    for outer in 0..possible_lines.len() {
+        for inner in (outer+1)..possible_lines.len() {
+            let line1 = possible_lines[inner];
+            let line2 = possible_lines[outer];
+            if line1.slope() == line2.slope() {
+                let base_pair = TrapezoidBasePair(line1, line2);
+                base_pairs.push(base_pair);
+            }
+        }
+    }
+
+    base_pairs
+}
+
+// Returns a Vec<LineSegment> of the four lines that make up a Trapezoid with bases base1 and
+// base2.
+fn lines_from_bases(base1: LineSegment, base2: LineSegment) -> Vec<LineSegment> {
+    let slope = base1.slope(); // TrapezoidBasePair, not a LineSegment
+    if slope == f32::INFINITY {
+        let top_leg = LineSegment::from_points(base1.highest_point(), base2.highest_point());
+        let bottom_leg = LineSegment::from_points(base1.lowest_point(), base2.lowest_point());
+        vec![bottom_leg, base1, top_leg, base2]
+    } else {
+        let left_leg = LineSegment::from_points(base1.leftmost_point(), base2.leftmost_point());
+        let right_leg = LineSegment::from_points(base1.rightmost_point(), base2.rightmost_point());
+        vec![base1, left_leg, base2, right_leg]
+    }
+}
 
 #[derive(Debug)]
 struct Pixel {
@@ -391,30 +359,16 @@ pub fn mask_from_trapezoids(trapezoids: &Vec<Trapezoid>, width: usize, height: u
      mask
 }
 
-
 #[cfg(test)]
 mod tests {
-    use super::{Trapezoid, TrapezoidBasePair, ray_from_point_crosses_line, mask_from_trapezoids};
+    use super::{
+        Trapezoid,
+        TrapezoidBasePair,
+        ray_from_point_crosses_line,
+        mask_from_trapezoids,
+        bases_from_points,
+    };
     use common_geometry::{Point, LineSegment};
-
-    // Test that the trapezoid defaults work.
-    #[test]
-    fn trapezoid_new() {
-        let trap = Trapezoid::new(0., 0.,
-                                  0., 1.,
-                                  1., 0.,
-                                  1., 1.);
-
-        let a = Point{x: 0., y: 0.};
-        let b = Point{x: 0., y: 1.};
-        let c = Point{x: 1., y: 0.};
-        let d = Point{x: 1., y: 1.};
-
-        assert_eq!(trap.a, a);
-        assert_eq!(trap.b, b);
-        assert_eq!(trap.c, c);
-        assert_eq!(trap.d, d);
-    }
 
     // Test that you can construct a trapezoid from points
     #[test]
@@ -424,10 +378,46 @@ mod tests {
         let c = Point{x: 1., y: 0.};
         let d = Point{x: 1., y: 1.};
         let trap = Trapezoid::from_points(a, b, c, d);
-        assert_eq!(trap.a, a);
-        assert_eq!(trap.b, b);
-        assert_eq!(trap.c, c);
-        assert_eq!(trap.d, d);
+
+        let (mut hasa, mut hasb, mut hasc, mut hasd) = (false, false, false, false);
+        for line in trap.lines() {
+            if line.point1 == a || line.point2 == a {
+                hasa = true;
+            }
+
+            if line.point1 == b || line.point2 == b {
+                hasb = true;
+            }
+
+            if line.point1 == c || line.point2 == c {
+                hasc = true;
+            }
+
+            if line.point1 == d || line.point2 == d {
+                hasd = true;
+            }
+        }
+
+        assert!(hasa);
+        assert!(hasb);
+        assert!(hasc);
+        assert!(hasd);
+    }
+
+    // Test that trapezoid can be constructed from bases
+    #[test]
+    fn trapezoid_from_bases() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 4., y: 0.};
+        let c = Point{x: 2., y: 2.};
+        let d = Point{x: 3., y: 2.};
+
+        let base1 = LineSegment{point1: a, point2: b};
+        let base2 = LineSegment{point1: c, point2: d};
+        let pair = TrapezoidBasePair(base1, base2);
+        let bases = bases_from_points(a, b, c, d);
+        assert!(bases[0] == pair);
+        assert!(bases.len() >= 1);
     }
 
     // Test that the ray_from_point_crosses_line function performs the 'crossings_test'
@@ -530,8 +520,7 @@ mod tests {
         let b = Point{x: 4., y: 0.};
         let c = Point{x: 2., y: 2.};
         let d = Point{x: 3., y: 2.};
-        let trap = Trapezoid::from_points(a, b, c, d);
-        let bases = trap.bases();
+        let bases = bases_from_points(a, b, c, d);
 
         let base1 = LineSegment::from_points(a, b);
         let base2 = LineSegment::from_points(c, d);
