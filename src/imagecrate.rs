@@ -30,3 +30,48 @@
  *
  *
  */
+
+use std::fs::File;
+use std::path::Path;
+use surfaces::ImageSurface;
+use types::Rgba;
+extern crate image;
+
+
+/// The supported image outputs in Cairus
+pub enum ImageType {
+    PNG,
+}
+
+pub fn fetch_image_converter(itc: &ImageType) -> fn(&ImageSurface, &Path) {
+    match *itc {
+        ImageType::PNG      => output_png,
+    }
+}
+
+/// Writes the image to a PNG file
+fn output_png(is: &ImageSurface, path: &Path) {
+
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ImageType;
+    use super::fetch_image_converter;
+    use super::output_png;
+    use surfaces::ImageSurface;
+    use std::path::Path;
+
+    #[test]
+    // checks that..
+    fn test_one() {
+        // Setup
+        // How do i create a new image surface when create is private?
+        let is =  ImageSurface::create(100,100);
+        let path = Path::new("file.jpg");
+        // Call
+        output_png(&is, &path);
+        // Test
+
+    }
+}
