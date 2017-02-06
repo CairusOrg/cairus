@@ -143,7 +143,9 @@ impl Trapezoid {
 
     // Returns a new Trapezoid from two bases
     fn from_bases(base1: LineSegment, base2: LineSegment) -> Trapezoid {
-        if base1.slope() != base2.slope() {
+        if base1.length() != 0. &&
+           base2.length() != 0. &&
+           base1.slope() != base2.slope() {
             panic!("Trapezoid::from_bases() can only be called on LineSegments with equal slope!");
         }
 
@@ -269,8 +271,7 @@ fn bases_from_points(a: Point, b: Point, c: Point, d: Point) -> Vec<TrapezoidBas
 // Returns a Vec<LineSegment> of the four lines that make up a Trapezoid with bases base1 and
 // base2.
 fn lines_from_bases(base1: LineSegment, base2: LineSegment) -> Vec<LineSegment> {
-    let slope = base1.slope(); // TrapezoidBasePair, not a LineSegment
-    if slope == f32::INFINITY {
+    if base1.slope() == f32::INFINITY {
         let top_leg = LineSegment::from_points(base1.highest_point(), base2.highest_point());
         let bottom_leg = LineSegment::from_points(base1.lowest_point(), base2.lowest_point());
         vec![bottom_leg, base1, top_leg, base2]
@@ -325,7 +326,7 @@ fn ray_from_point_crosses_line(point: &Point, line: &LineSegment) -> bool {
             x.is_sign_positive()
         }
     } else {
-            false
+        false
     }
 }
 
@@ -602,5 +603,10 @@ mod tests {
         let base2 = LineSegment{point1: c, point2: d};
 
         let trapezoid = Trapezoid::from_bases(base1, base2);
+
+        let internal_point = Point{x: 3., y: 2.};
+        let external_point = Point{x: 2., y: 2.5};
+        assert!(trapezoid.contains_point(&internal_point));
+        assert!(!trapezoid.contains_point(&external_point));
     }
 }

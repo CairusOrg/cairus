@@ -87,6 +87,11 @@ impl LineSegment {
         }
     }
 
+    // Returns the length of this LineSegment
+    pub fn length(&self) -> f32 {
+        (self.point2.x - self.point1.x + self.point2.y - self.point1.y).sqrt()
+    }
+
     /// Returns the slope of this LineSegment.
     ///
     /// If the slope is completely vertical, this function will return f32::INFINITY, otherwise
@@ -471,5 +476,11 @@ mod tests {
           }
       }
 
+      // Passes if LineSegment::length() works
+      #[test]
+      fn line_length() {
+          let line = LineSegment::new(0., 0., 2., 2.);
+          assert_eq!(line.length(), 2.);
+      }
 
 }
