@@ -44,9 +44,11 @@ use std::vec::IntoIter;
 use types::Rgba;
 
 
-//Format enum descriptors for the surface object
-//These are specifically the format types copied from the C implementation,
-//some may not be necessary
+
+
+///Format enum descriptors for the surface object
+///These are specifically the format types copied from the C implementation,
+///analagous to cairo_format_t
 #[allow(non_camel_case_types)]
 pub enum Format {
     Invalid,
