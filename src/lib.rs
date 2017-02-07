@@ -56,6 +56,9 @@ mod types;
 #[allow(dead_code)]
 mod surfaces;
 
+#[allow(dead_code)]
+mod imagecrate;
+
 #[cfg(test)]
 mod tests {
     #[test]
