@@ -128,10 +128,11 @@ mod tests{
 
 #[test]
     fn test_get_default_operator(){
-        let context = Context::create(
-            &mut ImageSurface::create(255, 255),
-            );
-        assert_eq!( Operator::Over, context.get_operator() );
+        let mut surface = ImageSurface::create(255, 255); 
+        let context = Context::create( &mut surface );
+            //&'a mut ImageSurface::create(255, 255),
+            //);
+        assert_eq!( &Operator::Over, context.get_operator() );
     }
 
     #[test]
