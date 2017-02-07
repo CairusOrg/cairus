@@ -1,7 +1,7 @@
 /*
  * Cairus - a reimplementation of the cairo graphics library in Rust
  *
- * Copyright © 20XX CairusOrg
+ * Copyright © 2017 CairusOrg
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -33,53 +33,30 @@
  *  Evan Smelser <evanjsmelser@gmail.com>
  */
 
-
-
 use surfaces::ImageSurface;
 use types::Rgba;
 use operators::{Operator, fetch_operator};
 
-
-/*struct cairo_array{
-    size: u64,
-    num_elements: u64,
-    element_size: u64, //no need
-    elements: &char //DONT NEED IT FOR NOW
-}
-
-impl cairo_array{
-
-    fn new(size: u64, num_elements: u64, element_size: u64, elements: &char)->cairo_array{
-        cairo_array{size: size, num_elements: num_elements, element_size: element_size, elements: elements}
-    }
-}*/
-
 pub struct Context<'a>{
 
-    //hold a surface and an rgba or just rgba
-    //holds a reference to another surface
-
-    //pub surface: &'a ImageSurface,
     pub rgba: Rgba,
-    //pub ref_count: u64, // no need
-    //pub user_data_array: cairo_array
-    surface: &'a mut ImageSurface,
+    target: &'a mut ImageSurface,
     operator: Operator,
 }
 
 impl<'a> Context<'a>{
     //Pretty certain the default operator is defined as Over so we don't need to pass it in.
     //But I'm open to discuss for sure.
-    fn create(surface: &'a mut ImageSurface)-> Context {
+    fn create(target: &'a mut ImageSurface)-> Context {
 
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
-            surface: surface,
+            target: target,
             operator: Operator::Over 
         }
     }
 
-    fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
+    pub fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
 
         self.rgba.red = red;
         self.rgba.green = green;
@@ -108,13 +85,11 @@ impl<'a> Context<'a>{
     pub fn paint(&mut self) {
         let op = Operator::Over;
         let operator = fetch_operator(&op);
-        for mut pixel in self.surface.iter_mut() {
+        for mut pixel in self.target.iter_mut() {
             operator(&self.rgba, pixel);
         }
     }
-
 }
-
 
 /// # References
 /// [Cairo Operators]: https://www.cairographics.org/operators/
@@ -126,12 +101,12 @@ mod tests{
     use operators::{Operator, fetch_operator};
     use super::Context;
 
-#[test]
+    #[test]
     fn test_get_default_operator(){
+        //setup
         let mut surface = ImageSurface::create(255, 255); 
         let context = Context::create( &mut surface );
-            //&'a mut ImageSurface::create(255, 255),
-            //);
+        //call and assert
         assert_eq!( &Operator::Over, context.get_operator() );
     }
 
@@ -141,8 +116,30 @@ mod tests{
        //operator and check to see that it was actually changed. However, I only have the
        //Over operator implemented in this branch so there really isn't anything to change
        //it to here.
+
+        //setup
+        //call
+        //assert
     }
 
+
+    //I'm not sure exactly what we wanted to test here, but definitely open to discuss it and help
+    //get these written up and assertions put together. Just let me know. -Evan
+    #[test]
+    fn test_create_context(){
+        
+        let mut target = ImageSurface::create(100, 100);
+        let empty_context = Context::create(&mut target);
+
+    }
+
+    #[test]
+    fn test_set_rgba(){
+
+        let mut target = ImageSurface::create(100, 100);
+        let mut empty_context = Context::create(&mut target);
+        let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
+    }
 
 
 }
