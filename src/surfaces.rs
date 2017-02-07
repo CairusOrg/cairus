@@ -39,10 +39,12 @@
 //! Cairo surfaces are basically raster (bitmap) containers.  They 'receive' operations performed
 //! on them by contexts.  They are the 'canvas' of Cairus.
 
+use std::fs::File;
+use std::path::Path;
 use std::slice::{IterMut, Iter};
 use std::vec::IntoIter;
 use types::Rgba;
-
+extern crate image;
 
 
 
@@ -119,6 +121,10 @@ impl ImageSurface {
 
     fn iter_mut(&mut self) -> IterMut<Rgba> {
         self.base.iter_mut()
+    }
+
+    pub fn to_png(&self, path: &Path) {
+
     }
 }
 
