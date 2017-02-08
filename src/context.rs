@@ -161,7 +161,5 @@ mod tests{
         for pixel in target.iter() {
             assert_eq!(*pixel, expected);
         }
-
     }
-
 }
