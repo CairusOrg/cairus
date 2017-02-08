@@ -56,7 +56,7 @@ mod types;
 #[allow(dead_code)]
 mod surfaces;
 
-mod cairo_t;
+mod context;
 
 #[cfg(test)]
 mod tests {
@@ -66,6 +66,3 @@ mod tests {
     }
 }
 
-mod test2 {
-    fn works() {}
-}

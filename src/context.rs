@@ -1,7 +1,7 @@
 /*
  * Cairus - a reimplementation of the cairo graphics library in Rust
  *
- * Copyright © 20XX CairusOrg
+ * Copyright © 2017 CairusOrg
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -33,68 +33,59 @@
  *
  */
 
-
-
 use surfaces::ImageSurface;
 use types::Rgba;
 
-enum Status{
 
-    Success = 0,
-    NoMemory,
-    InvalidRestore,
-    InvalidPopGroup,
-    NoCurrentPoint,
-    InvalidMatrix,
-    InvalidStatus,
-    NullPointer,
-    InvalidString
-}
+pub struct Context<'a>{
 
-/*struct cairo_array{
-    size: u64,
-    num_elements: u64,
-    element_size: u64, //no need
-    elements: &char //DONT NEED IT FOR NOW
-}
-
-impl cairo_array{
-
-    fn new(size: u64, num_elements: u64, element_size: u64, elements: &char)->cairo_array{
-        cairo_array{size: size, num_elements: num_elements, element_size: element_size, elements: elements}
-    }
-}*/
-
-pub struct cairo_t{
-
-    //hold a surface and an rgba or just rgba
-    //holds a reference to another surface
-
-    //pub surface: &'a ImageSurface,
     pub rgba: Rgba,
-    //pub ref_count: u64, // no need
-    status: Status,
-    //pub user_data_array: cairo_array
+    target: &'a ImageSurface,
 
 }
 
-impl cairo_t{
+impl<'a> Context<'a>{
 
-    fn new(status: Status, )->cairo_t{
+    pub fn create(target: &'a ImageSurface )-> Context {
 
-        cairo_t{
-            status: status,
-            rgba: Rgba::new(0., 0., 0., 0.)
+        Context{
+            rgba: Rgba::new(0., 0., 0., 0.),
+            target: target,
         }
     }
 
-    fn set_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
+    pub fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
 
         self.rgba.red = red;
         self.rgba.green = green;
         self.rgba.blue = blue;
         self.rgba.alpha = alpha;
 
+    }
+
+}
+
+mod tests{
+
+    use types::Rgba;
+    use surfaces::ImageSurface;
+    use context::Context;
+
+    #[test]
+    fn test_create_context(){
+
+        let surface = ImageSurface::create(100, 100);
+        let empty_context = Context::create(&surface);
+
+
+    }
+
+    #[test]
+    fn test_set_rgba(){
+
+        let surface = ImageSurface::create(100, 100);
+        let mut empty_context = Context::create(&surface);
+        let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
     }
 
 }
