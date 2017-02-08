@@ -31,6 +31,8 @@
  * Contributor(s):
  *	Sara Ferdousi <ferdousi@pdx.edu>
  *  Evan Smelser <evanjsmelser@gmail.com>
+ *  Bobby Eshleman <bobbyeshleman@gmail.com>
+ *
  */
 
 use surfaces::ImageSurface;
