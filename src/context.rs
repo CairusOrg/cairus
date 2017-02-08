@@ -46,7 +46,8 @@ pub struct Context<'a>{
 //Implementation of methods for context
 impl<'a> Context<'a>{
 
-    //default constructor. Sets Rgba values to zeroes
+    //default constructor. Sets Rgba values to zeroes and set the target to passed ImageSurface.
+    //When new context is created a target surface needs to be passed in.
     pub fn create(target: &'a ImageSurface )-> Context {
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
@@ -55,6 +56,7 @@ impl<'a> Context<'a>{
     }
 
     //Sets Rgba values of source
+    //This function changes the Rgba values of the source
     pub fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
         self.rgba.red = red;
         self.rgba.green = green;
@@ -74,6 +76,7 @@ mod tests{
     fn test_create_context(){
         let surface = ImageSurface::create(100, 100);
         let empty_context = Context::create(&surface);
+
     }
 
     //Testing set_rgba function
@@ -82,6 +85,10 @@ mod tests{
         let surface = ImageSurface::create(100, 100);
         let mut empty_context = Context::create(&surface);
         let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
+        assert_eq!(empty_context.rgba.blue, 1.);
+        assert_eq!(empty_context.rgba.green, 1.);
+        assert_eq!(empty_context.rgba.red, 1.);
+        assert_eq!(empty_context.rgba.alpha, 1.);
     }
 
 }
