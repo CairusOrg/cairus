@@ -143,7 +143,8 @@ mod tests{
         let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
     }
 
-    // This tests that naive paint covers the target.
+    // This tests that naive paint covers the target.  It does two calls, in order to check that
+    // multiple mutable borrows (via paint) work fine too.
     #[test]
     fn test_paint() {
         // Setup
