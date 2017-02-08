@@ -46,7 +46,7 @@ pub struct Context<'a>{
 //Implementation of methods for context
 impl<'a> Context<'a>{
 
-    //default constructor. Sets Rgba values to zeroes and set the target to passed ImageSurface.
+    //Creates a new cairo context with rgba values set to zeroes with passed ImageSurface as target surface
     //When new context is created a target surface needs to be passed in.
     pub fn create(target: &'a ImageSurface )-> Context {
         Context{
@@ -55,7 +55,7 @@ impl<'a> Context<'a>{
         }
     }
 
-    //Sets Rgba values of source
+    //Sets Rgba values of source to used defined values
     //This function changes the Rgba values of the source
     pub fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
         self.rgba.red = red;
@@ -76,7 +76,7 @@ mod tests{
     fn test_create_context(){
         let surface = ImageSurface::create(100, 100);
         let empty_context = Context::create(&surface);
-
+        assert_eq!(empty_context.rgba.red, 0.);
     }
 
     //Testing set_rgba function
