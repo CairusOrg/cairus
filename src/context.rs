@@ -52,7 +52,7 @@ impl<'a> Context<'a>{
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
             target: target,
-            operator: Operator::Over 
+            operator: Operator::Over
         }
     }
 
@@ -104,7 +104,7 @@ mod tests{
     #[test]
     fn test_get_default_operator(){
         //setup
-        let mut surface = ImageSurface::create(255, 255); 
+        let mut surface = ImageSurface::create(255, 255);
         let context = Context::create( &mut surface );
         //call and assert
         assert_eq!( &Operator::Over, context.get_operator() );
@@ -127,7 +127,7 @@ mod tests{
     //get these written up and assertions put together. Just let me know. -Evan
     #[test]
     fn test_create_context(){
-        
+
         let mut target = ImageSurface::create(100, 100);
         let empty_context = Context::create(&mut target);
 
@@ -141,6 +141,27 @@ mod tests{
         let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
     }
 
+    // This tests that naive paint covers the target.
+    #[test]
+    fn test_paint() {
+        // Setup
+        let mut target = ImageSurface::create(100, 100);
+
+        // Call
+        {
+            let mut context = Context::create(&mut target);
+            context.set_source_rgba(1., 0., 0., 1.);
+            context.paint();
+            context.set_source_rgba(0., 1., 0., 1.);
+            context.paint();
+        }
+
+        // Test
+        let expected = Rgba::new(0., 1., 0., 1.);
+        for pixel in target.iter() {
+            assert_eq!(*pixel, expected);
+        }
+
+    }
 
 }
-
