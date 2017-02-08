@@ -47,8 +47,6 @@ pub struct Context<'a>{
 }
 
 impl<'a> Context<'a>{
-    //Pretty certain the default operator is defined as Over so we don't need to pass it in.
-    //But I'm open to discuss for sure.
     fn create(target: &'a mut ImageSurface)-> Context {
 
         Context{
@@ -67,14 +65,32 @@ impl<'a> Context<'a>{
 
     }
 
-    ///Set Operator function.
-    ///Changes the operator held by the context object to the passed in operator.
-    ///The operator passed in is just a copy of the enum which gives the context knowledge of the
-    ///current operator in use.
+    /// Set Operator function.
+    /// 
+    /// Changes the operator held by the context object to the passed in operator.
+    /// The operator passed in is just a copy of the enum which gives the context knowledge of the
+    /// current operator in use.
+    /// Sets the operator held within the context object to the passed in operator of choice.
+    ///
+    /// # Arguments
+    /// * `&mut self` - Reference to the `Context` to hold the desired `Operator`.
+    /// * `operator` - An enum `Operator` that matches the desired operation.
+    ///
+    /// # Usage
+    /// set_operator(&context, op_enum);
     fn set_operator(&mut self, operator: Operator){
         self.operator = operator;
     }
 
+    /// Get Operator function.
+    ///
+    /// Returns the operator held within the passed in context object.
+    ///
+    /// # Arguments
+    /// * `&self` - Reference to the `Context` object that maintains the `Operator` functionality.
+    ///
+    /// # Usage
+    /// let op_enum = get_operator();
     fn get_operator(&self)-> &Operator{
         &self.operator
     }
@@ -108,8 +124,12 @@ mod tests{
         //setup
         let mut surface = ImageSurface::create(255, 255);
         let context = Context::create( &mut surface );
-        //call and assert
-        assert_eq!( &Operator::Over, context.get_operator() );
+
+        //call
+        let op_enum = context.get_operator();
+        
+        //assert
+        assert_eq!( &Operator::Over, op_enum );
     }
 
     #[test]
@@ -124,20 +144,14 @@ mod tests{
         //assert
     }
 
-
-    //I'm not sure exactly what we wanted to test here, but definitely open to discuss it and help
-    //get these written up and assertions put together. Just let me know. -Evan
     #[test]
     fn test_create_context(){
-
         let mut target = ImageSurface::create(100, 100);
         let empty_context = Context::create(&mut target);
-
     }
 
     #[test]
     fn test_set_rgba(){
-
         let mut target = ImageSurface::create(100, 100);
         let mut empty_context = Context::create(&mut target);
         let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
