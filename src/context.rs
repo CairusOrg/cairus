@@ -36,18 +36,14 @@
 use surfaces::ImageSurface;
 use types::Rgba;
 
-
 pub struct Context<'a>{
-
     pub rgba: Rgba,
     target: &'a ImageSurface,
-
 }
 
 impl<'a> Context<'a>{
 
     pub fn create(target: &'a ImageSurface )-> Context {
-
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
             target: target,
@@ -55,34 +51,26 @@ impl<'a> Context<'a>{
     }
 
     pub fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
-
         self.rgba.red = red;
         self.rgba.green = green;
         self.rgba.blue = blue;
         self.rgba.alpha = alpha;
-
     }
-
 }
 
 mod tests{
-
     use types::Rgba;
     use surfaces::ImageSurface;
     use context::Context;
 
     #[test]
     fn test_create_context(){
-
         let surface = ImageSurface::create(100, 100);
         let empty_context = Context::create(&surface);
-
-
     }
 
     #[test]
     fn test_set_rgba(){
-
         let surface = ImageSurface::create(100, 100);
         let mut empty_context = Context::create(&surface);
         let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
