@@ -50,7 +50,7 @@ extern crate image;
 
 ///Format enum descriptors for the surface object
 ///These are specifically the format types copied from the C implementation,
-///analagous to cairo_format_t
+///analogous to cairo_format_t
 #[allow(non_camel_case_types)]
 pub enum Format {
     Invalid,
@@ -106,7 +106,7 @@ pub struct ImageSurface {
 /// paint, it can simply iterate through the pixels in the image surface and use a image
 /// compositing operator to operate on them.  See `operators.rs` for those operations.
 impl ImageSurface {
-    // Analagous to cairo_create(), you pass in a width and height and get in a surface in exchange.
+    // Analogous to cairo_create(), you pass in a width and height and get in a surface in exchange.
     pub fn create(width: usize, height: usize) -> ImageSurface {
         ImageSurface {
             base: vec![Rgba::new(0., 0., 0., 0.); width * height],
@@ -124,9 +124,18 @@ impl ImageSurface {
     }
 
     pub fn to_png(&self, path: &Path) {
+        let ref mut fout = File::create(path).unwrap();
+        //unwrap may need to be replaced with a try depending how we want to handle error
+        //let _= self.save(fout, image::PNG).unwrap(); //still looking up the variable construct
 
     }
 }
+///Test the equality of formats (useful to ensure the output file is rendered as a PNG
+//impl PartialEq for ImageSurface{
+//    fn eq(&self, other: &ImageFormat) -> bool {
+//        self.ImageFormat == other.ImageFormat
+//    }
+//} Needs to reference the ENUM PNG within Image crate to compile
 
 impl IntoIterator for ImageSurface {
     type Item = Rgba;
@@ -171,7 +180,7 @@ mod tests {
         // Passes if ImageSurface::iter() functions properly
         let surface = ImageSurface::create(100, 100);
 
-        // Leave pixel.red to default (0.0), change all other hcannels to 1.0
+        // Leave pixel.red to default (0.0), change all other channels to 1.0
         let result = surface.iter()
             .map(|&pixel| {
                 Rgba {
