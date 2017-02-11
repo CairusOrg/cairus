@@ -123,10 +123,20 @@ impl ImageSurface {
         self.base.iter_mut()
     }
 
+    fn into_bytes(& self) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        for pixel in self.base.iter() {
+            for byte in pixel.into_bytes() {
+              bytes.push(byte);
+            }
+        }
+        bytes
+    }
+
     pub fn to_png(&self, path: &Path) {
-        let ref mut fout = File::create(path).unwrap();
-        //unwrap may need to be replaced with a try depending how we want to handle error
-        //let _= self.save(fout, image::PNG).unwrap(); //still looking up the variable construct
+
+        let buffer = self.into_bytes();
+        let our_image = image::save_buffer(path, buffer.as_slice(), self.width as u32, self.height as u32, image::RGBA(8)).unwrap();
 
     }
 }
@@ -151,6 +161,11 @@ mod tests {
     use types::Rgba;
     use surfaces::ImageSurface;
     use operators::{Operator, fetch_operator};
+
+    use std::fs::File;
+    use std::path::Path;
+    extern crate image;
+
 
     #[test]
     fn test_image_surface_create() {
@@ -244,5 +259,17 @@ mod tests {
         for pixel in destination {
             assert_eq!(pixel, expected);
         }
+
     }
+
+    #[test]
+    fn test_image_surface_to_png() {
+        // Setup
+        let surface = ImageSurface::create(200, 200);
+        let path = Path::new("test1.png");
+
+        //Call
+        surface.to_png(path);
+    }
+
 }
