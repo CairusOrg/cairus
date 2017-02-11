@@ -170,6 +170,29 @@ mod tests{
     use::decasteljau::DeCasteljauPoints;
 
     #[test]
+    fn test_create_splineknots(){
+
+        let mut q1 = Point::create(0.,0.);
+        let q2 = Point::create(1., 2.);
+        let q3 = Point::create(1.5, 2.4);
+        let q4 = Point::create(2.6, 3.3);
+
+        let q5 = Point::create(0.,1.);
+        let q6 = Point::create(2., 2.);
+        let q7 = Point::create(1.9, 2.4);
+        let q8 = Point::create(2.7, 3.3);
+
+        let mut r1 = SplineKnots::create(q1, q2, q3, q4);
+        let mut r2 = SplineKnots::create(q5, q6, q7, q8);
+
+        assert_eq!(r1.a.x, 0.0);
+        assert_eq!(r1.c.y, 2.4);
+        assert_eq!(r2.d.x, 2.7);
+        assert_eq!(r2.d.y, 3.3);
+
+    }
+
+    #[test]
     fn test_create_spline(){
 
         let p1 = Point::create(0.,0.);
