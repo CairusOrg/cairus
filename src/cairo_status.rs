@@ -53,11 +53,6 @@ enum Status{
     InvalidFormat,
     InvalidVisual,
     FileNotFound,
-
-
-
-
     LastStatus
-
-
+    
 }
