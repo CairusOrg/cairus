@@ -35,14 +35,16 @@
 
 use std::f32;
 
-//Creates points for spline
+///Creates points for splineknots
 pub struct Point{
     pub x: f32,
     pub y: f32,
 }
 
+///Implements methods for Points
 impl Point{
 
+    ///Sets x and y values of a Point to 0.0 (origin)
     fn origin()->Point{
         Point{
             x:0.,
@@ -50,71 +52,61 @@ impl Point{
         }
     }
 
+    ///Creates a Point with user defined values
     fn create(x:f32, y:f32)->Point{
-
         Point{
             x: x,
             y: y,
         }
-
     }
-
 }
 
-//SplineKnots as in cairo c library
+///SplineKnots for bezier curves
 pub struct SplineKnots{
-
     pub a: Point,
     pub b: Point,
     pub c: Point,
     pub d: Point,
-
 }
 
+///Implements SplineKnots methods
 impl SplineKnots{
 
+    ///Creates a new SplineKnots with user defined points
     pub fn create(a:Point, b:Point, c:Point, d:Point)->SplineKnots{
-
         SplineKnots{
             a:Point::create(a.x, a.y),
             b:Point::create(b.x, b.y),
             c:Point::create(c.x, c.y),
             d:Point::create(d.x, d.y),
         }
-
     }
-
 }
 
-//lerp_half as coded in cairo c.
-
+///This function takes two Points and provides the median value
 fn lerp_half(a: & Point, b: & Point)->Point{
-
     let result = Point{
         x: a.x + (b.x - a.x)/2.,
         y: a.y + (b.y - a.y)/2.,
     };
-
     return result;
-
 }
 
-//separated points and knots. This is the implementation of points
+///Initial four points of the Bezier curve
 struct DeCasteljauPoints{
-
     pub ab: Point,
     pub bc: Point,
     pub cd: Point,
     abbc: Point,
     bccd: Point,
     fin: Point,
-
 }
 
+///Implemetation of Decasteljau methods
 impl DeCasteljauPoints {
 
+    ///Sets all the Points of the bezier curve to 0.0 using origin method of Point
     fn create()-> DeCasteljauPoints{
-
         DeCasteljauPoints{
             ab: Point::origin(),
             bc: Point::origin(),
@@ -122,13 +114,11 @@ impl DeCasteljauPoints {
             abbc: Point::origin(),
             bccd: Point::origin(),
             fin: Point::origin(),
-
         }
-
     }
 
+    ///This method is implemented for testing purpose
     fn constructor(ab: Point, bc: Point, cd: Point, abbc: Point, bccd: Point, fin: Point)->DeCasteljauPoints{
-
         DeCasteljauPoints{
             ab: ab,
             bc: bc,
@@ -136,13 +126,11 @@ impl DeCasteljauPoints {
             abbc: abbc,
             bccd: bccd,
             fin: fin,
-
         }
     }
 
-
+    ///Implementation of the bezier curve
     fn create_spline(& mut self, s1: & mut SplineKnots, s2: & mut SplineKnots){
-
         self.ab = lerp_half(&s1.a, &s1.b);
         self.bc = lerp_half(&s1.b, &s1.c);
         self.cd = lerp_half(&s1.c, &s1.d);
@@ -158,9 +146,7 @@ impl DeCasteljauPoints {
         s1.b = Point::create(self.ab.x, self.ab.y);
         s1.c = Point::create(self.abbc.x, self.abbc.y);
         s1.d = Point::create(self.fin.x, self.fin.y);
-
     }
-
 }
 
 mod tests{
@@ -171,7 +157,6 @@ mod tests{
 
     #[test]
     fn test_create_splineknots(){
-
         let mut q1 = Point::create(0.,0.);
         let q2 = Point::create(1., 2.);
         let q3 = Point::create(1.5, 2.4);
@@ -189,12 +174,31 @@ mod tests{
         assert_eq!(r1.c.y, 2.4);
         assert_eq!(r2.d.x, 2.7);
         assert_eq!(r2.d.y, 3.3);
+    }
 
+    #[test]
+    fn test_splineknots_negative(){
+        let mut q1 = Point::create(0.,0.);
+        let q2 = Point::create(-1., -2.);
+        let q3 = Point::create(-1.5, -2.4);
+        let q4 = Point::create(2.6, 3.3);
+
+        let q5 = Point::create(0.,1.);
+        let q6 = Point::create(2., 2.);
+        let q7 = Point::create(1.9, 2.4);
+        let q8 = Point::create(-2.7, -3.3);
+
+        let mut r1 = SplineKnots::create(q1, q2, q3, q4);
+        let mut r2 = SplineKnots::create(q5, q6, q7, q8);
+
+        assert_eq!(r1.a.x, 0.0);
+        assert_eq!(r1.c.y, -2.4);
+        assert_eq!(r2.d.x, -2.7);
+        assert_eq!(r2.d.y, -3.3);
     }
 
     #[test]
     fn test_create_spline(){
-
         let p1 = Point::create(0.,0.);
         let p2 = Point::create(1., 2.);
         let p3 = Point::create(1.5, 2.4);
@@ -215,9 +219,7 @@ mod tests{
         d1.create_spline(& mut s1,  & mut s2);
 
         assert_eq!(s2.a.x, d1.fin.x);
-
     }
-
 }
 
 
