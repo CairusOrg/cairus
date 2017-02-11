@@ -54,5 +54,5 @@ enum Status{
     InvalidVisual,
     FileNotFound,
     LastStatus
-    
+
 }
