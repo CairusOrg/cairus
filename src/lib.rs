@@ -56,7 +56,7 @@ mod types;
 #[allow(dead_code)]
 mod surfaces;
 
-#[allow)dead_code)]
+#[allow(dead_code)]
 mod context;
 
 #[allow(dead_code)]
