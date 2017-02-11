@@ -105,7 +105,7 @@ pub struct ImageSurface {
 /// compositing operator to operate on them.  See `operators.rs` for those operations.
 impl ImageSurface {
     // Analagous to cairo_create(), you pass in a width and height and get in a surface in exchange.
-    fn create(width: usize, height: usize) -> ImageSurface {
+    pub fn create(width: usize, height: usize) -> ImageSurface {
         ImageSurface {
             base: vec![Rgba::new(0., 0., 0., 0.); width * height],
             width: width,
@@ -113,11 +113,11 @@ impl ImageSurface {
         }
     }
 
-    fn iter(&self) -> Iter<Rgba> {
+    pub fn iter(&self) -> Iter<Rgba> {
         self.base.iter()
     }
 
-    fn iter_mut(&mut self) -> IterMut<Rgba> {
+    pub fn iter_mut(&mut self) -> IterMut<Rgba> {
         self.base.iter_mut()
     }
 }

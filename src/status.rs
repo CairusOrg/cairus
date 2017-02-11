@@ -29,44 +29,30 @@
  * The Original Code is the cairus graphics library.
  *
  * Contributor(s):
- *  Bobby Eshleman <bobbyeshleman@gmail.com>
+ *	Sara Ferdousi <ferdousi@pdx.edu>
  *
  */
 
-//! The main crate for Cairus.
-//!
-//! ## Overview
-//!
-//! Cairus is a 2D graphics library based on the Cairo vector graphics library.  Cairus is designed
-//! to utilize and preserve the Cairo drawing model while providing the benefits of a native Rust
-//! implementation.
+enum Status{
 
-/// ### Top-level Design
-/// ## Stroke Implementation
-///
+    Success = 0,
+    NoMemory,
+    InvalidRestore,
+    InvalidPopGroup,
+    NoCurrentPoint,
+    InvalidMatrix,
+    InvalidStatus,
+    NullPointer,
+    InvalidString,
+    InvalidPathData,
+    ReadError,
+    WriteError,
+    SurfaceFinished,
+    SurfaceTypeMismatch,
+    InvalidContent,
+    InvalidFormat,
+    InvalidVisual,
+    FileNotFound,
+    LastStatus
 
-/// When we get down to the level of pixels, they are blended together by operations
-/// defined in the operators module.
-#[allow(dead_code)]
-pub mod operators;
-
-#[allow(dead_code)]
-mod types;
-
-#[allow(dead_code)]
-mod surfaces;
-
-#[allow(dead_code)]
-mod context;
-
-#[allow(dead_code)]
-mod common_geometry;
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-
-    }
 }
-
