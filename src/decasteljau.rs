@@ -100,7 +100,7 @@ fn lerp_half(a: & Point, b: & Point)->Point{
 }
 
 //separated points and knots. This is the implementation of points
-struct DeCasteljau_Points{
+struct DeCasteljauPoints{
 
     pub ab: Point,
     pub bc: Point,
@@ -111,11 +111,11 @@ struct DeCasteljau_Points{
 
 }
 
-impl DeCasteljau_Points {
+impl DeCasteljauPoints {
 
-    fn create()-> DeCasteljau_Points{
+    fn create()-> DeCasteljauPoints{
 
-        DeCasteljau_Points{
+        DeCasteljauPoints{
             ab: Point::origin(),
             bc: Point::origin(),
             cd: Point::origin(),
@@ -125,6 +125,19 @@ impl DeCasteljau_Points {
 
         }
 
+    }
+
+    fn constructor(ab: Point, bc: Point, cd: Point, abbc: Point, bccd: Point, fin: Point)->DeCasteljauPoints{
+
+        DeCasteljauPoints{
+            ab: ab,
+            bc: bc,
+            cd: cd,
+            abbc: abbc,
+            bccd: bccd,
+            fin: fin,
+
+        }
     }
 
 
@@ -154,7 +167,7 @@ mod tests{
 
     use::decasteljau::Point;
     use::decasteljau::SplineKnots;
-    use::decasteljau::DeCasteljau_Points;
+    use::decasteljau::DeCasteljauPoints;
 
     #[test]
     fn test_create_spline(){
@@ -172,7 +185,7 @@ mod tests{
         let mut s1 = SplineKnots::create(p1, p2, p3, p4);
         let mut s2 = SplineKnots::create(p5, p6, p7, p8);
 
-        let mut d1 = DeCasteljau_Points::create();
+        let mut d1 = DeCasteljauPoints::create();
 
         assert_eq!(d1.ab.x, 0.0);
 
