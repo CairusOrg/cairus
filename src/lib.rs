@@ -56,7 +56,11 @@ mod types;
 #[allow(dead_code)]
 mod surfaces;
 
+#[allow)dead_code)]
 mod context;
+
+#[allow(dead_code)]
+mod common_geometry;
 
 #[cfg(test)]
 mod tests {
