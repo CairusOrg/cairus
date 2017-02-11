@@ -30,6 +30,7 @@
  *
  * Contributor(s):
  *	Sara Ferdousi <ferdousi@pdx.edu>
+ *	Kyle Kneitinger <kyle@kneit.in>
  *
  */
 
@@ -58,10 +59,11 @@ impl<'a> Context<'a>{
     //Sets Rgba values of source to used defined values
     //This function changes the Rgba values of the source
     pub fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
-        self.rgba.red = red;
-        self.rgba.green = green;
-        self.rgba.blue = blue;
+        self.rgba.red = red * alpha;
+        self.rgba.green = green * alpha;
+        self.rgba.blue = blue * alpha;
         self.rgba.alpha = alpha;
+        self.rgba.correct();
     }
 }
 
@@ -71,27 +73,42 @@ mod tests{
     use surfaces::ImageSurface;
     use context::Context;
 
-    //Test to check if the constructors work
     #[test]
-    fn test_create_context(){
+    fn test_set_rgba_happy(){
         let surface = ImageSurface::create(100, 100);
-        let empty_context = Context::create(&surface);
-        assert_eq!(empty_context.rgba.red, 0.);
+        let mut context = Context::create(&surface);
+        context.set_source_rgba(0.1, 0.2, 0.3, 1.);
+        assert_eq!(context.rgba.red, 0.1);
+        assert_eq!(context.rgba.green, 0.2);
+        assert_eq!(context.rgba.blue, 0.3);
+        assert_eq!(context.rgba.alpha, 1.);
+
+        // Test Rbga premultiply
+        context.set_source_rgba(0.2, 0.4, 0.6, 0.5);
+        assert_eq!(context.rgba.red, 0.1);
+        assert_eq!(context.rgba.green, 0.2);
+        assert_eq!(context.rgba.blue, 0.3);
+        assert_eq!(context.rgba.alpha, 0.5);
     }
 
-    //Testing set_rgba function
     #[test]
-    fn test_set_rgba(){
+    fn test_set_rgba_out_of_bounds_values(){
         let surface = ImageSurface::create(100, 100);
-        let mut empty_context = Context::create(&surface);
-        let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
-        assert_eq!(empty_context.rgba.blue, 1.);
-        assert_eq!(empty_context.rgba.green, 1.);
-        assert_eq!(empty_context.rgba.red, 1.);
-        assert_eq!(empty_context.rgba.alpha, 1.);
+        let mut context = Context::create(&surface);
+
+        // Test negative alpha value pre-multiplting to zero
+        context.set_source_rgba(1., 1., 1., -10.);
+        assert_eq!(context.rgba.red, 0.);
+        assert_eq!(context.rgba.green, 0.);
+        assert_eq!(context.rgba.blue, 0.);
+        assert_eq!(context.rgba.alpha, 0.);
+
+        // Test bound to range [0,1]
+        context.set_source_rgba(-22.,22.,-22.,9.);
+        assert_eq!(context.rgba.red, 0.);
+        assert_eq!(context.rgba.green, 1.);
+        assert_eq!(context.rgba.blue, 0.);
+        assert_eq!(context.rgba.alpha, 1.);
     }
 
 }
-
-
-
