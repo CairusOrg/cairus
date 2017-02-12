@@ -64,6 +64,13 @@ pub enum Operator {
     /// Cairus's default operator.  Draws source layer on top of destination layer.
     Over,
 }
+/*
+impl PartialEq for Operator {
+        fn eq(&self, other: &Operator) -> bool {
+                    self.isbn == other.isbn
+                            }
+}
+*/
 
 
 /// Returns an image compositing function that corresponds to an Operator enum.
