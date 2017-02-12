@@ -29,9 +29,10 @@
  * The Original Code is the cairus graphics library.
  *
  * Contributor(s):
- *	Sara Ferdousi <ferdousi@pdx.edu>
+ *  Sara Ferdousi <ferdousi@pdx.edu>
  *  Evan Smelser <evanjsmelser@gmail.com>
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
+ *  Kyle Kneitinger <kyle@kneit.in>
  *
  */
 
@@ -47,8 +48,6 @@ pub struct Context<'a>{
 }
 
 impl<'a> Context<'a>{
-    //Pretty certain the default operator is defined as Over so we don't need to pass it in.
-    //But I'm open to discuss for sure.
     fn create(target: &'a mut ImageSurface)-> Context {
 
         Context{
@@ -67,14 +66,32 @@ impl<'a> Context<'a>{
 
     }
 
-    ///Set Operator function.
+    ///Set Operator function
+    ///
     ///Changes the operator held by the context object to the passed in operator.
     ///The operator passed in is just a copy of the enum which gives the context knowledge of the
-    ///current operator in use.
+    ///current operator in use. 
+    ///Sets the operator held within the context object to the passed in operator of choice. 
+    ///
+    ///# Arguments    
+    ///* `&mut self` - Reference to the `Context` to hold the desired `Operator`.
+    ///* `operator` - An enum `Operator` that matches the desired operation.    
+    ///
+    ///# Usage    
+    ///set_operator(&context, op_enum);
     fn set_operator(&mut self, operator: Operator){
         self.operator = operator;
     }
 
+    /// Get Operator function.
+    ///
+    /// Returns the operator held within the passed in context object.
+    ///
+    /// # Arguments
+    /// * `&self` - Reference to the `Context` object that maintains the `Operator` functionality.
+    ///
+    /// # Usage
+    /// let op_enum = get_operator();
     fn get_operator(&self)-> &Operator{
         &self.operator
     }
