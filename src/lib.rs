@@ -54,10 +54,9 @@ pub mod operators;
 mod types;
 
 #[allow(dead_code)]
-mod surfaces;
+pub mod surfaces;
 
-#[allow(dead_code)]
-mod context;
+pub mod context;
 
 #[allow(dead_code)]
 mod common_geometry;

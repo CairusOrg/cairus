@@ -41,15 +41,15 @@ use types::Rgba;
 use operators::Operator;
 use operators::fetch_operator;
 
-//Struct defined for context
+/// Struct defined for context
 pub struct Context<'a>{
     pub rgba: Rgba,
     target: &'a mut ImageSurface,
     operator: Operator,
 }
 
-//Implementation of methods for context
-impl<'a> Context<'a>{
+/// Implementation of methods for context
+impl<'a> Context<'a> {
     //Creates a new cairo context with rgba values set to zeroes with passed ImageSurface as target surface
     //When new context is created a target surface needs to be passed in.
     pub fn create(target: &'a mut ImageSurface )-> Context {
@@ -60,8 +60,8 @@ impl<'a> Context<'a>{
         }
     }
 
-    //Sets Rgba values of source to used defined values
-    //This function changes the Rgba values of the source
+    /// Sets Rgba values of source to used defined values
+    /// This function changes the Rgba values of the source
     pub fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
         self.rgba.red = red * alpha;
         self.rgba.green = green * alpha;
