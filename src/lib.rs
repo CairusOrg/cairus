@@ -58,6 +58,9 @@ pub mod surfaces;
 
 pub mod context;
 
+#[allow(dead_code)]
+mod common_geometry;
+
 #[cfg(test)]
 mod tests {
     #[test]
