@@ -169,6 +169,7 @@ mod tests{
         }
     }
 
+    #[test]
     fn test_set_rgba_happy(){
         let mut surface = ImageSurface::create(100, 100);
         let mut context = Context::create(&mut surface);
