@@ -133,8 +133,18 @@ impl ImageSurface {
         bytes
     }
 
-    pub fn to_png(&self, path: &Path) {
+    pub fn to_file(&self, path: &Path){
+        let extension = path.extension().unwrap();
 
+        if extension == "jpg" {
+            self.to_png_jpg(path);
+        }
+        else {
+         //   panic!("error: {:?} output not supported", extension);
+        }
+    }
+
+    fn to_png_jpg(&self, path: &Path) {
         let buffer = self.into_bytes();
         let our_image = image::save_buffer(path, buffer.as_slice(), self.width as u32, self.height as u32, image::RGBA(8)).unwrap();
 
@@ -268,8 +278,10 @@ mod tests {
         let surface = ImageSurface::create(200, 200);
         let path = Path::new("test1.png");
 
-        //Call
-        surface.to_png(path);
+        // Call
+        surface.to_png_jpg(path);
+
+        // Test
     }
 
     #[test]
@@ -280,7 +292,7 @@ mod tests {
         let expected_width = surface.width as u32;
         let expected_height = surface.height as u32;
         //call
-        surface.to_png(path);
+        surface.to_png_jpg(path);
         let img = image::open(path).unwrap();
         let (result_width, result_height) = img.dimensions();
         //test
@@ -295,7 +307,7 @@ mod tests {
 //        //let transparent_pixel = image::RGBA(i as u8);
 //        let path = Path::new("test3.png");
 //        //call
-//        surface.to_png(path);
+//        surface.to_png_jpg(path);
 //        let img = image::open(path).unwrap();
 //        //test
 //        for pixel in img.pixels() {
@@ -306,4 +318,15 @@ mod tests {
 //            //println!("{:?}", channels);
 //        }
 //    }
+
+    #[test]
+    fn test_to_file_happy_path() {
+        // Setup
+        let surface = ImageSurface::create(100,100);
+        let path = Path::new("test.jpg");
+
+        // Call
+        surface.to_file(path);
+        // Test
+    }
 }
