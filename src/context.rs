@@ -38,7 +38,8 @@
 
 use surfaces::ImageSurface;
 use types::Rgba;
-use operators::{Operator, fetch_operator};
+use operators::Operator;
+use operators::fetch_operator;
 
 //Struct defined for context
 pub struct Context<'a>{
@@ -51,7 +52,7 @@ pub struct Context<'a>{
 impl<'a> Context<'a>{
     //Creates a new cairo context with rgba values set to zeroes with passed ImageSurface as target surface
     //When new context is created a target surface needs to be passed in.
-    pub fn create(target: &'a ImageSurface )-> Context {
+    pub fn create(target: &'a mut ImageSurface )-> Context {
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
             target: target,
@@ -169,8 +170,8 @@ mod tests{
     }
 
     fn test_set_rgba_happy(){
-        let surface = ImageSurface::create(100, 100);
-        let mut context = Context::create(&surface);
+        let mut surface = ImageSurface::create(100, 100);
+        let mut context = Context::create(&mut surface);
         context.set_source_rgba(0.1, 0.2, 0.3, 1.);
         assert_eq!(context.rgba.red, 0.1);
         assert_eq!(context.rgba.green, 0.2);
@@ -187,8 +188,8 @@ mod tests{
 
     #[test]
     fn test_set_rgba_out_of_bounds_values(){
-        let surface = ImageSurface::create(100, 100);
-        let mut context = Context::create(&surface);
+        let mut surface = ImageSurface::create(100, 100);
+        let mut context = Context::create(&mut surface);
 
         // Test negative alpha value pre-multiplting to zero
         context.set_source_rgba(1., 1., 1., -10.);

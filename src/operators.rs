@@ -253,13 +253,13 @@ mod tests {
         };
         let mut destination = Rgba::new(0., 1., 0., 0.5);
         operator_in(&source, &mut destination);
-        let testRgba = Rgba{
+        let test_rgba = Rgba{
             red:0.5,
             green:0.5,
             blue:0.5,
             alpha:0.25
         };
-        assert_eq!(destination, testRgba);
+        assert_eq!(destination, test_rgba);
     }
 
     #[test]
@@ -267,13 +267,13 @@ mod tests {
         let source = Rgba::new(0.5, 0.5, 0.5, 1.);
         let mut destination = Rgba::new(1., 1., 1., 0.5);
         operator_in(&source, &mut destination);
-        let testRgba =  Rgba{ 
+        let test_rgba =  Rgba{ 
             red:0.5, 
             green:0.5,
             blue:0.5,
             alpha:0.5
         };
-        assert_eq!(destination, testRgba);
+        assert_eq!(destination, test_rgba);
     }
 
     #[test]
@@ -286,13 +286,13 @@ mod tests {
         };
         let mut destination = Rgba::new(1.0, 1.0, 1.0, 1.0);
         operator_in(&source, &mut destination);
-        let testRgba = Rgba{
+        let test_rgba = Rgba{
             red:0.25,
             green:0.25,
             blue:0.25,
             alpha:0.25
         };
-        assert_eq!(destination, testRgba);
+        assert_eq!(destination, test_rgba);
     }
 
     #[test]
@@ -305,13 +305,13 @@ mod tests {
         };
         let mut destination = Rgba::new(1.0, 1.0, 1.0, 0.0);
         operator_in(&source, &mut destination);
-        let testRgba = Rgba{
+        let test_rgba = Rgba{
             red:0.5,
             green:0.5,
             blue:0.5,
             alpha:0.0
         };
-        assert_eq!(destination, testRgba);
+        assert_eq!(destination, test_rgba);
     }
 
 
