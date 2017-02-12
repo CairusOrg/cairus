@@ -74,14 +74,14 @@ impl<'a> Context<'a> {
     ///
     ///Changes the operator held by the context object to the passed in operator.
     ///The operator passed in is just a copy of the enum which gives the context knowledge of the
-    ///current operator in use. 
-    ///Sets the operator held within the context object to the passed in operator of choice. 
+    ///current operator in use.
+    ///Sets the operator held within the context object to the passed in operator of choice.
     ///
-    ///# Arguments    
+    ///# Arguments
     ///* `&mut self` - Reference to the `Context` to hold the desired `Operator`.
-    ///* `operator` - An enum `Operator` that matches the desired operation.    
+    ///* `operator` - An enum `Operator` that matches the desired operation.
     ///
-    ///# Usage    
+    ///# Usage
     ///set_operator(&context, op_enum);
     fn set_operator(&mut self, operator: Operator){
         self.operator = operator;
@@ -119,7 +119,7 @@ impl<'a> Context<'a> {
 
 #[cfg(test)]
 mod tests{
-  
+
     use surfaces::ImageSurface;
     use types::Rgba;
     use operators::{Operator, fetch_operator};
@@ -127,23 +127,29 @@ mod tests{
 
     #[test]
     fn test_get_default_operator(){
-        //setup
+        // Setup
         let mut surface = ImageSurface::create(255, 255);
         let context = Context::create( &mut surface );
-        //call and assert
-        assert_eq!( &Operator::Over, context.get_operator() );
+
+        // Call
+        let op = context.get_operator();
+
+        // Assert
+        assert_eq!( &Operator::Over, op );
     }
 
     #[test]
-    fn test_set_get_operator(){
-       //My intent here is to instantiate a context and then set the operator to another
-       //operator and check to see that it was actually changed. However, I only have the
-       //Over operator implemented in this branch so there really isn't anything to change
-       //it to here.
+    fn test_set_operator(){
+        // Setup
+        let mut surface = ImageSurface::create(255, 255);
+        let mut context = Context::create( &mut surface );
 
-        //setup
-        //call
-        //assert
+        // Call
+        context.set_operator(Operator::In);
+        let op = context.get_operator();
+
+        // Assert
+        assert_eq!( &Operator::In, op );
     }
 
     // This tests that naive paint covers the target.  It does two calls, in order to check that
@@ -169,6 +175,7 @@ mod tests{
         }
     }
 
+    #[test]
     fn test_set_rgba_happy(){
         let mut surface = ImageSurface::create(100, 100);
         let mut context = Context::create(&mut surface);
