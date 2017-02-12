@@ -52,6 +52,7 @@ mod types;
 #[allow(dead_code)]
 pub mod surfaces;
 
+#[allow(dead_code)]
 pub mod context;
 
 #[allow(dead_code)]
