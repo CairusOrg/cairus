@@ -54,9 +54,9 @@ pub mod operators;
 mod types;
 
 #[allow(dead_code)]
-mod surfaces;
+pub mod surfaces;
 
-mod context;
+pub mod context;
 
 #[cfg(test)]
 mod tests {
