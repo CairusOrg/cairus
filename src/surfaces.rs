@@ -161,6 +161,7 @@ mod tests {
     use types::Rgba;
     use surfaces::ImageSurface;
     use operators::{Operator, fetch_operator};
+    use surfaces::image::GenericImage;
 
     use std::fs::File;
     use std::path::Path;
@@ -259,7 +260,6 @@ mod tests {
         for pixel in destination {
             assert_eq!(pixel, expected);
         }
-
     }
 
     #[test]
@@ -272,4 +272,38 @@ mod tests {
         surface.to_png(path);
     }
 
+    #[test]
+    fn test_to_png_output_correct_dimensions() {
+        //setup
+        let surface = ImageSurface::create(100, 100);
+        let path = Path::new("test2.png");
+        let expected_width = surface.width as u32;
+        let expected_height = surface.height as u32;
+        //call
+        surface.to_png(path);
+        let img = image::open(path).unwrap();
+        let (result_width, result_height) = img.dimensions();
+        //test
+        assert_eq!(result_width, expected_width);
+        assert_eq!(result_height, expected_height);
+    }
+
+//    #[test]
+//    fn test_int_to_png_intergrity_per_pixel() {
+//        //setup
+//        let surface = ImageSurface::create(100, 100);
+//        //let transparent_pixel = image::RGBA(i as u8);
+//        let path = Path::new("test3.png");
+//        //call
+//        surface.to_png(path);
+//        let img = image::open(path).unwrap();
+//        //test
+//        for pixel in img.pixels() {
+//            let (_,_, apixel) = pixel;
+//            //let () = apixel;
+//            let channels = pixel.channels4();
+//            //assert_eq!(pixel, transparent_pixel);
+//            //println!("{:?}", channels);
+//        }
+//    }
 }
