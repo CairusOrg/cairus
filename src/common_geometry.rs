@@ -87,6 +87,11 @@ impl LineSegment {
         }
     }
 
+    // Returns the length of this LineSegment
+    pub fn length(&self) -> f32 {
+        (self.point2.x - self.point1.x + self.point2.y - self.point1.y).sqrt()
+    }
+
     /// Returns the slope of this LineSegment.
     ///
     /// If the slope is completely vertical, this function will return f32::INFINITY, otherwise
@@ -123,7 +128,78 @@ impl LineSegment {
             y: (self.point1.y + self.point2.y) / 2.,
         }
     }
+
+    pub fn highest_point(&self) -> Point {
+        if self.point1.y > self.point2.y {
+            self.point1
+        } else {
+            self.point2
+        }
+    }
+
+    pub fn lowest_point(&self) -> Point {
+        if self.point1.y < self.point2.y {
+            self.point1
+        } else {
+            self.point2
+        }
+    }
+
+    pub fn leftmost_point(&self) -> Point {
+        if self.point1.x < self.point2.x {
+            self.point1
+        } else {
+            self.point2
+        }
+    }
+
+    pub fn rightmost_point(&self) -> Point {
+        if self.point1.x > self.point2.x {
+            self.point1
+        } else {
+            self.point2
+        }
+    }
+
+
+    // Returns a Vector of coordinates indicating which pixels this line should color when
+    // rasterized.  The algorithm is a straight-forward DDA.
+    pub fn into_pixel_coordinates(&self) -> Vec<(i32, i32)> {
+        let leftpoint = self.leftmost_point();
+        let rightpoint = self.rightmost_point();
+
+        let delta_x = rightpoint.x - leftpoint.x;
+        let delta_y = rightpoint.y - leftpoint.y;
+
+        let steps = if delta_x.abs() > delta_y.abs() {
+            delta_x.abs()
+        } else {
+            delta_y.abs()
+        };
+
+        let x_increment = delta_x / steps;
+        let y_increment = delta_y / steps;
+        let (mut x, mut y) = (leftpoint.x, leftpoint.y);
+
+        let mut result = Vec::with_capacity(steps as usize);
+        for _ in 0..(steps as i32) {
+            x += x_increment;
+            y += y_increment;
+            let point = (x as i32 , y as i32);
+            result.push(point);
+        }
+
+        result
+    }
 }
+
+impl PartialEq for LineSegment {
+    fn eq(&self, other: &LineSegment) -> bool {
+        (self.point1 == other.point1 && self.point2 == other.point2) ||
+        (self.point1 == other.point2 && self.point2 == other.point1)
+    }
+}
+
 
 /// ## Vector
 ///
@@ -204,6 +280,40 @@ mod tests {
         let line = LineSegment::from_points(p1, p2);
         assert_eq!(line.point1, Point{x: 0., y: 0.});
         assert_eq!(line.point2, Point{x: 1., y: 1.});
+    }
+
+    // Tests that LineSegment's  highest/lowest/leftmost/rightmost point functions work
+    #[test]
+    fn line_query_functions() {
+        let p1 = Point{x: 0., y: 0.};
+        let p2 = Point{x: 1., y: 1.};
+        let line = LineSegment::from_points(p1, p2);
+        assert_eq!(line.leftmost_point(), p1);
+        assert_eq!(line.lowest_point(), p1);
+        assert_eq!(line.rightmost_point(), p2);
+        assert_eq!(line.highest_point(), p2);
+    }
+
+    // Tests that LineSegment Eq implementation is working
+    #[test]
+    fn line_eq() {
+        let p1 = Point{x: 0., y: 0.};
+        let p2 = Point{x: 1., y: 1.};
+        let line1 = LineSegment::from_points(p1, p2);
+        let line2 = LineSegment::from_points(p1, p2);
+
+        assert_eq!(line1, line2);
+    }
+
+    // Tests that lines are equal even when the endpoints are swithced
+    #[test]
+    fn line_eq_opposite() {
+        let p1 = Point{x: 0., y: 0.};
+        let p2 = Point{x: 1., y: 1.};
+        let line1 = LineSegment::from_points(p1, p2);
+        let line2 = LineSegment::from_points(p2, p1);
+
+        assert_eq!(line1, line2);
     }
 
     // Tests that the simple case for LineSegment::slope() is working.
@@ -312,4 +422,65 @@ mod tests {
         let b = Vector::new(1., 1.);
         assert_eq!(a.angle_between(&b).to_degrees(), 45.)
     }
+
+    #[test]
+      fn line_into_pixel_coordinates_slope_lt_one() {
+          // The following coordinates were calculated by hand to be known pixels in the defined
+          // line.
+          let line = LineSegment::new(0., 0., 20., 5.);
+          let expected = vec![
+            (1, 0),
+            (2, 0),
+            (3, 0),
+            (4, 1),
+            (5, 1),
+            (6, 1)
+          ];
+
+          let pixel_coordinates = line.into_pixel_coordinates();
+          for coordinate in expected {
+              assert!(pixel_coordinates.contains(&coordinate));
+          }
+      }
+
+      #[test]
+      fn line_into_pixel_coordinates_slope_gt_one() {
+          // The following coordinates were calculated by hand to be known pixels in the defined
+          // line.
+          let line = LineSegment::new(0., 0., 5., 20.);
+          let expected = vec![
+              (0, 1),
+              (0, 2),
+              (0, 3),
+              (1, 4),
+              (1, 5),
+              (1, 6),
+              (1, 7)
+          ];
+
+          let pixel_coordinates = line.into_pixel_coordinates();
+          for coordinate in expected {
+              assert!(pixel_coordinates.contains(&coordinate));
+          }
+      }
+
+
+      #[test]
+      fn line_with_negative_slope() {
+          let line = LineSegment { point1: Point { x: 3., y: 2. }, point2: Point { x: 4., y: 0. } };
+          for pixel in line.into_pixel_coordinates() {
+              let x = pixel.0;
+              let y = pixel.1;
+              assert!(y >= 0);
+              assert!(x >= 0);
+          }
+      }
+
+      // Passes if LineSegment::length() works
+      #[test]
+      fn line_length() {
+          let line = LineSegment::new(0., 0., 2., 2.);
+          assert_eq!(line.length(), 2.);
+      }
+
 }
