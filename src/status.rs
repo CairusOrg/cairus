@@ -1,7 +1,7 @@
 /*
  * Cairus - a reimplementation of the cairo graphics library in Rust
  *
- * Copyright © 20XX CairusOrg
+ * Copyright © 2017 CairusOrg
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -31,28 +31,29 @@
  * Contributor(s):
  *	Sara Ferdousi <ferdousi@pdx.edu>
  *  Evan Smelser <evanjsmelser@gmail.com>
+ *
  */
 
-enum status{
+enum Status{
 
-     Success = 0,
-     NoMemory,
-     InvalidRestore,
-     InvalidPopGroup,
-     NoCurrentPoint,
-     InvalidMatrix,
-     InvalidStatus,
-     NullPointer,
-     InvalidString,
-     InvalidPathData,
-     ReadError,
-     WriteError,
-     SurfaceFinished,
-     SurfaceTypeMismatch,
-     InvalidContent,
-     InvalidFormat,
-     InvalidVisual,
-     FileNotFound,
+    Success = 0,
+    NoMemory,
+    InvalidRestore,
+    InvalidPopGroup,
+    NoCurrentPoint,
+    InvalidMatrix,
+    InvalidStatus,
+    NullPointer,
+    InvalidString,
+    InvalidPathData,
+    ReadError,
+    WriteError,
+    SurfaceFinished,
+    SurfaceTypeMismatch,
+    InvalidContent,
+    InvalidFormat,
+    InvalidVisual,
+    FileNotFound,
+    LastStatus
 
-     LastStatus
 }

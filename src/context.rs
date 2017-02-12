@@ -40,16 +40,18 @@ use surfaces::ImageSurface;
 use types::Rgba;
 use operators::{Operator, fetch_operator};
 
+//Struct defined for context
 pub struct Context<'a>{
-
     pub rgba: Rgba,
     target: &'a mut ImageSurface,
     operator: Operator,
 }
 
+//Implementation of methods for context
 impl<'a> Context<'a>{
-    fn create(target: &'a mut ImageSurface)-> Context {
-
+    //Creates a new cairo context with rgba values set to zeroes with passed ImageSurface as target surface
+    //When new context is created a target surface needs to be passed in.
+    pub fn create(target: &'a ImageSurface )-> Context {
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
             target: target,
@@ -57,13 +59,14 @@ impl<'a> Context<'a>{
         }
     }
 
+    //Sets Rgba values of source to used defined values
+    //This function changes the Rgba values of the source
     pub fn set_source_rgba(&mut self, red: f32, green: f32, blue: f32, alpha: f32){
-
-        self.rgba.red = red;
-        self.rgba.green = green;
-        self.rgba.blue = blue;
+        self.rgba.red = red * alpha;
+        self.rgba.green = green * alpha;
+        self.rgba.blue = blue * alpha;
         self.rgba.alpha = alpha;
-
+        self.rgba.correct();
     }
 
     ///Set Operator function
@@ -115,6 +118,7 @@ impl<'a> Context<'a>{
 
 #[cfg(test)]
 mod tests{
+  
     use surfaces::ImageSurface;
     use types::Rgba;
     use operators::{Operator, fetch_operator};
@@ -141,25 +145,6 @@ mod tests{
         //assert
     }
 
-
-    //I'm not sure exactly what we wanted to test here, but definitely open to discuss it and help
-    //get these written up and assertions put together. Just let me know. -Evan
-    #[test]
-    fn test_create_context(){
-
-        let mut target = ImageSurface::create(100, 100);
-        let empty_context = Context::create(&mut target);
-
-    }
-
-    #[test]
-    fn test_set_rgba(){
-
-        let mut target = ImageSurface::create(100, 100);
-        let mut empty_context = Context::create(&mut target);
-        let set_context_rgba = Context::set_source_rgba(&mut empty_context, 1., 1., 1., 1.);
-    }
-
     // This tests that naive paint covers the target.  It does two calls, in order to check that
     // multiple mutable borrows (via paint) work fine too.
     #[test]
@@ -181,5 +166,42 @@ mod tests{
         for pixel in target.iter() {
             assert_eq!(*pixel, expected);
         }
+    }
+
+    fn test_set_rgba_happy(){
+        let surface = ImageSurface::create(100, 100);
+        let mut context = Context::create(&surface);
+        context.set_source_rgba(0.1, 0.2, 0.3, 1.);
+        assert_eq!(context.rgba.red, 0.1);
+        assert_eq!(context.rgba.green, 0.2);
+        assert_eq!(context.rgba.blue, 0.3);
+        assert_eq!(context.rgba.alpha, 1.);
+
+        // Test Rbga premultiply
+        context.set_source_rgba(0.2, 0.4, 0.6, 0.5);
+        assert_eq!(context.rgba.red, 0.1);
+        assert_eq!(context.rgba.green, 0.2);
+        assert_eq!(context.rgba.blue, 0.3);
+        assert_eq!(context.rgba.alpha, 0.5);
+    }
+
+    #[test]
+    fn test_set_rgba_out_of_bounds_values(){
+        let surface = ImageSurface::create(100, 100);
+        let mut context = Context::create(&surface);
+
+        // Test negative alpha value pre-multiplting to zero
+        context.set_source_rgba(1., 1., 1., -10.);
+        assert_eq!(context.rgba.red, 0.);
+        assert_eq!(context.rgba.green, 0.);
+        assert_eq!(context.rgba.blue, 0.);
+        assert_eq!(context.rgba.alpha, 0.);
+
+        // Test bound to range [0,1]
+        context.set_source_rgba(-22.,22.,-22.,9.);
+        assert_eq!(context.rgba.red, 0.);
+        assert_eq!(context.rgba.green, 1.);
+        assert_eq!(context.rgba.blue, 0.);
+        assert_eq!(context.rgba.alpha, 1.);
     }
 }
