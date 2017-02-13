@@ -57,7 +57,7 @@ mod types;
 mod surfaces;
 
 #[allow(dead_code)]
-mod decasteljau;
+pub mod decasteljau;
 
 #[cfg(test)]
 mod tests {
