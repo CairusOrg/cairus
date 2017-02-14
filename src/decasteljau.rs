@@ -34,30 +34,8 @@
  */
 
 use std::f32;
+use common_geometry::Point;
 
-///Creates points for splineknots
-pub struct Point{
-    pub x: f32,
-    pub y: f32,
-}
-
-///Implements methods for Points
-impl Point{
-    ///Sets x and y values of a Point to 0.0 (origin)
-    fn origin()->Point{
-        Point{
-            x:0.,
-            y:0.,
-        }
-    }
-    ///Creates a Point with user defined values
-    fn create(x:f32, y:f32)->Point{
-        Point{
-            x: x,
-            y: y,
-        }
-    }
-}
 
 ///SplineKnots for bezier curves
 pub struct SplineKnots{
@@ -70,7 +48,7 @@ pub struct SplineKnots{
 ///Implements SplineKnots methods
 impl SplineKnots{
     ///Creates a new SplineKnots with user defined points
-    pub fn create(a: &Point, b: &Point, c: &Point, d: &Point)->SplineKnots{
+    fn create(a: &Point, b: &Point, c: &Point, d: &Point)->SplineKnots{
         SplineKnots{
             a:Point::create(a.x, a.y),
             b:Point::create(b.x, b.y),
@@ -82,18 +60,17 @@ impl SplineKnots{
 
 ///This function takes two Points and provides the median value
 fn lerp_half(a: & Point, b: & Point)->Point{
-    let result = Point{
+    Point{
         x: a.x + (b.x - a.x)/2.,
         y: a.y + (b.y - a.y)/2.,
-    };
-    return result;
+    }
 }
 
 ///Initial four points of the Bezier curve
 struct DeCasteljauPoints{
-    pub ab: Point,
-    pub bc: Point,
-    pub cd: Point,
+    ab: Point,
+    bc: Point,
+    cd: Point,
     abbc: Point,
     bccd: Point,
     fin: Point,
@@ -145,7 +122,7 @@ impl DeCasteljauPoints {
 
 mod tests{
 
-    use::decasteljau::Point;
+    use::common_geometry::Point;
     use::decasteljau::SplineKnots;
     use::decasteljau::DeCasteljauPoints;
     use::decasteljau::lerp_half;
