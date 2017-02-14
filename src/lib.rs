@@ -53,7 +53,7 @@ mod types;
 pub mod surfaces;
 
 #[allow(dead_code)]
-pub mod decasteljau;
+mod decasteljau;
 
 #[allow(dead_code)]
 pub mod context;
