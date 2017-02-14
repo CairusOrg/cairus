@@ -300,24 +300,29 @@ mod tests {
         assert_eq!(result_height, expected_height);
     }
 
-//    #[test]
-//    fn test_int_to_png_intergrity_per_pixel() {
-//        //setup
-//        let surface = ImageSurface::create(100, 100);
-//        //let transparent_pixel = image::RGBA(i as u8);
-//        let path = Path::new("test3.png");
-//        //call
-//        surface.to_png_jpg(path);
-//        let img = image::open(path).unwrap();
-//        //test
-//        for pixel in img.pixels() {
-//            let (_,_, apixel) = pixel;
-//            //let () = apixel;
-//            let channels = pixel.channels4();
-//            //assert_eq!(pixel, transparent_pixel);
-//            //println!("{:?}", channels);
-//        }
-//    }
+    #[test]
+    fn test_int_to_png_intergrity_per_pixel() {
+        //setup
+        let surface = ImageSurface::create(100, 100);
+        let transparent_pixel = Rgba::new(0.,0.,0.,0.);
+       //let new_pix = images::Rgba::from_channels(0., 0., 0., 0.);
+        println!("{:?}", transparent_pixel);
+        let path = Path::new("test3.png");
+        //call
+        surface.to_png_jpg(path);
+        let img = image::open(path).unwrap().to_rgba();
+        //test
+        for pixel in img.pixels() {
+            //let (_,_, apixel) = pixel;
+            //let () = apixel;
+            //let channels = pixel.channels4();
+            let (r,g,b,a) = (pixel.data[0], pixel.data[1], pixel.data[2], pixel.data[3]);
+            let result = Rgba::new(r as f32, g as f32, b as f32, a as f32);
+            //println!("{:?}", pixel.data);
+            assert_eq!(result,transparent_pixel);
+        }
+
+    }
 
     #[test]
     fn test_to_file_happy_path() {
