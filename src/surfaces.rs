@@ -105,13 +105,19 @@ pub struct ImageSurface {
 /// ImageSurface provides iter(), into_iter(), and iter_mut() so that when a Cairus context calls
 /// paint, it can simply iterate through the pixels in the image surface and use a image
 /// compositing operator to operate on them.  See `operators.rs` for those operations.
+/// A valid ImageSurface needs tangible height and width dimensions to be successfully created.
 impl ImageSurface {
     // Analogous to cairo_create(), you pass in a width and height and get in a surface in exchange.
     pub fn create(width: usize, height: usize) -> ImageSurface {
-        ImageSurface {
-            base: vec![Rgba::new(0., 0., 0., 0.); width * height],
-            width: width,
-            height: height,
+        if width == 0 || height ==0 {
+            panic!("ImageSurface dimensions are not supported.")
+        }
+        else {
+            ImageSurface {
+                base: vec![Rgba::new(0., 0., 0., 0.); width * height],
+                width: width,
+                height: height,
+            }
         }
     }
 
@@ -132,7 +138,10 @@ impl ImageSurface {
         }
         bytes
     }
-
+    ///The external Rust Image Crate is a library under development to read,
+    /// manipulate and write images. At the moment "image" supports reading and writing
+    /// JPG and PNG images. The below functions, to_file() and to_png_jpg, use this external
+    /// library to write output image files, provided a valid Cairus ImageSurface.
     pub fn to_file(&self, path: &Path){
         let extension = path.extension().unwrap();
 
@@ -150,12 +159,6 @@ impl ImageSurface {
 
     }
 }
-///Test the equality of formats (useful to ensure the output file is rendered as a PNG
-//impl PartialEq for ImageSurface{
-//    fn eq(&self, other: &ImageFormat) -> bool {
-//        self.ImageFormat == other.ImageFormat
-//    }
-//} Needs to reference the ENUM PNG within Image crate to compile
 
 impl IntoIterator for ImageSurface {
     type Item = Rgba;
@@ -329,5 +332,15 @@ mod tests {
         // Call
         surface.to_file(path);
         // Test
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_image_surface_dimesions_to_png() {
+        // Setup
+        let surface = ImageSurface::create(0, 100);
+        let path = Path::new("testInvalid.jpg");
+        // Call & Test
+        surface.to_file(path);
     }
 }
