@@ -302,23 +302,19 @@ mod tests {
 
     #[test]
     fn test_int_to_png_intergrity_per_pixel() {
-        //setup
+        // Setup
         let surface = ImageSurface::create(100, 100);
         let transparent_pixel = Rgba::new(0.,0.,0.,0.);
-       //let new_pix = images::Rgba::from_channels(0., 0., 0., 0.);
-        println!("{:?}", transparent_pixel);
         let path = Path::new("test3.png");
-        //call
+
+        // Call
         surface.to_png_jpg(path);
         let img = image::open(path).unwrap().to_rgba();
-        //test
+
+        // Test
         for pixel in img.pixels() {
-            //let (_,_, apixel) = pixel;
-            //let () = apixel;
-            //let channels = pixel.channels4();
             let (r,g,b,a) = (pixel.data[0], pixel.data[1], pixel.data[2], pixel.data[3]);
             let result = Rgba::new(r as f32, g as f32, b as f32, a as f32);
-            //println!("{:?}", pixel.data);
             assert_eq!(result,transparent_pixel);
         }
 
