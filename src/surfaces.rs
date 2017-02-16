@@ -176,7 +176,7 @@ mod tests {
     use operators::{Operator, fetch_operator};
     use surfaces::image::GenericImage;
 
-    use std::fs::File;
+    use std::fs;
     use std::path::Path;
     extern crate image;
 
@@ -300,6 +300,8 @@ mod tests {
         //test
         assert_eq!(result_width, expected_width);
         assert_eq!(result_height, expected_height);
+        // Cleanup
+        fs::remove_file(path);
     }
 
     #[test]
@@ -319,6 +321,8 @@ mod tests {
             let result = Rgba::new(r as f32, g as f32, b as f32, a as f32);
             assert_eq!(result,transparent_pixel);
         }
+        // Cleanup
+        fs::remove_file(path);
 
     }
 
@@ -330,7 +334,11 @@ mod tests {
 
         // Call
         surface.to_file(path);
+
         // Test
+
+        // Cleanup
+        fs::remove_file(path);
     }
 
     #[test]
@@ -341,6 +349,8 @@ mod tests {
         let path = Path::new("test_invalid_dimension.jpg");
         // Call & Test
         surface.to_file(path);
+        // Cleanup
+        fs::remove_file(path);
     }
 
     #[test]
@@ -351,6 +361,8 @@ mod tests {
         let path = Path::new("test_invalid_dimension.jpg");
         // Call & Test
         surface.to_file(path);
+        // Cleanup
+        fs::remove_file(path);
     }
     #[test]
     #[should_panic]
@@ -360,5 +372,7 @@ mod tests {
         let path = Path::new("test_extension.uyk");
         // Call & Test
         surface.to_file(path);
+        // Cleanup
+        fs::remove_file(path);
     }
 }
