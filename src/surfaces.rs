@@ -140,20 +140,29 @@ impl ImageSurface {
     }
     ///The external Rust Image Crate is a library under development to read,
     /// manipulate and write images. At the moment "image" supports reading and writing
-    /// JPG and PNG images. The below functions, to_file() and to_png_jpg, use this external
+    /// JPG and PNG images. The below functions, to_file(), to_png, and to_jpg use this external
     /// library to write output image files, provided a valid Cairus ImageSurface.
     pub fn to_file(&self, path: &Path){
         let extension = path.extension().unwrap();
 
-        if extension == "jpg" || extension == "png" {
-            self.to_png_jpg(path);
+        if extension == "png" {
+            self.to_png(path);
+        }
+        else if extension == "jpg" {
+            self.to_jpg(path);
         }
         else {
             panic!("error: {:?} output not supported", extension);
         }
     }
 
-    fn to_png_jpg(&self, path: &Path) {
+    fn to_png(&self, path: &Path) {
+        let buffer = self.into_bytes();
+        let our_image = image::save_buffer(path, buffer.as_slice(), self.width as u32, self.height as u32, image::RGBA(8)).unwrap();
+
+    }
+
+    fn to_jpg(&self, path: &Path) {
         let buffer = self.into_bytes();
         let our_image = image::save_buffer(path, buffer.as_slice(), self.width as u32, self.height as u32, image::RGBA(8)).unwrap();
 
@@ -276,66 +285,62 @@ mod tests {
     }
 
     #[test]
-    fn test_image_surface_with_paint_to_png_manual() {
-        //Setup
-//        let source_rgba = Rgba::new(1., 0., 0., 1.);
-//        let mut surface = ImageSurface::create(100, 100);
-//        call paint <--Needed
-//        let path = Path::new("testVisual.png");
-//        surface.to_png_jpg(path);
-        //Visual inspection is needed (will be automated in the future)
-    }
-
-    #[test]
     fn test_to_png_output_correct_dimensions() {
+        // Writes image surface to file then verifies image in file has correct dimensions.
+
         //setup
         let surface = ImageSurface::create(100, 100);
         let path = Path::new("test2.png");
         let expected_width = surface.width as u32;
         let expected_height = surface.height as u32;
         //call
-        surface.to_png_jpg(path);
+        surface.to_png(path);
         let img = image::open(path).unwrap();
         let (result_width, result_height) = img.dimensions();
         //test
-        assert_eq!(result_width, expected_width);
-        assert_eq!(result_height, expected_height);
+        assert_eq!(result_width, expected_width, "Error: width was not as expected");
+        assert_eq!(result_height, expected_height, "Error: width was not as expected");
         // Cleanup
         fs::remove_file(path);
     }
 
     #[test]
-    fn test_int_to_png_intergrity_per_pixel() {
+    fn test_int_to_png_integrity_per_pixel() {
+        // Writes image surface to file then verifies file content is as expected
+
         // Setup
         let surface = ImageSurface::create(100, 100);
         let transparent_pixel = Rgba::new(0.,0.,0.,0.);
         let path = Path::new("test3.png");
 
         // Call
-        surface.to_png_jpg(path);
+        surface.to_png(path);
         let img = image::open(path).unwrap().to_rgba();
 
         // Test
         for pixel in img.pixels() {
             let (r,g,b,a) = (pixel.data[0], pixel.data[1], pixel.data[2], pixel.data[3]);
             let result = Rgba::new(r as f32, g as f32, b as f32, a as f32);
-            assert_eq!(result,transparent_pixel);
+            assert_eq!(result,transparent_pixel, "Error: Image integrity failed");
         }
         // Cleanup
         fs::remove_file(path);
-
     }
 
     #[test]
-    fn test_to_file_happy_path() {
+    fn test_int_to_jpg_file_created() {
+        // Writes image surface to file and verifies file was created
+
         // Setup
-        let surface = ImageSurface::create(100,100);
-        let path = Path::new("test.jpg");
+        let surface = ImageSurface::create(100, 100);
+        let transparent_pixel = Rgba::new(0.,0.,0.,0.);
+        let path = Path::new("test3.jpg");
 
         // Call
-        surface.to_file(path);
+        surface.to_jpg(path);
 
         // Test
+        assert!(Path::new(path).exists(), "Error: JPG file was not created");
 
         // Cleanup
         fs::remove_file(path);
@@ -344,6 +349,8 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_invalid_image_surface_height_to_png() {
+        // Verifies we cannot create a image with a 0 height value
+
         // Setup
         let surface = ImageSurface::create(100, 0);
         let path = Path::new("test_invalid_dimension.jpg");
@@ -356,6 +363,8 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_invalid_image_surface_width_to_png() {
+        // Verifies we cannot create a image with a 0 width value
+
         // Setup
         let surface = ImageSurface::create(0, 100);
         let path = Path::new("test_invalid_dimension.jpg");
@@ -367,6 +376,8 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_invalid_file_extension() {
+        // Verifies we cannot create a image with a invalid type
+
         // Setup
         let surface = ImageSurface::create(100, 100);
         let path = Path::new("test_extension.uyk");
