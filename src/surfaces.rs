@@ -349,7 +349,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_invalid_image_surface_height_to_png() {
+    fn test_invalid_image_surface_height_to_jpeg() {
         // Verifies we cannot create a image with a 0 height value
 
         // Setup
@@ -368,7 +368,7 @@ mod tests {
 
         // Setup
         let surface = ImageSurface::create(0, 100);
-        let path = Path::new("test_invalid_dimension.jpg");
+        let path = Path::new("test_invalid_dimension.png");
         // Call & Test
         surface.to_file(path);
         // Cleanup
