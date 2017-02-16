@@ -33,6 +33,7 @@
  *  Evan Smelser <evanjsmelser@gmail.com>
  *  Kyle Kneitinger <kneit@pdx.edu>
  *  Courtney Anderson-Clark <anderson@pdx.edu>
+ *  DJ Sabo <sabodj@pdx.edu>
  */
 
 //! # Overview
