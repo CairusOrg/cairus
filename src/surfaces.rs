@@ -32,7 +32,7 @@
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
  *  Evan Smelser <evanjsmelser@gmail.com>
  *  Kyle Kneitinger <kneit@pdx.edu>
- *
+ *  Courtney Anderson-Clark <anderson@pdx.edu>
  */
 
 //! # Overview
@@ -91,7 +91,7 @@ pub enum Type {
     Cogl,
 }
 
-/// A surface needs to hold pixels (Rgba's) and its width and height.  The width and height
+/// A surface needs to hold pixels (Rgba's) and its width and height. The width and height
 /// will be used in rendering to images and calculating clipping, and the pixels will be the things
 /// that actually are operated on by stroke or paint operations.  See the
 /// `test_image_surface_with_operator` test case below for an example of what that might look like.
@@ -109,8 +109,8 @@ pub struct ImageSurface {
 impl ImageSurface {
     // Analogous to cairo_create(), you pass in a width and height and get in a surface in exchange.
     pub fn create(width: usize, height: usize) -> ImageSurface {
-        if width == 0 || height ==0 {
-            panic!("ImageSurface dimensions are not supported.")
+        if width <= 0 || height <=0 {
+            panic!("error: ImageSurface dimensions are not supported.")
         }
         else {
             ImageSurface {
@@ -145,11 +145,11 @@ impl ImageSurface {
     pub fn to_file(&self, path: &Path){
         let extension = path.extension().unwrap();
 
-        if extension == "jpg" {
+        if extension == "jpg" || extension == "png" {
             self.to_png_jpg(path);
         }
         else {
-         //   panic!("error: {:?} output not supported", extension);
+            panic!("error: {:?} output not supported", extension);
         }
     }
 
@@ -276,15 +276,14 @@ mod tests {
     }
 
     #[test]
-    fn test_image_surface_to_png() {
-        // Setup
-        let surface = ImageSurface::create(200, 200);
-        let path = Path::new("test1.png");
-
-        // Call
-        surface.to_png_jpg(path);
-
-        // Test
+    fn test_image_surface_with_paint_to_png_manual() {
+        //Setup
+//        let source_rgba = Rgba::new(1., 0., 0., 1.);
+//        let mut surface = ImageSurface::create(100, 100);
+//        call paint <--Needed
+//        let path = Path::new("testVisual.png");
+//        surface.to_png_jpg(path);
+        //Visual inspection is needed (will be automated in the future)
     }
 
     #[test]
@@ -336,10 +335,29 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_invalid_image_surface_dimesions_to_png() {
+    fn test_invalid_image_surface_height_to_png() {
+        // Setup
+        let surface = ImageSurface::create(100, 0);
+        let path = Path::new("test_invalid_dimension.jpg");
+        // Call & Test
+        surface.to_file(path);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_invalid_image_surface_width_to_png() {
         // Setup
         let surface = ImageSurface::create(0, 100);
-        let path = Path::new("testInvalid.jpg");
+        let path = Path::new("test_invalid_dimension.jpg");
+        // Call & Test
+        surface.to_file(path);
+    }
+    #[test]
+    #[should_panic]
+    fn test_invalid_file_extension() {
+        // Setup
+        let surface = ImageSurface::create(100, 100);
+        let path = Path::new("test_extension.uyk");
         // Call & Test
         surface.to_file(path);
     }
