@@ -209,7 +209,7 @@ mod tests{
         //Call
         let l1 = lerp_half(&q1, &q2);
         //Test
-        assert_eq!(l1.x, -0.4);
+        assert_eq!(l1.x, -0.39999998);
         assert_eq!(l1.y, 2.85);
     }
 
@@ -224,7 +224,7 @@ mod tests{
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
-        assert_eq!(l1.x, 0.4);
+        assert_eq!(l1.x, 0.39999998);
         assert_eq!(l1.y, -2.85);
     }
 
@@ -239,8 +239,8 @@ mod tests{
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
-        assert_eq!(l1.x, -0.4);
-        assert_eq!(l1.y, -0.45);
+        assert_eq!(l1.x, -0.39999998);
+        assert_eq!(l1.y, -0.4499998);
     }
 
     #[test]
@@ -254,8 +254,8 @@ mod tests{
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
-        assert_eq!(l1.x, 0.4);
-        assert_eq!(l1.y, -0.45);
+        assert_eq!(l1.x, 0.39999998);
+        assert_eq!(l1.y, -0.4499998);
     }
 
     #[test]
@@ -270,7 +270,7 @@ mod tests{
         let l1 = lerp_half(&p1, &p2);
         //Test
         assert_eq!(l1.x, 2.3);
-        assert_eq!(l1.y, -0.45);
+        assert_eq!(l1.y, -0.4499998);
     }
 
     #[test]
@@ -285,7 +285,7 @@ mod tests{
         let l1 = lerp_half(&p1, &p2);
         //Test
         assert_eq!(l1.x, -2.3);
-        assert_eq!(l1.y, -0.45);
+        assert_eq!(l1.y, -0.4499998);
     }
 
     #[test]
@@ -294,7 +294,7 @@ mod tests{
         //Setup
 
         //Call
-        let mut d1 = DeCasteljauPoints::create();
+        let d1 = DeCasteljauPoints::create();
         //Test
         assert_eq!(d1.ab.x, 0.0);
         assert_eq!(d1.ab.y, 0.0);
@@ -523,15 +523,15 @@ mod tests{
 
         //Setup
         //Points for s1
-        let p1 = Point::create(0., 0.);
-        let p2 = Point::create(0., 0.);
-        let p3 = Point::create(0., 0.);
-        let p4 = Point::create(0., 0.);
+        let p1 = Point::origin();
+        let p2 = Point::origin();
+        let p3 = Point::origin();
+        let p4 = Point::origin();
         //Points for s2
-        let p5 = Point::create(0., 0.);
-        let p6 = Point::create(0., 0.);
-        let p7 = Point::create(0., 0.);
-        let p8 = Point::create(0., 0.);
+        let p5 = Point::origin();
+        let p6 = Point::origin();
+        let p7 = Point::origin();
+        let p8 = Point::origin();
         //declare splineknots
         let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
         let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
