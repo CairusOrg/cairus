@@ -33,7 +33,7 @@
  *
  */
 
-use std::f32;
+//use std::f32;
 use common_geometry::Point;
 
 ///SplineKnots for bezier curves
@@ -57,8 +57,8 @@ impl SplineKnots{
     }
 }
 
-///This function takes two Points and provides the median value
-fn lerp_half(a: & Point, b: & Point)->Point{
+///This function takes two end points which are interpolated providing the intermediate point
+fn lerp_half(a: &Point, b: &Point)->Point{
     Point{
         x: a.x + (b.x - a.x)/2.,
         y: a.y + (b.y - a.y)/2.,
@@ -114,72 +114,224 @@ mod tests{
     use::decasteljau::DeCasteljauPoints;
     use::decasteljau::lerp_half;
 
-    ///tests in Quadrant I
+
     #[test]
-    fn test_splineknots_positive(){
-        let mut q1 = Point::create(0.,0.);
-        let q2 = Point::create(1., 2.);
-        let q3 = Point::create(1.5, 2.4);
-        let q4 = Point::create(2.6, 3.3);
+    fn test_splineknots(){
+        //Functional test for the creation of Splineknots using provided points
 
-        let q5 = Point::create(0.,1.);
-        let q6 = Point::create(2., 2.);
-        let q7 = Point::create(1.9, 2.4);
-        let q8 = Point::create(2.7, 3.3);
+        //Setup
+        let p1 = Point::create(1., 1.);
+        let p2 = Point::create(-1., 2.);
+        let p3 = Point::create(-1.5, -2.4);
+        let p4 = Point::create(2.6, -3.3);
 
-        let mut r1 = SplineKnots::create(&q1, &q2, &q3, &q4);
-        let mut r2 = SplineKnots::create(&q5, &q6, &q7, &q8);
-
-        assert_eq!(r1.a.x, 0.0);
-        assert_eq!(r1.c.y, 2.4);
-        assert_eq!(r2.d.x, 2.7);
-        assert_eq!(r2.d.y, 3.3);
+        //Call
+        let s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
+        //Test
+        assert_eq!(s1.a.x, 1.);
+        assert_eq!(s1.a.y, 1.);
+        assert_eq!(s1.b.x, -1.);
+        assert_eq!(s1.b.y, 2.);
+        assert_eq!(s1.c.x, -1.5);
+        assert_eq!(s1.c.y, -2.4);
+        assert_eq!(s1.d.x, 2.6);
+        assert_eq!(s1.d.y, -3.3);
     }
 
     #[test]
-    fn test_lerp_half(){
-        let mut p1 = Point::create(0.,0.);
-        let mut p2 = Point::create(1., 2.);
-        let mut p3 = Point::create(1.5, 2.4);
-        let mut p4 = Point::create(2.6, 3.3);
+    fn test_lerp_half_quadrant1(){
+        //Functional test to ensure the creation of the calculated intermediate point with two
+        //endpoints located in Q1
 
-        let p5 = Point::create(0.,1.);
-        let p6 = Point::create(2., 2.);
-        let p7 = Point::create(1.9, 2.4);
-        let p8 = Point::create(2.7, 3.3);
+        //Setup
+        let p1 = Point::create(1.9, 2.4);
+        let p2 = Point::create(2.7, 3.3);
+        //Call
+        let l1 = lerp_half(&p1, &p2);
+        //Test
+        assert_eq!(l1.x, 2.3);
+        assert_eq!(l1.y, 2.85);
+    }
 
-        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
-        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+    #[test]
+    fn test_lerp_half_quadrant2(){
+        //Functional test to ensure the creation of the calculated intermediate point with two
+        //endpoints located in Q2
 
+        //Setup
+        let p1 = Point::create(-1.9, 2.4);
+        let p2 = Point::create(-2.7, 3.3);
+        //Call
+        let l1 = lerp_half(&p1, &p2);
+        //Test
+        assert_eq!(l1.x, -2.3);
+        assert_eq!(l1.y, 2.85);
+    }
+
+    #[test]
+    fn test_lerp_half_quadrant3(){
+        //Functional test to ensure the creation of the calculated intermediate point with two
+        //endpoints located in Q3
+
+        //Setup
+        let p1 = Point::create(-1.9, -2.4);
+        let p2 = Point::create(-2.7, -3.3);
+        //Call
+        let l1 = lerp_half(&p1, &p2);
+        //Test
+        assert_eq!(l1.x, -2.3);
+        assert_eq!(l1.y, -2.85);
+    }
+
+    #[test]
+    fn test_lerp_half_quadrant4(){
+        //Functional test to ensure the creation of the calculated intermediate point with two
+        //endpoints located in Q4
+
+        //Setup
+        let p1 = Point::create(-1.9, -2.4);
+        let p2 = Point::create(-2.7, -3.3);
+        //Call
+        let l1 = lerp_half(&p1, &p2);
+        //Test
+        assert_eq!(l1.x, -2.3);
+        assert_eq!(l1.y, -2.85);
+    }
+
+    #[test]
+    fn test_lerp_half_quad1_quad2(){
+        //Functional test to ensure the creation of the calculated intermediate point with two
+        //endpoints located in Q1 & Q2
+
+        //Setup
+        let q1 = Point::create(1.9, 2.4);
+        let q2 = Point::create(-2.7, 3.3);
+        //Call
+        let l1 = lerp_half(&q1, &q2);
+        //Test
+        assert_eq!(l1.x, -0.4);
+        assert_eq!(l1.y, 2.85);
+    }
+
+    #[test]
+    fn test_lerp_half_quad3_quad4(){
+        //Functional test to ensure the creation of the calculated intermediate point with two
+        //endpoints located in Q3 & Q4
+
+        //Setup
+        let p1 = Point::create(-1.9, -2.4);
+        let p2 = Point::create(2.7, -3.3);
+        //Call
+        let l1 = lerp_half(&p1, &p2);
+        //Test
+        assert_eq!(l1.x, 0.4);
+        assert_eq!(l1.y, -2.85);
+    }
+
+    #[test]
+    fn test_lerp_half_quad1_quad3(){
+        //Functional test to ensure the creation of the calculated intermediate point with two
+        //endpoints located in Q1 & Q3
+
+        //Setup
+        let p1 = Point::create(1.9, 2.4);
+        let p2 = Point::create(-2.7, -3.3);
+        //Call
+        let l1 = lerp_half(&p1, &p2);
+        //Test
+        assert_eq!(l1.x, -0.4);
+        assert_eq!(l1.y, -0.45);
+    }
+
+    #[test]
+    fn test_lerp_half_quad2_quad4(){
+        //Functional test to ensure the creation of the calculated intermediate point with two
+        //endpoints located in Q2 & Q4
+
+        //Setup
+        let p1 = Point::create(-1.9, 2.4);
+        let p2 = Point::create(2.7, -3.3);
+        //Call
+        let l1 = lerp_half(&p1, &p2);
+        //Test
+        assert_eq!(l1.x, 0.4);
+        assert_eq!(l1.y, -0.45);
+    }
+
+    #[test]
+    fn test_lerp_half_quad1_quad4(){
+        //Functional test to ensure the creation of the calculated intermediate point with two
+        //endpoints located in Q1 & Q4
+
+        //Setup
+        let p1 = Point::create(1.9, 2.4);
+        let p2 = Point::create(2.7, -3.3);
+        //Call
+        let l1 = lerp_half(&p1, &p2);
+        //Test
+        assert_eq!(l1.x, 2.3);
+        assert_eq!(l1.y, -0.45);
+    }
+
+    #[test]
+    fn test_lerp_half_quad2_quad3(){
+        //Functional test to ensure the creation of the calculated intermediate point with two
+        //endpoints located in Q2 & Q3
+
+        //Setup
+        let p1 = Point::create(-1.9, 2.4);
+        let p2 = Point::create(-2.7, -3.3);
+        //Call
+        let l1 = lerp_half(&p1, &p2);
+        //Test
+        assert_eq!(l1.x, -2.3);
+        assert_eq!(l1.y, -0.45);
+    }
+
+    #[test]
+    fn test_initial_spline_points(){
+        //Tests the constructor for deCasteljau - tests ensures origin remains valid
+        //Setup
+
+        //Call
         let mut d1 = DeCasteljauPoints::create();
-
-        let mut a1 = Point::origin();
-        a1 = lerp_half(&p7, &p8);
-        assert_eq!(a1.x, 2.3);
-        assert_eq!(a1.y, 2.85);
+        //Test
+        assert_eq!(d1.ab.x, 0.0);
+        assert_eq!(d1.ab.y, 0.0);
+        assert_eq!(d1.bc.x, 0.0);
+        assert_eq!(d1.bc.y, 0.0);
+        assert_eq!(d1.cd.x, 0.0);
+        assert_eq!(d1.cd.y, 0.0);
+        assert_eq!(d1.abbc.x, 0.0);
+        assert_eq!(d1.abbc.y, 0.0);
     }
 
     #[test]
-    fn test_create_spline_positive(){
+    fn test_create_spline_quadrant1(){
+        //Functional test to ensure that the splineknots are effectively updated using the
+        //DeCasteljau algorithm with the call to create_spline() using points from Q1
+
+        //Setup
+        //Points for splineknot one
         let p1 = Point::create(0.,0.);
         let p2 = Point::create(1., 2.);
         let p3 = Point::create(1.5, 2.4);
         let p4 = Point::create(2.6, 3.3);
-
-        let p5 = Point::create(0.,1.);
+        //Points for splineknot two
+        let p5 = Point::create(0., 1.);
         let p6 = Point::create(2., 2.);
         let p7 = Point::create(1.9, 2.4);
         let p8 = Point::create(2.7, 3.3);
-
+        //Splineknots
         let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
         let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
-
+        //the curve
         let mut d1 = DeCasteljauPoints::create();
 
-        assert_eq!(d1.ab.x, 0.0);
-
+        //Call
         d1.create_spline(& mut s1,  & mut s2);
 
+        //Test
         assert_eq!(s2.a.x, d1.fin.x);
         assert_eq!(s2.a.y, d1.fin.y);
         assert_eq!(s2.b.x, d1.bccd.x);
@@ -188,29 +340,222 @@ mod tests{
         assert_eq!(s2.c.y, d1.cd.y);
         assert_eq!(s2.d.x, p4.x);
         assert_eq!(s2.d.y, p4.y);
-
+        assert_eq!(s1.b.x, d1.ab.x);
+        assert_eq!(s1.b.y, d1.ab.y);
+        assert_eq!(s1.c.x, d1.abbc.x);
+        assert_eq!(s1.c.y, d1.abbc.y);
+        assert_eq!(s1.d.x, d1.fin.x);
+        assert_eq!(s1.d.y, d1.fin.y);
     }
 
-    ///tests in Quadrant II
     #[test]
-    fn test_splineknots_negative(){
-        let q1 = Point::create(0.,0.);
-        let q2 = Point::create(-1., 2.);
-        let q3 = Point::create(-1.5, 2.4);
-        let q4 = Point::create(-2.6, 3.3);
+    fn test_create_spline_quadrant2(){
+        //Functional test to ensure that the splineknots are effectively updated using the
+        //DeCasteljau algorithm with the call to create_spline() using points from Q2
 
-        let q5 = Point::create(0., 0.);
-        let q6 = Point::create(-2., 2.);
-        let q7 = Point::create(-1.9, 2.4);
-        let q8 = Point::create(-2.7, 3.3);
+        //Setup
+        //Points for splineknot one
+        let p1 = Point::create(0.,0.);
+        let p2 = Point::create(-1., 2.);
+        let p3 = Point::create(-1.5, 2.4);
+        let p4 = Point::create(-2.6, 3.3);
+        //Points for splineknot 2
+        let p5 = Point::create(0., 0.);
+        let p6 = Point::create(-2., 2.);
+        let p7 = Point::create(-1.9, 2.4);
+        let p8 = Point::create(-2.7, 3.3);
+        //declare splineknots
+        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        //curve
+        let mut d1 = DeCasteljauPoints::create();
 
-        let mut r1 = SplineKnots::create(&q1, &q2, &q3, &q4);
-        let mut r2 = SplineKnots::create(&q5, &q6, &q7, &q8);
+        //Call
+        d1.create_spline(& mut s1,  & mut s2);
 
-        assert_eq!(r1.a.x, 0.0);
-        assert_eq!(r1.c.y, 2.4);
-        assert_eq!(r2.d.x, -2.7);
-        assert_eq!(r2.d.y, 3.3);
+        //Test
+        assert_eq!(s2.a.x, d1.fin.x);
+        assert_eq!(s2.a.y, d1.fin.y);
+        assert_eq!(s2.b.x, d1.bccd.x);
+        assert_eq!(s2.b.y, d1.bccd.y);
+        assert_eq!(s2.c.x, d1.cd.x);
+        assert_eq!(s2.c.y, d1.cd.y);
+        assert_eq!(s2.d.x, p4.x);
+        assert_eq!(s2.d.y, p4.y);
+        assert_eq!(s1.b.x, d1.ab.x);
+        assert_eq!(s1.b.y, d1.ab.y);
+        assert_eq!(s1.c.x, d1.abbc.x);
+        assert_eq!(s1.c.y, d1.abbc.y);
+        assert_eq!(s1.d.x, d1.fin.x);
+        assert_eq!(s1.d.y, d1.fin.y);
+    }
+
+    #[test]
+    fn test_create_spline_quadrant3(){
+        //Functional test to ensure that the splineknots are effectively updated using the
+        //DeCasteljau algorithm with the call to create_spline() using points from Q3
+
+        //Setup
+        //Points for splineknot one
+        let p1 = Point::create(0., 0.);
+        let p2 = Point::create(-1., -2.);
+        let p3 = Point::create(-1.5, -2.4);
+        let p4 = Point::create(-2.6, -3.3);
+        //Points for splineknot 2
+        let p5 = Point::create(0., -1.);
+        let p6 = Point::create(-2., -2.);
+        let p7 = Point::create(-1.9, -2.4);
+        let p8 = Point::create(-2.7, -3.3);
+        //declare splineknots
+        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        //curve
+        let mut d1 = DeCasteljauPoints::create();
+
+        //Call
+        d1.create_spline(& mut s1,  & mut s2);
+
+        //Test
+        assert_eq!(s2.a.x, d1.fin.x);
+        assert_eq!(s2.a.y, d1.fin.y);
+        assert_eq!(s2.b.x, d1.bccd.x);
+        assert_eq!(s2.b.y, d1.bccd.y);
+        assert_eq!(s2.c.x, d1.cd.x);
+        assert_eq!(s2.c.y, d1.cd.y);
+        assert_eq!(s2.d.x, p4.x);
+        assert_eq!(s2.d.y, p4.y);
+        assert_eq!(s1.b.x, d1.ab.x);
+        assert_eq!(s1.b.y, d1.ab.y);
+        assert_eq!(s1.c.x, d1.abbc.x);
+        assert_eq!(s1.c.y, d1.abbc.y);
+        assert_eq!(s1.d.x, d1.fin.x);
+        assert_eq!(s1.d.y, d1.fin.y);
+    }
+
+    #[test]
+    fn test_create_spline_quadrant4(){
+        //Functional test to ensure that the splineknots are effectively updated using the
+        //DeCasteljau algorithm with the call to create_spline() using points from Q4
+
+        //Setup
+        //Points for splineknot one
+        let p1 = Point::create(0., 0.);
+        let p2 = Point::create(1., -2.);
+        let p3 = Point::create(1.5, -2.4);
+        let p4 = Point::create(2.6, -3.3);
+        //Points for splineknot 2
+        let p5 = Point::create(0., -1.);
+        let p6 = Point::create(2., -2.);
+        let p7 = Point::create(1.9, -2.4);
+        let p8 = Point::create(2.7, -3.3);
+        //declare splineknots
+        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        //curve
+        let mut d1 = DeCasteljauPoints::create();
+
+        //Call
+        d1.create_spline(& mut s1,  & mut s2);
+
+        //Test
+        assert_eq!(s2.a.x, d1.fin.x);
+        assert_eq!(s2.a.y, d1.fin.y);
+        assert_eq!(s2.b.x, d1.bccd.x);
+        assert_eq!(s2.b.y, d1.bccd.y);
+        assert_eq!(s2.c.x, d1.cd.x);
+        assert_eq!(s2.c.y, d1.cd.y);
+        assert_eq!(s2.d.x, p4.x);
+        assert_eq!(s2.d.y, p4.y);
+        assert_eq!(s1.b.x, d1.ab.x);
+        assert_eq!(s1.b.y, d1.ab.y);
+        assert_eq!(s1.c.x, d1.abbc.x);
+        assert_eq!(s1.c.y, d1.abbc.y);
+        assert_eq!(s1.d.x, d1.fin.x);
+        assert_eq!(s1.d.y, d1.fin.y);
+    }
+
+    #[test]
+    fn test_create_spline_mixedquad(){
+        //Functional test to ensure that the splineknots are effectively updated using the
+        //DeCasteljau algorithm with the call to create_spline() using points from Q1/Q2/Q3/Q4
+
+        //Setup
+        //Points for s1
+        let p1 = Point::create(2., -2.9);
+        let p2 = Point::create(1., 2.);
+        let p3 = Point::create(-1.5, -2.4);
+        let p4 = Point::create(-2.6, 3.3);
+        //Points for s2
+        let p5 = Point::create(0., -1.);
+        let p6 = Point::create(-2., 2.);
+        let p7 = Point::create(-1.9, -2.4);
+        let p8 = Point::create(2.7, 3.3);
+        //declare splineknots
+        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        //decasteljau points
+        let mut d1 = DeCasteljauPoints::create();
+
+        //Call
+        d1.create_spline(& mut s1,  & mut s2);
+
+        //Test
+        assert_eq!(s2.a.x, d1.fin.x);
+        assert_eq!(s2.a.y, d1.fin.y);
+        assert_eq!(s2.b.x, d1.bccd.x);
+        assert_eq!(s2.b.y, d1.bccd.y);
+        assert_eq!(s2.c.x, d1.cd.x);
+        assert_eq!(s2.c.y, d1.cd.y);
+        assert_eq!(s2.d.x, p4.x);
+        assert_eq!(s2.d.y, p4.y);
+        assert_eq!(s1.b.x, d1.ab.x);
+        assert_eq!(s1.b.y, d1.ab.y);
+        assert_eq!(s1.c.x, d1.abbc.x);
+        assert_eq!(s1.c.y, d1.abbc.y);
+        assert_eq!(s1.d.x, d1.fin.x);
+        assert_eq!(s1.d.y, d1.fin.y);
+    }
+
+    #[test]
+    fn test_create_spline_all_origin(){
+        //Functional test to ensure that the splineknots are effectively updated using the
+        //DeCasteljau algorithm with the call to create_spline() using points from Q1/Q2/Q3/Q4
+
+        //Setup
+        //Points for s1
+        let p1 = Point::create(0., 0.);
+        let p2 = Point::create(0., 0.);
+        let p3 = Point::create(0., 0.);
+        let p4 = Point::create(0., 0.);
+        //Points for s2
+        let p5 = Point::create(0., 0.);
+        let p6 = Point::create(0., 0.);
+        let p7 = Point::create(0., 0.);
+        let p8 = Point::create(0., 0.);
+        //declare splineknots
+        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        //decasteljau points
+        let mut d1 = DeCasteljauPoints::create();
+
+        //Call
+        d1.create_spline(& mut s1,  & mut s2);
+
+        //Test
+        assert_eq!(s2.a.x, d1.fin.x);
+        assert_eq!(s2.a.y, d1.fin.y);
+        assert_eq!(s2.b.x, d1.bccd.x);
+        assert_eq!(s2.b.y, d1.bccd.y);
+        assert_eq!(s2.c.x, d1.cd.x);
+        assert_eq!(s2.c.y, d1.cd.y);
+        assert_eq!(s2.d.x, p4.x);
+        assert_eq!(s2.d.y, p4.y);
+        assert_eq!(s1.b.x, d1.ab.x);
+        assert_eq!(s1.b.y, d1.ab.y);
+        assert_eq!(s1.c.x, d1.abbc.x);
+        assert_eq!(s1.c.y, d1.abbc.y);
+        assert_eq!(s1.d.x, d1.fin.x);
+        assert_eq!(s1.d.y, d1.fin.y);
     }
 }
 
