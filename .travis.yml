@@ -16,8 +16,8 @@ addons:
       - libdw-dev
       - cmake
       - gcc
+      - zlib1g-dev
       - binutils-dev
-      - kcov
 
 env:
   global:
@@ -36,14 +36,15 @@ script:
 
 after_success:
   - travis-cargo --only stable doc-upload --branch develop
-  - wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz
-  - tar xzf master.tar.gz
-  - cd kcov-master
+  - wget https://github.com/SimonKagstrom/kcov/archive/v33.tar.gz
+  - tar xzf v33.tar.gz
+  - cd kcov-33
   - mkdir build
   - cd build
   - cmake ..
   - make
   - sudo make install
   - cd ../..
-  - rm -rf kcov-master
+  - rm -rf kcov-33
   - kcov --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo,/usr/lib --verify target/cov target/debug/cairus-*
+  - echo 'kcov coverage percent ' $(grep "\"covered\":\"[0-9]*\.[0-9]*\"" target/cov/index.json -o | cut -d ':' -f2)
