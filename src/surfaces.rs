@@ -145,27 +145,14 @@ impl ImageSurface {
     pub fn to_file(&self, path: &Path){
         let extension = path.extension().unwrap();
 
-        if extension == "png" {
-            self.to_png(path);
-        }
-        else if extension == "jpg" {
-            self.to_jpg(path);
+        if extension == "png" || extension == "jpg"  {
+            let buffer = self.into_bytes();
+            image::save_buffer(path, buffer.as_slice(), self.width as u32,
+                               self.height as u32, image::RGBA(8)).unwrap();
         }
         else {
             panic!("error: {:?} output not supported", extension);
         }
-    }
-
-    fn to_png(&self, path: &Path) {
-        let buffer = self.into_bytes();
-        image::save_buffer(path, buffer.as_slice(), self.width as u32, self.height as u32, image::RGBA(8)).unwrap();
-
-    }
-
-    fn to_jpg(&self, path: &Path) {
-        let buffer = self.into_bytes();
-        image::save_buffer(path, buffer.as_slice(), self.width as u32, self.height as u32, image::RGBA(8)).unwrap();
-
     }
 
     pub fn get(&self, x: usize, y: usize) -> Option<&Rgba> {
@@ -308,7 +295,7 @@ mod tests {
         let expected_width = surface.width as u32;
         let expected_height = surface.height as u32;
         //call
-        surface.to_png(path);
+        surface.to_file(path);
         let img = image::open(path).unwrap();
         let (result_width, result_height) = img.dimensions();
         //test
@@ -328,7 +315,7 @@ mod tests {
         let path = Path::new("test3.png");
 
         // Call
-        surface.to_png(path);
+        surface.to_file(path);
         let img = image::open(path).unwrap().to_rgba();
 
         // Test
@@ -350,7 +337,7 @@ mod tests {
         let path = Path::new("test3.jpg");
 
         // Call
-        surface.to_jpg(path);
+        surface.to_file(path);
 
         // Test
         assert!(Path::new(path).exists(), "Error: JPG file was not created");
