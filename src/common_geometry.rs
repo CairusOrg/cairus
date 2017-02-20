@@ -47,6 +47,23 @@ pub struct Point {
     pub y: f32,
 }
 
+impl Point{
+    ///Sets x and y values of a Point to 0.0 (origin)
+    pub fn origin()->Point{
+        Point{
+            x:0.,
+            y:0.,
+        }
+    }
+    ///Creates a Point with user defined values
+    pub fn create(x:f32, y:f32)->Point{
+        Point{
+            x: x,
+            y: y,
+        }
+    }
+}
+
 impl PartialEq for Point {
     fn eq(&self, other: &Point) -> bool {
         self.x == other.x && self.y == other.y
