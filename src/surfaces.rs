@@ -294,15 +294,18 @@ mod tests {
         let path = Path::new("test2.png");
         let expected_width = surface.width as u32;
         let expected_height = surface.height as u32;
+
         //call
         surface.to_file(path);
         let img = image::open(path).unwrap();
         let (result_width, result_height) = img.dimensions();
+
         //test
         assert_eq!(result_width, expected_width, "Error: width was not as expected");
         assert_eq!(result_height, expected_height, "Error: width was not as expected");
+
         // Cleanup
-        fs::remove_file(path).unwrap()
+        let _ = fs::remove_file(path).unwrap();
     }
 
     #[test]
@@ -325,7 +328,7 @@ mod tests {
             assert_eq!(result,transparent_pixel, "Error: Image integrity failed");
         }
         // Cleanup
-        fs::remove_file(path).unwrap()
+        let _ = fs::remove_file(path).unwrap();
     }
 
     #[test]
@@ -343,7 +346,7 @@ mod tests {
         assert!(Path::new(path).exists(), "Error: JPG file was not created");
 
         // Cleanup
-        fs::remove_file(path).unwrap()
+        let _ = fs::remove_file(path).unwrap();
     }
 
     #[test]
@@ -351,13 +354,8 @@ mod tests {
     fn test_invalid_image_surface_height_to_jpeg() {
         // Verifies we cannot create a image with a 0 height value
 
-        // Setup
-        let surface = ImageSurface::create(100, 0);
-        let path = Path::new("test_invalid_dimension.jpg");
-        // Call & Test
-        surface.to_file(path);
-        // Cleanup
-        fs::remove_file(path).unwrap()
+        // Call and panic
+        let _ = ImageSurface::create(100, 0);
     }
 
     #[test]
@@ -365,14 +363,10 @@ mod tests {
     fn test_invalid_image_surface_width_to_png() {
         // Verifies we cannot create a image with a 0 width value
 
-        // Setup
-        let surface = ImageSurface::create(0, 100);
-        let path = Path::new("test_invalid_dimension.png");
-        // Call & Test
-        surface.to_file(path);
-        // Cleanup
-        fs::remove_file(path).unwrap()
+        // Call and panic
+        let _ = ImageSurface::create(0, 100);
     }
+
     #[test]
     #[should_panic]
     fn test_invalid_file_extension() {
@@ -381,10 +375,8 @@ mod tests {
         // Setup
         let surface = ImageSurface::create(100, 100);
         let path = Path::new("test_extension.uyk");
-        // Call & Test
-        surface.to_file(path);
-        // Cleanup
-        fs::remove_file(path).unwrap()
+        // Call and panic
+        let _ = surface.to_file(path);
     }
 
     #[test]
