@@ -122,7 +122,7 @@ mod tests{
 
     use surfaces::ImageSurface;
     use types::Rgba;
-    use operators::{Operator, fetch_operator};
+    use operators::Operator;
     use super::Context;
 
     #[test]

@@ -40,7 +40,6 @@
 //! Cairo surfaces are basically raster (bitmap) containers.  They 'receive' operations performed
 //! on them by contexts.  They are the 'canvas' of Cairus.
 
-use std::fs::File;
 use std::path::Path;
 use std::slice::{IterMut, Iter};
 use std::vec::IntoIter;
@@ -159,13 +158,13 @@ impl ImageSurface {
 
     fn to_png(&self, path: &Path) {
         let buffer = self.into_bytes();
-        let our_image = image::save_buffer(path, buffer.as_slice(), self.width as u32, self.height as u32, image::RGBA(8)).unwrap();
+        image::save_buffer(path, buffer.as_slice(), self.width as u32, self.height as u32, image::RGBA(8)).unwrap();
 
     }
 
     fn to_jpg(&self, path: &Path) {
         let buffer = self.into_bytes();
-        let our_image = image::save_buffer(path, buffer.as_slice(), self.width as u32, self.height as u32, image::RGBA(8)).unwrap();
+        image::save_buffer(path, buffer.as_slice(), self.width as u32, self.height as u32, image::RGBA(8)).unwrap();
 
     }
 
@@ -316,7 +315,7 @@ mod tests {
         assert_eq!(result_width, expected_width, "Error: width was not as expected");
         assert_eq!(result_height, expected_height, "Error: width was not as expected");
         // Cleanup
-        fs::remove_file(path);
+        fs::remove_file(path).unwrap()
     }
 
     #[test]
@@ -339,7 +338,7 @@ mod tests {
             assert_eq!(result,transparent_pixel, "Error: Image integrity failed");
         }
         // Cleanup
-        fs::remove_file(path);
+        fs::remove_file(path).unwrap()
     }
 
     #[test]
@@ -348,7 +347,6 @@ mod tests {
 
         // Setup
         let surface = ImageSurface::create(100, 100);
-        let transparent_pixel = Rgba::new(0.,0.,0.,0.);
         let path = Path::new("test3.jpg");
 
         // Call
@@ -358,7 +356,7 @@ mod tests {
         assert!(Path::new(path).exists(), "Error: JPG file was not created");
 
         // Cleanup
-        fs::remove_file(path);
+        fs::remove_file(path).unwrap()
     }
 
     #[test]
@@ -372,7 +370,7 @@ mod tests {
         // Call & Test
         surface.to_file(path);
         // Cleanup
-        fs::remove_file(path);
+        fs::remove_file(path).unwrap()
     }
 
     #[test]
@@ -386,7 +384,7 @@ mod tests {
         // Call & Test
         surface.to_file(path);
         // Cleanup
-        fs::remove_file(path);
+        fs::remove_file(path).unwrap()
     }
     #[test]
     #[should_panic]
@@ -399,7 +397,7 @@ mod tests {
         // Call & Test
         surface.to_file(path);
         // Cleanup
-        fs::remove_file(path);
+        fs::remove_file(path).unwrap()
     }
 
     #[test]
