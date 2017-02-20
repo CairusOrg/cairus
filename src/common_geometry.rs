@@ -484,3 +484,24 @@ mod tests {
       }
 
 }
+///SplineKnots for bezier curves
+pub struct SplineKnots{
+    pub a: Point,
+    pub b: Point,
+    pub c: Point,
+    pub d: Point,
+}
+
+///Implements SplineKnots methods
+impl SplineKnots{
+///Creates a new SplineKnots with user defined points
+    fn create(a: &Point, b: &Point, c: &Point, d: &Point)->SplineKnots{
+        SplineKnots{
+            a:Point::create(a.x, a.y),
+            b:Point::create(b.x, b.y),
+            c:Point::create(c.x, c.y),
+            d:Point::create(d.x, d.y),
+        }
+    }
+}
+
