@@ -4,12 +4,12 @@ description = "A reimplementation of the Cairo vector graphics library in Rust"
 version = "0.1.0"
 authors = [
             "Kyle Kneitinger <kyle@kneit.in>",
-            "Courtney Anderson-Clark <>",
-            "Bobby Eshleman <asdfd@asd.das>",
-            "Sara Ferdousi <asdfd@asd.das>",
-            "Philip Troy Routley <asdfd@asd.das>",
-            "DJ Sabo <asdfd@asd.das>",
-            "Evan Smelser <asdfd@asd.das>",
+            "Courtney Anderson-Clark",
+            "Bobby Eshleman",
+            "Sara Ferdousi",
+            "Philip Troy Routley",
+            "DJ Sabo",
+            "Evan Smelser",
           ]
 readme = "README.md"
 repository = "https://github.com/CairusOrg/cairus"
@@ -18,3 +18,4 @@ license = "LGPL-2.1/MPL-2.0"
 
 [dependencies]
 image = '0.12.2'
+
