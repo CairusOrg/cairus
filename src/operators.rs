@@ -50,7 +50,7 @@
 //!          the destination opaque as well.
 //! * Source - Overwrites the destination with the source. Result color & alpha is equal to source.
 //! * In - The destination object is removed and the source object is only drawn where the
-//! destination was. 
+//! destination was.
 //! Descriptions/formulas for Cairo operators:
 //! [Cairo Operators](https://www.cairographics.org/operators/)
 
@@ -196,7 +196,7 @@ mod tests {
     fn test_over_operator_semi_transparent_source() {
         let source = Rgba::new(1., 0., 0., 0.5);
         let mut destination = Rgba::new(0., 1., 0., 0.5);
-        operator_over(&source, &mut destination);
+        fetch_operator(&Operator::Over)(&source, &mut destination);
 
         // This result was computed manually to be correct, and then modified to match Rust's
         // default floating point decimal place rounding.
@@ -222,7 +222,7 @@ mod tests {
     fn test_source_operator_semi_transparent_source() {
         let source = Rgba::new(1., 0., 0., 0.5);
         let mut destination = Rgba::new(0., 1., 0.5, 0.8);
-        operator_source(&source, &mut destination);
+        fetch_operator(&Operator::Source)(&source, &mut destination);
 
         assert_eq!(destination, Rgba::new(1., 0., 0., 0.5));
     }
@@ -246,13 +246,13 @@ mod tests {
     #[test]
     fn test_in_operator_semi_transparent_source() {
         let source = Rgba{
-            red:0.5, 
-            green:0.5, 
-            blue:0.5, 
+            red:0.5,
+            green:0.5,
+            blue:0.5,
             alpha:0.5
         };
         let mut destination = Rgba::new(0., 1., 0., 0.5);
-        operator_in(&source, &mut destination);
+        fetch_operator(&Operator::In)(&source, &mut destination);
         let test_rgba = Rgba{
             red:0.5,
             green:0.5,
@@ -267,8 +267,8 @@ mod tests {
         let source = Rgba::new(0.5, 0.5, 0.5, 1.);
         let mut destination = Rgba::new(1., 1., 1., 0.5);
         operator_in(&source, &mut destination);
-        let test_rgba =  Rgba{ 
-            red:0.5, 
+        let test_rgba =  Rgba{
+            red:0.5,
             green:0.5,
             blue:0.5,
             alpha:0.5
@@ -279,9 +279,9 @@ mod tests {
     #[test]
     fn test_in_operator_opaque_destination() {
         let source = Rgba{
-            red:0.25, 
-            green:0.25, 
-            blue:0.25, 
+            red:0.25,
+            green:0.25,
+            blue:0.25,
             alpha:0.25
         };
         let mut destination = Rgba::new(1.0, 1.0, 1.0, 1.0);
@@ -298,9 +298,9 @@ mod tests {
     #[test]
     fn test_in_operator_transparent_destination() {
         let source = Rgba{
-            red:0.5, 
-            green:0.5, 
-            blue:0.5, 
+            red:0.5,
+            green:0.5,
+            blue:0.5,
             alpha:0.25
         };
         let mut destination = Rgba::new(1.0, 1.0, 1.0, 0.0);
