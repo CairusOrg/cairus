@@ -143,16 +143,30 @@ impl ImageSurface {
     /// JPG and PNG images. The below functions, to_file(), to_png, and to_jpg use this external
     /// library to write output image files, provided a valid Cairus ImageSurface.
     pub fn to_file(&self, path: &Path){
-        let extension = path.extension().unwrap();
-
-        if extension == "png" || extension == "jpg"  {
-            let buffer = self.into_bytes();
-            image::save_buffer(path, buffer.as_slice(), self.width as u32,
-                               self.height as u32, image::RGBA(8)).unwrap();
+        let pathExtension = path.extension().unwrap();
+        let extension = (String::from(pathExtension.to_str().unwrap())).to_lowercase();
+       // let () = extension2;
+        if extension == "png"  {
+            self.to_png(path)
+        }
+        else if extension == "jpg" {
+            self.to_jpg(path);
         }
         else {
-            panic!("error: {:?} output not supported", extension);
+            panic!("error: {:?} output not supported", pathExtension);
         }
+    }
+
+    fn to_png(&self, path: &Path) {
+        let buffer = self.into_bytes();
+        let our_image = image::save_buffer(path, buffer.as_slice(), self.width as u32,
+                                           self.height as u32, image::RGBA(8)).unwrap();
+    }
+
+    fn to_jpg(&self, path: &Path) {
+        let buffer = self.into_bytes();
+        let our_image = image::save_buffer(path, buffer.as_slice(), self.width as u32,
+                                           self.height as u32, image::RGBA(8)).unwrap();
     }
 
     pub fn get(&self, x: usize, y: usize) -> Option<&Rgba> {
@@ -375,8 +389,12 @@ mod tests {
         // Setup
         let surface = ImageSurface::create(100, 100);
         let path = Path::new("test_extension.uyk");
+
         // Call and panic
         let _ = surface.to_file(path);
+
+        // Cleanup
+        let _ = fs::remove_file(path).unwrap();
     }
 
     #[test]
