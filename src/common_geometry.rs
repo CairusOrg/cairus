@@ -305,10 +305,15 @@ mod tests {
         let p1 = Point{x: 0., y: 0.};
         let p2 = Point{x: 1., y: 1.};
         let line = LineSegment::from_points(p1, p2);
+        let line_rev = LineSegment::from_points(p2, p1);
         assert_eq!(line.leftmost_point(), p1);
+        assert_eq!(line_rev.leftmost_point(), p1);
         assert_eq!(line.lowest_point(), p1);
+        assert_eq!(line_rev.lowest_point(), p1);
         assert_eq!(line.rightmost_point(), p2);
+        assert_eq!(line_rev.rightmost_point(), p2);
         assert_eq!(line.highest_point(), p2);
+        assert_eq!(line_rev.highest_point(), p2);
     }
 
     // Tests that LineSegment Eq implementation is working
