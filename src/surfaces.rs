@@ -143,8 +143,8 @@ impl ImageSurface {
     /// JPG and PNG images. The below functions, to_file(), to_png, and to_jpg use this external
     /// library to write output image files, provided a valid Cairus ImageSurface.
     pub fn to_file(&self, path: &Path){
-        let pathExtension = path.extension().unwrap();
-        let extension = (String::from(pathExtension.to_str().unwrap())).to_lowercase();
+        let path_extension = path.extension().unwrap();
+        let extension = (String::from(path_extension.to_str().unwrap())).to_lowercase();
        // let () = extension2;
         if extension == "png"  {
             self.to_png(path)
@@ -153,7 +153,7 @@ impl ImageSurface {
             self.to_jpg(path);
         }
         else {
-            panic!("error: {:?} output not supported", pathExtension);
+            panic!("error: {:?} output not supported", path_extension);
         }
     }
 
@@ -300,7 +300,25 @@ mod tests {
     }
 
     #[test]
-    fn test_to_png_output_correct_dimensions() {
+    fn test_into_bytes() {
+        // verifies that into bytes returns the correct number of bytes and all bytes are correct
+
+        // Setup
+        let surface = ImageSurface::create(100, 100);
+        let transparent_pixel = Rgba::new(0.,0.,0.,0.);
+
+        // Call
+        let result = surface.into_bytes();
+
+        // Test
+        assert_eq!(40000, result.len(), "Error: Byte count incorrect");
+        for byte in result {
+            assert_eq!(0, byte, "Error: Byte value incorrect");
+        }
+    }
+
+    #[test]
+    fn test_to_file_output_correct_dimensions() {
         // Writes image surface to file then verifies image in file has correct dimensions.
 
         //setup
@@ -323,7 +341,7 @@ mod tests {
     }
 
     #[test]
-    fn test_int_to_png_integrity_per_pixel() {
+    fn test_int_to_file_integrity_per_pixel() {
         // Writes image surface to file then verifies file content is as expected
 
         // Setup
@@ -364,6 +382,60 @@ mod tests {
     }
 
     #[test]
+    fn test_int_to_file_uppercase_extension() {
+        // Writes image surface to file and verifies file was created
+
+        // Setup
+        let surface = ImageSurface::create(100, 100);
+        let path = Path::new("test3.JPG");
+
+        // Call
+        surface.to_file(path);
+
+        // Test
+        assert!(Path::new(path).exists(), "Error: JPG file was not created");
+
+        // Cleanup
+        let _ = fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn test_to_png_file_created() {
+        // Tests private to_png() function
+
+        // Setup
+        let surface = ImageSurface::create(100, 100);
+        let path = Path::new("pngfile.png");
+
+        // Call
+        surface.to_file(path);
+
+        // Test
+        assert!(Path::new(path).exists(), "Error: PNG file was not created");
+
+        // Cleanup
+        let _ = fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn test_to_jpg_file_created() {
+        // Tests private to_jpg() function
+
+        // Setup
+        let surface = ImageSurface::create(100, 100);
+        let path = Path::new("jaypeg.jpg");
+
+        // Call
+        surface.to_file(path);
+
+        // Test
+        assert!(Path::new(path).exists(), "Error: JPG file was not created");
+
+        // Cleanup
+        let _ = fs::remove_file(path).unwrap();
+    }
+
+    #[test]
     #[should_panic]
     fn test_invalid_image_surface_height_to_jpeg() {
         // Verifies we cannot create a image with a 0 height value
@@ -374,7 +446,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_invalid_image_surface_width_to_png() {
+    fn test_invalid_image_surface_width() {
         // Verifies we cannot create a image with a 0 width value
 
         // Call and panic
