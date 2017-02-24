@@ -159,13 +159,13 @@ impl ImageSurface {
 
     fn to_png(&self, path: &Path) {
         let buffer = self.into_bytes();
-        let our_image = image::save_buffer(path, buffer.as_slice(), self.width as u32,
+        let _ = image::save_buffer(path, buffer.as_slice(), self.width as u32,
                                            self.height as u32, image::RGBA(8)).unwrap();
     }
 
     fn to_jpg(&self, path: &Path) {
         let buffer = self.into_bytes();
-        let our_image = image::save_buffer(path, buffer.as_slice(), self.width as u32,
+        let _ = image::save_buffer(path, buffer.as_slice(), self.width as u32,
                                            self.height as u32, image::RGBA(8)).unwrap();
     }
 
@@ -305,7 +305,6 @@ mod tests {
 
         // Setup
         let surface = ImageSurface::create(100, 100);
-        let transparent_pixel = Rgba::new(0.,0.,0.,0.);
 
         // Call
         let result = surface.into_bytes();
