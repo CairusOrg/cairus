@@ -192,6 +192,17 @@ mod tests {
     use super::fetch_operator;
     use types::Rgba;
 
+    fn create_rgba_not_multiplied(red: f32, green: f32, blue: f32, alpha: f32) -> Rgba {
+        // This function creates a new Rgba object that does not pre-multiply which is needed
+        // to verify results when testing.
+         Rgba {
+            red: red,
+            green: green,
+            blue: blue,
+            alpha: alpha
+        }
+    }
+
     #[test]
     fn test_over_operator_semi_transparent_source() {
         let source = Rgba::new(1., 0., 0., 0.5);
@@ -245,20 +256,11 @@ mod tests {
 
     #[test]
     fn test_in_operator_semi_transparent_source() {
-        let source = Rgba{
-            red:0.5,
-            green:0.5,
-            blue:0.5,
-            alpha:0.5
-        };
+        let source = create_rgba_not_multiplied(0.5, 0.5, 0.5, 0.5);
+
         let mut destination = Rgba::new(0., 1., 0., 0.5);
         fetch_operator(&Operator::In)(&source, &mut destination);
-        let test_rgba = Rgba{
-            red:0.5,
-            green:0.5,
-            blue:0.5,
-            alpha:0.25
-        };
+        let test_rgba =  create_rgba_not_multiplied(0.5, 0.5, 0.5, 0.25);
         assert_eq!(destination, test_rgba);
     }
 
@@ -267,50 +269,25 @@ mod tests {
         let source = Rgba::new(0.5, 0.5, 0.5, 1.);
         let mut destination = Rgba::new(1., 1., 1., 0.5);
         operator_in(&source, &mut destination);
-        let test_rgba =  Rgba{
-            red:0.5,
-            green:0.5,
-            blue:0.5,
-            alpha:0.5
-        };
+        let test_rgba = create_rgba_not_multiplied(0.5, 0.5, 0.5, 0.5);
         assert_eq!(destination, test_rgba);
     }
 
     #[test]
     fn test_in_operator_opaque_destination() {
-        let source = Rgba{
-            red:0.25,
-            green:0.25,
-            blue:0.25,
-            alpha:0.25
-        };
+        let source =  create_rgba_not_multiplied(0.25, 0.25, 0.25, 0.25);
         let mut destination = Rgba::new(1.0, 1.0, 1.0, 1.0);
         operator_in(&source, &mut destination);
-        let test_rgba = Rgba{
-            red:0.25,
-            green:0.25,
-            blue:0.25,
-            alpha:0.25
-        };
+        let test_rgba = create_rgba_not_multiplied(0.25, 0.25, 0.25, 0.25);
         assert_eq!(destination, test_rgba);
     }
 
     #[test]
     fn test_in_operator_transparent_destination() {
-        let source = Rgba{
-            red:0.5,
-            green:0.5,
-            blue:0.5,
-            alpha:0.25
-        };
+        let source = create_rgba_not_multiplied(0.5, 0.5, 0.5, 0.25);
         let mut destination = Rgba::new(1.0, 1.0, 1.0, 0.0);
         operator_in(&source, &mut destination);
-        let test_rgba = Rgba{
-            red:0.5,
-            green:0.5,
-            blue:0.5,
-            alpha:0.0
-        };
+        let test_rgba = create_rgba_not_multiplied(0.5, 0.5, 0.5, 0.);
         assert_eq!(destination, test_rgba);
     }
 
