@@ -105,14 +105,75 @@ impl DeCasteljauPoints {
         s1.c = Point::create(self.abbc.x, self.abbc.y);
         s1.d = Point::create(self.fin.x, self.fin.y);
     }
+
 }
+
+///Calculates the upper bound on the error (squared) that could result from approximating a
+///spline as a line segment connecting the two endpoints.
+fn error_squared(knots: & SplineKnots) -> f64{
+
+    //We are going to compute the distance (squared) between each of the b and c control points and
+    //the segment a-b. The maximum of these two distances will be our approximation error.
+
+    //we will use these values to determine the difference in slope between the bezier control 
+    //points and point a for comparison with the slope of point d below to see how close we are to
+    //a straight line
+    let mut bdx: f64 = (knots.b.x - knots.a.x) as f64;
+    let mut bdy: f64 = (knots.b.y - knots.a.y) as f64;
+
+    let mut cdx: f64 = (knots.c.x - knots.a.x) as f64;
+    let mut cdy: f64 = (knots.c.y - knots.a.y) as f64;
+
+    if knots.a.x != knots.d.x || knots.a.y != knots.d.y {
+
+        let dx: f64 = (knots.d.x - knots.a.x) as f64;
+        let dy: f64 = (knots.d.y - knots.a.y) as f64;
+        //we will compare v and u to see how close our Bezier is to a straight line from a to d.
+        let v = dx*dx + dy*dy;
+        
+        //how close is the slope of a-b to a-d
+        let u = bdx*dx + bdy*dy;
+        if u <= 0. {}
+        else if u >= v {
+            bdx -= dx;
+            bdy -= dy;
+        }
+        else {
+            bdx -= u/v * dx;
+            bdy -= u/v * dy;
+        }
+
+        //how close is the slope of a-c to a-d
+        let z = cdx*dx + cdy*dy;
+        if z <= 0. {}
+        else if z >= v {
+            cdx -= dx;
+            cdy -= dy;
+        }
+        else {
+            cdx -= z/v * dx;
+            cdy -= z/v * dy;
+        }
+    }
+    //calculate and return the upper bound of the error from approximating a spline as a line
+    //segment connecting the two endpoints.
+    let berr = bdx*bdx + bdy*bdy;
+    let cerr = cdx*cdx + cdy*cdy;
+    if berr > cerr {
+        berr
+    }
+    else {
+        cerr
+    }
+}
+
 
 #[cfg(test)]
 mod tests{
     use::common_geometry::Point;
-    use::decasteljau::SplineKnots;
-    use::decasteljau::DeCasteljauPoints;
-    use::decasteljau::lerp_half;
+    use::splines::SplineKnots;
+    use::splines::DeCasteljauPoints;
+    use::splines::lerp_half;
 
 
     #[test]
