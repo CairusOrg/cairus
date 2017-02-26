@@ -609,4 +609,18 @@ mod tests {
         assert!(trapezoid.contains_point(&internal_point));
         assert!(!trapezoid.contains_point(&external_point));
     }
+
+    #[test]
+    #[should_panic]
+    fn trap_from_bases_panics_on_non_parallel() {
+        let a = Point{x: 0., y: 0.};
+        let b = Point{x: 1., y: 1.};
+        let base1 = LineSegment{point1: a, point2: b};
+
+        let c = Point{x: 0., y: 0.};
+        let d = Point{x: 1., y: 2.};
+        let base2 = LineSegment{point1: c, point2: d};
+
+        let _ = Trapezoid::from_bases(base1, base2);
+    }
 }

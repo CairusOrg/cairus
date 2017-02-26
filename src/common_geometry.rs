@@ -47,6 +47,23 @@ pub struct Point {
     pub y: f32,
 }
 
+impl Point{
+    ///Sets x and y values of a Point to 0.0 (origin)
+    pub fn origin()->Point{
+        Point{
+            x:0.,
+            y:0.,
+        }
+    }
+    ///Creates a Point with user defined values
+    pub fn create(x:f32, y:f32)->Point{
+        Point{
+            x: x,
+            y: y,
+        }
+    }
+}
+
 impl PartialEq for Point {
     fn eq(&self, other: &Point) -> bool {
         self.x == other.x && self.y == other.y
@@ -288,10 +305,15 @@ mod tests {
         let p1 = Point{x: 0., y: 0.};
         let p2 = Point{x: 1., y: 1.};
         let line = LineSegment::from_points(p1, p2);
+        let line_rev = LineSegment::from_points(p2, p1);
         assert_eq!(line.leftmost_point(), p1);
+        assert_eq!(line_rev.leftmost_point(), p1);
         assert_eq!(line.lowest_point(), p1);
+        assert_eq!(line_rev.lowest_point(), p1);
         assert_eq!(line.rightmost_point(), p2);
+        assert_eq!(line_rev.rightmost_point(), p2);
         assert_eq!(line.highest_point(), p2);
+        assert_eq!(line_rev.highest_point(), p2);
     }
 
     // Tests that LineSegment Eq implementation is working
