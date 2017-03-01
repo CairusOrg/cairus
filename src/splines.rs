@@ -30,11 +30,12 @@
  *
  * Contributor(s):
  *	Sara Ferdousi <ferdousi@pdx.edu>
- *
+ *  Evan Smelser <evanjsmelser@gmail.com>
  */
 
 //use std::f32;
 use common_geometry::Point;
+use common_geometry::Slope;
 
 ///SplineKnots for bezier curves
 pub struct SplineKnots{
@@ -57,6 +58,67 @@ impl SplineKnots{
     }
 }
 
+///Spline
+pub struct Spline{
+    //not sure which if any of these we will need.
+    //add_point_func
+    //closure
+
+    //working on figuring out mutability of these attributes...
+    //Also wondering if I will need to use lifetime specifics here for ownership.
+    pub knots: SplineKnots,
+    pub initial_slope: Slope,
+    pub final_slope: Slope,
+    pub has_point: bool,
+    pub last_point: Point,
+}
+
+///Implements Spline methods
+impl Spline{
+    ///Creates a new Spline with user defined values
+    fn spline_init(spline: & mut Spline,
+                   a: Point, b: Point,
+                   c: Point, d: Point) -> bool {
+        // If both tangents are zero, this is just a straight line
+        if a.x == b.x && a.y == b.y && c.x == d.x && c.y == d.y {
+            return false;
+        }
+
+        //The cairo code calls the add point function here and assigns the closure here, I'm not
+        //sure if we need these concepts or not. 
+        //spline.add_point_func
+        //spline.closure 
+
+        spline.knots = SplineKnots::create(&a, &b, &c, &d);
+
+        if a.x != b.x || a.y != b.y {
+            spline.initial_slope = Slope::slope_init(spline.knots.a, spline.knots.b);
+        }
+        else if a.x != c.x || a.y != c.y {
+            spline.initial_slope = Slope::slope_init(spline.knots.a, spline.knots.c);
+        }
+        else if a.x != d.x || a.y != d.y {
+            spline.initial_slope = Slope::slope_init(spline.knots.a, spline.knots.d);
+        }
+        else{
+            //This is just a straight line
+            return false;
+        }
+       
+
+        if c.x != d.x || c.y != d.y {
+            spline.final_slope = Slope::slope_init(spline.knots.c, spline.knots.d);
+        }
+        else if b.x != d.x || b.y != d.y {
+            spline.final_slope = Slope::slope_init(spline.knots.b, spline.knots.d);
+        }
+        else{
+            //This is just a straight line
+            return false;
+        }
+        true
+    }
+}
 ///This function takes two end points which are interpolated providing the intermediate point
 fn lerp_half(a: &Point, b: &Point)->Point{
     Point{
@@ -118,12 +180,12 @@ fn error_squared(knots: & SplineKnots) -> f64{
     //we will use these values to determine the difference in slope between the bezier control 
     //points and point a for comparison with the slope of point d below to see how close we are to
     //a straight line
-    let mut bdx: f64 = (knots.b.x - knots.a.x) as f64;
-    let mut bdy: f64 = (knots.b.y - knots.a.y) as f64;
+    let mut bdx = (knots.b.x - knots.a.x) as f64;
+    let mut bdy = (knots.b.y - knots.a.y) as f64;
 
-    let mut cdx: f64 = (knots.c.x - knots.a.x) as f64;
-    let mut cdy: f64 = (knots.c.y - knots.a.y) as f64;
-
+    let mut cdx = (knots.c.x - knots.a.x) as f64;
+    let mut cdy = (knots.c.y - knots.a.y) as f64;
+    
     if knots.a.x != knots.d.x || knots.a.y != knots.d.y {
 
         let dx: f64 = (knots.d.x - knots.a.x) as f64;
@@ -167,6 +229,12 @@ fn error_squared(knots: & SplineKnots) -> f64{
     }
 }
 
+//will return false to let us know if it failed rather than a status like in Cairo.
+fn spline_decompose_into (s1: & SplineKnots, 
+                          tolerance_squared: f64,
+                          result: & Spline) -> bool {
+    unimplemented!();
+}
 
 #[cfg(test)]
 mod tests{

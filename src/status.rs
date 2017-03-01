@@ -34,7 +34,7 @@
  *
  */
 
-enum Status{
+pub enum Status{
 
     Success = 0,
     NoMemory,

@@ -269,9 +269,29 @@ impl PartialEq for Vector {
     }
 }
 
+/// ## Slope
+///
+/// Defines a slope by the difference between its x and y coordinates.
+#[derive(Debug, Copy, Clone)]
+pub struct Slope {
+   dx: f32,
+   dy: f32,
+}
+
+///Implements Slope methods
+impl Slope{
+    ///Creates a new Slope between two user defined points
+    pub fn slope_init (a: Point, b: Point) -> Slope{
+        Slope{
+            dx: b.x - a.x,
+            dy: b.y - a.y,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{LineSegment, Point, Vector};
+    use super::{LineSegment, Point, Vector, Slope};
 
     // Tests that point subtraction is working.
     #[test]
@@ -505,25 +525,26 @@ mod tests {
           assert_eq!(line.length(), 2.);
       }
 
-}
-///SplineKnots for bezier curves
-pub struct SplineKnots{
-    pub a: Point,
-    pub b: Point,
-    pub c: Point,
-    pub d: Point,
-}
+      //Tests that Slope::slope_init() works
+      #[test]
+      fn zero_slope() {
+          let a = Point::origin();
+          let b = Point::create(0., 1.);
+          let slope = Slope::slope_init(a, b);
+          assert_eq!(slope.dx, 0.);
+          assert_eq!(slope.dy, 1.);
+      }
 
-///Implements SplineKnots methods
-impl SplineKnots{
-///Creates a new SplineKnots with user defined points
-    fn create(a: &Point, b: &Point, c: &Point, d: &Point)->SplineKnots{
-        SplineKnots{
-            a:Point::create(a.x, a.y),
-            b:Point::create(b.x, b.y),
-            c:Point::create(c.x, c.y),
-            d:Point::create(d.x, d.y),
-        }
-    }
+      #[test]
+      fn zero_slope_same_point() {
+          let a = Point::create(42., 42.);
+          let b = Point::create(42., 42.);
+          let slope = Slope::slope_init(a, b);
+          assert_eq!(slope.dx, 0.);
+          assert_eq!(slope.dy, 0.);
+      }
+
+      //Finish tests for regular slope, negative slope, and infinite slope.
+
 }
 
