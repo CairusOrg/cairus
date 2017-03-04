@@ -6,6 +6,15 @@ Sweep line is a horizontal line going from top (minimum y) to bottom (maximum y)
 
 LineSegment defined in common_geometry.rs contains 2 points
 edge is a line + top, bot, dir
+    dir is a direction and should come from whatever initially 'drew' the lines
+        in a pinch, we could generate dir from a sequence of line segments assuming
+        each segment's first point is the previous segment's end point.
+        dir should be +1 for a segment that is being drawn in the positive y direction,
+        -1 for a segment being drawn in the negative y direction, and 0 for horizontal lines
+        (horizontal lines don't actually matter since we will never cross them with a
+        horizontal ray)
+    For example: A clockwise drawn square would have a right side with a +1 dir,
+        and a left side with a -1 dir.
 SL_edge has edge + *prev, *next, *colinear, deferred_trap (top, *right)
 
 1. build event queue (EQ) (BST?)
@@ -86,7 +95,25 @@ In case of multiple lines crossing at same intersection point we have a couple p
 does slope of lines help with this? investigate cairo code...
 
 */
-
+/*
+add_to_traps(SL_edge edge, float bot, int mask, traps *traps)
+    //mask is 0xFFFFFFFF if using winding rule, 0x1 if using even/odd rule
+    //only output traps with positive area
+    if edge.deferred_trap.top >= bot
+        return
+    //count edge directions for ray right to infinity
+    in_out = 0
+    pos = edge.deferred_trap->right (or pos = edge->next? should be same, no?)
+    while (pos != null)
+        in_out += pos.dir
+        pos = pos.deferred_trap->right (or pos = pos->next? should be same, no?)
+    //in_out & mask is zero means do not fill (0 or even)
+    if in_out & mask != 0
+        LineSegment left, right
+        left = edge->LineSegment
+        right = edge.deferred_trap->right->LineSegment
+        traps_push(left, right, edge.deferred_trap.top, bot)
+*/
 use common_geometry::{Point, LineSegment};
 use std::cmp::Ordering;
 extern crate linked_list;
