@@ -106,7 +106,7 @@ pub struct Edge {
 
 pub struct Event {
     edge_left: Edge,
-    edge_right: Edge,
+    edge_right: Option<Box<Edge>>,
     point: Point,
     event_type: EventType
 
@@ -143,6 +143,26 @@ impl Eq for Event {}
 #[cfg(test)]
 mod tests {
     use super::{EventType, Edge, Event};
+    use common_geometry::{LineSegment, Point};
+
+    fn create_edge(x1: f32, y1: f32, x2: f32, y2:f32) -> Edge{
+        Edge{
+            line: LineSegment::new(x1, y1, x2, y2),
+            top: y1,
+            bottom: y2,
+            direction: 1,
+
+        }
+    }
+
+    fn create_start_event(x1: f32, y1: f32, x2:f32, y2:f32) -> Event {
+        Event {
+            edge_left: create_edge(x1, y1, x2, y2),
+            edge_right: None,
+            point: Point::create(x1, y1),
+            event_type: EventType::Start
+        }
+    }
 
     #[test]
     fn event_compare(){
