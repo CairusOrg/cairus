@@ -86,3 +86,33 @@ In case of multiple lines crossing at same intersection point we have a couple p
 does slope of lines help with this? investigate cairo code...
 
 */
+
+use common_geometry::{Point, LineSegment};
+extern crate linked_list;
+
+pub enum EventType {
+    Start,
+    End,
+    Intersection
+}
+
+pub struct Edge {
+    line: LineSegment,
+    top: f32, // highest y value
+    bottom: f32, // lowest y value
+    direction: i32, // positive or negative
+}
+
+pub struct Event {
+    edge_left: Edge,
+    edge_right: Edge,
+    point: Point,
+    event_type: EventType
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::{EventType, Edge, Event};
+
+}

@@ -63,3 +63,6 @@ mod trapezoid_rasterizer;
 
 #[allow(dead_code)]
 mod common_geometry;
+
+#[allow(dead_code)]
+mod bo_trap;
