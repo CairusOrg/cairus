@@ -144,6 +144,7 @@ impl Eq for Event {}
 mod tests {
     use super::{EventType, Edge, Event};
     use common_geometry::{LineSegment, Point};
+    use std::cmp::Ordering;
 
     fn create_edge(x1: f32, y1: f32, x2: f32, y2:f32) -> Edge{
         Edge{
@@ -166,7 +167,8 @@ mod tests {
 
     #[test]
     fn event_compare(){
-
+        let lesser = create_start_event(0., 0., 3., 3.);
+        let greater = create_start_event(1., 1., 0., 2.);
+        assert_eq!(lesser.cmp(&greater), Ordering::Less);
     }
-
 }
