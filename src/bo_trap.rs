@@ -26,19 +26,19 @@ while EQ not empty:
         case: event.type = start
             insert event.edge into SLL (build SL_edge)
                 building SL_edge:
-                    SL_edge->edge = edge
+                    SL_edge->edge = event.edge
                     if SL_edge->next != null start new trap:
                         SL_edge.deferred_trap->right = SL_edge->next.edge
-                        #SL_edge.deferred_trap.top = SL.y
+                        SL_edge.deferred_trap.top = SL.y
                     if SL_edge->prev.deferred_trap.right != null (edge to left has
                                                 deferred trap)
                         add_to_traps(SL_edge->prev, SL.y)
-                        SL_edge->prev.deferred_trap.right = SL_edge
-                        SL_edge->prev.deferred_trap.top = SL.y
+                    SL_edge->prev.deferred_trap.right = SL_edge
+                    SL_edge->prev.deferred_trap.top = SL.y
             check if SL_edge.prev intersects with SL_edge
                 add intersection to EQ
             check if SL_edge.next intersects with SL_edge
-                add intersection to EQ
+                add intersection to EQ (future? current?)
 
         case: event.type = end
             if SL_edge->prev intersects with SL_edge->next
