@@ -88,6 +88,7 @@ does slope of lines help with this? investigate cairo code...
 */
 
 use common_geometry::{Point, LineSegment};
+use std::cmp::Ordering;
 extern crate linked_list;
 
 pub enum EventType {
@@ -108,11 +109,44 @@ pub struct Event {
     edge_right: Edge,
     point: Point,
     event_type: EventType
+
 }
 
+impl PartialOrd for Event {
+    fn partial_cmp(&self, other:&Event) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Event {
+    fn cmp(&self, other:&Event) -> Ordering {
+        let top_compare = match self.edge_left.top.partial_cmp(&other.edge_left.top){
+            Some(val) => val,
+            None => Ordering::Equal,
+        };
+        if top_compare == Ordering::Less {
+                return Ordering::Less
+        }
+        Ordering::Greater
+    }
+}
+
+
+impl PartialEq for Event {
+    fn eq(&self, other:&Event) -> bool {
+        true
+    }
+}
+
+impl Eq for Event {}
 
 #[cfg(test)]
 mod tests {
     use super::{EventType, Edge, Event};
+
+    #[test]
+    fn event_compare(){
+
+    }
 
 }
