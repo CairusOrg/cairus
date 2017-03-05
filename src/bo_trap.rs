@@ -233,27 +233,53 @@ impl Event {
     }
 }
 
-/*
-fn event_list_from_edges(edges: &Vec<Edge>) -> Vec<Event> {
+
+fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
+    let mut events = Vec::new();
     for edge in edges {
         if edge.top == edge.bottom {
             // Is horizontal
-
             if edge.line.point1.x < edge.line.point2.x {
                 // let start_event = Event::new();
+                events.push(Event::new(edge,
+                                       &Point::create(edge.line.point1.x, edge.line.point1.y),
+                                       EventType::Start));
+                events.push(Event::new(edge,
+                                       &Point::create(edge.line.point2.x, edge.line.point2.y),
+                                       EventType::End));
+            }
+            else {
+                events.push(Event::new(edge,
+                                       &Point::create(edge.line.point2.x, edge.line.point2.y),
+                                       EventType::Start ));
+                events.push(Event::new(edge,
+                                       &Point::create(edge.line.point1.x, edge.line.point1.y),
+                                       EventType::End ));
             }
         }
 
         if edge.top == edge.line.point1.y {
             // Point1 is start event
-
+            events.push(Event::new(edge,
+                                   &Point::create(edge.line.point1.x, edge.line.point1.y),
+                                   EventType::Start ));
+            events.push(Event::new(edge,
+                                   &Point::create(edge.line.point2.x, edge.line.point2.y),
+                                   EventType::End ));
 
         } else {
             // Point2 is start event
+            events.push(Event::new(edge,
+                                   &Point::create(edge.line.point2.x, edge.line.point2.y),
+                                   EventType::Start ));
+            events.push(Event::new(edge,
+                                   &Point::create(edge.line.point1.x, edge.line.point1.y),
+                                   EventType::End ));
         }
     }
+    events
 }
-*/
+
 
 #[cfg(test)]
 mod tests {
@@ -325,7 +351,7 @@ mod tests {
         assert_eq!(event_list.get(2).unwrap().edge_left.line.point2.y, 3.);
     }
 
-/*
+
     #[test]
     fn event_list_from_edges_sorted() {
         let edges = vec![
@@ -334,10 +360,10 @@ mod tests {
             create_edge(0., 0., 5., 5.),
         ];
 
-        let event_list = event_list_from_edges(&edges);
+        let event_list = event_list_from_edges(edges);
         assert_eq!(event_list.len(), 6);
     }
-*/
+
 
     #[test]
     fn event_constructor() {
