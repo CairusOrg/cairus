@@ -277,6 +277,7 @@ fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
                                    EventType::End ));
         }
     }
+    events.sort();
     events
 }
 
@@ -288,10 +289,17 @@ mod tests {
     use std::cmp::Ordering;
 
     fn create_edge(x1: f32, y1: f32, x2: f32, y2:f32) -> Edge{
+        let mut top = y1;
+        let mut bottom = y2;
+        if y1 > y2 {
+            top = y2;
+            bottom = y1;
+        }
+
         Edge{
             line: LineSegment::new(x1, y1, x2, y2),
-            top: y1,
-            bottom: y2,
+            top: top,
+            bottom: bottom,
             direction: 1,
 
         }
@@ -353,7 +361,8 @@ mod tests {
 
 
     #[test]
-    fn event_list_from_edges_sorted() {
+    fn event_list_from_edges_sorted_test_size() {
+        // Verify event list is the correct size
         let edges = vec![
             create_edge(3., 4., 1., 2.),
             create_edge(0., 1., 6., 6.),
@@ -362,6 +371,42 @@ mod tests {
 
         let event_list = event_list_from_edges(edges);
         assert_eq!(event_list.len(), 6);
+    }
+
+    #[test]
+    fn event_list_from_edges_sorted_test_order() {
+        // Verify event list is the correct order
+        let edges = vec![
+        create_edge(3., 4., 1., 2.),
+        create_edge(0., 1., 6., 6.),
+        create_edge(0., 0., 5., 5.),
+        ];
+
+        let event_list = event_list_from_edges(edges);
+        assert_eq!(event_list.get(0).unwrap().point, Point::create(0., 0.));
+        assert_eq!(event_list.get(1).unwrap().point, Point::create(0., 1.));
+        assert_eq!(event_list.get(2).unwrap().point, Point::create(1., 2.));
+        assert_eq!(event_list.get(3).unwrap().point, Point::create(3., 4.));
+        assert_eq!(event_list.get(4).unwrap().point, Point::create(5., 5.));
+        assert_eq!(event_list.get(5).unwrap().point, Point::create(6., 6.));
+    }
+
+    #[test]
+    fn event_list_from_edges_sorted_test_types() {
+        // Verify event list events have the correct start/end types
+        let edges = vec![
+        create_edge(3., 4., 1., 2.),
+        create_edge(0., 1., 6., 6.),
+        create_edge(0., 0., 5., 5.),
+        ];
+
+        let event_list = event_list_from_edges(edges);
+        assert_eq!(event_list.get(0).unwrap().event_type, EventType::Start);
+        assert_eq!(event_list.get(1).unwrap().event_type, EventType::Start);
+        assert_eq!(event_list.get(2).unwrap().event_type, EventType::Start);
+        assert_eq!(event_list.get(3).unwrap().event_type, EventType::End);
+        assert_eq!(event_list.get(4).unwrap().event_type, EventType::End);
+        assert_eq!(event_list.get(5).unwrap().event_type, EventType::End);
     }
 
 
