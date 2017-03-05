@@ -116,14 +116,48 @@ add_to_traps(SL_edge edge, float bot, int mask, traps *traps)
 */
 use common_geometry::{Point, LineSegment};
 use std::cmp::Ordering;
+use std::clone::Clone;
 extern crate linked_list;
 
+#[derive(Eq, PartialEq, Debug)]
 pub enum EventType {
     Start,
     End,
     Intersection
 }
 
+impl PartialOrd for EventType {
+    fn partial_cmp(&self, other: &EventType) -> Option<Ordering> {
+        Some(self.cmp(&other))
+    }
+}
+
+impl Ord for EventType {
+    fn cmp(&self, other: &EventType) -> Ordering {
+        match *self {
+            EventType::Start =>
+                match *other {
+                    EventType::Start => Ordering::Equal,
+                    EventType::End => Ordering::Greater,
+                    EventType::Intersection => Ordering::Greater,
+                },
+            EventType::End =>
+                match *other {
+                    EventType::Start => Ordering::Less,
+                    EventType::End => Ordering::Equal,
+                    EventType::Intersection => Ordering::Less,
+                },
+            EventType::Intersection =>
+                match *other {
+                    EventType::Start => Ordering::Less,
+                    EventType::End => Ordering::Greater,
+                    EventType::Intersection => Ordering::Equal,
+                },
+        }
+    }
+}
+
+#[derive(Copy)]
 pub struct Edge {
     line: LineSegment,
     top: f32, // highest y value
@@ -131,30 +165,51 @@ pub struct Edge {
     direction: i32, // positive or negative
 }
 
+impl Clone for Edge {
+    fn clone(&self) -> Edge { *self }
+}
+
+
 pub struct Event {
     edge_left: Edge,
     edge_right: Option<Box<Edge>>,
     point: Point,
     event_type: EventType
-
 }
 
 impl PartialOrd for Event {
-    fn partial_cmp(&self, other:&Event) -> Option<Ordering> {
-        Some(self.cmp(other))
+    fn partial_cmp(&self, other: &Event) -> Option<Ordering> {
+        Some(self.cmp(&other))
     }
 }
 
 impl Ord for Event {
-    fn cmp(&self, other:&Event) -> Ordering {
-        let top_compare = match self.edge_left.top.partial_cmp(&other.edge_left.top){
+    fn cmp(&self, other: &Event) -> Ordering {
+        let y_compare = match self.point.y.partial_cmp(&other.point.y){
             Some(val) => val,
-            None => Ordering::Equal,
+            None => Ordering::Equal, // We choose an Ordering that isn't Ordering::Less because
+                                     // this will cause these events to be compared by other fields
         };
-        if top_compare == Ordering::Less {
-                return Ordering::Less
+
+        if y_compare != Ordering::Equal   {
+                return y_compare
         }
-        Ordering::Greater
+
+        let x_compare = match self.point.x.partial_cmp(&other.point.x){
+            Some(val) => val,
+            None => Ordering::Equal, // We choose an Ordering that isn't Ordering::Less because
+                                     // this will cause these events to be compared by other fields
+        };
+
+        if x_compare != Ordering::Equal   {
+                return x_compare
+        }
+
+        let type_compare = self.event_type.cmp(&other.event_type);
+        if type_compare == Ordering::Equal {
+            return Ordering::Greater
+        }
+        type_compare
     }
 }
 
@@ -167,9 +222,42 @@ impl PartialEq for Event {
 
 impl Eq for Event {}
 
+impl Event {
+    fn new(edge_left: Edge, point: &Point, event_type: EventType) -> Event {
+        Event {
+            point: *point,
+            edge_left: edge_left,
+            edge_right: None,
+            event_type: event_type,
+        }
+    }
+}
+
+/*
+fn event_list_from_edges(edges: &Vec<Edge>) -> Vec<Event> {
+    for edge in edges {
+        if edge.top == edge.bottom {
+            // Is horizontal
+
+            if edge.line.point1.x < edge.line.point2.x {
+                // let start_event = Event::new();
+            }
+        }
+
+        if edge.top == edge.line.point1.y {
+            // Point1 is start event
+
+
+        } else {
+            // Point2 is start event
+        }
+    }
+}
+*/
+
 #[cfg(test)]
 mod tests {
-    use super::{EventType, Edge, Event};
+    use super::*;
     use common_geometry::{LineSegment, Point};
     use std::cmp::Ordering;
 
@@ -184,18 +272,80 @@ mod tests {
     }
 
     fn create_start_event(x1: f32, y1: f32, x2:f32, y2:f32) -> Event {
-        Event {
-            edge_left: create_edge(x1, y1, x2, y2),
-            edge_right: None,
-            point: Point::create(x1, y1),
-            event_type: EventType::Start
-        }
+        let edge = create_edge(x1, y1, x2, y2);
+        let point = Point::create(x1, y1);
+        Event::new(edge, &point, EventType::Start)
     }
 
     #[test]
-    fn event_compare(){
+    fn event_compare_y_lesser(){
         let lesser = create_start_event(0., 0., 3., 3.);
         let greater = create_start_event(1., 1., 0., 2.);
         assert_eq!(lesser.cmp(&greater), Ordering::Less);
+    }
+
+    #[test]
+    fn event_compare_y_greater(){
+        let lesser = create_start_event(0., 0., 3., 3.);
+        let greater = create_start_event(1., 1., 0., 2.);
+        assert_eq!(greater.cmp(&lesser), Ordering::Greater);
+    }
+
+    #[test]
+    fn event_compare_x_lesser(){
+        let lesser = create_start_event(0., 0., 0., 0.);
+        let greater = create_start_event(1., 0., 0., 0.);
+        assert_eq!(lesser.cmp(&greater), Ordering::Less);
+    }
+
+    #[test]
+    fn event_compare_x_greater(){
+        let lesser = create_start_event(0., 0., 0., 0.);
+        let greater = create_start_event(1., 0., 0., 0.);
+        assert_eq!(greater.cmp(&lesser), Ordering::Greater);
+    }
+
+    #[test]
+    fn event_compare_type_greater(){
+        let dummy = create_start_event(0., 0., 0., 0.);
+        assert_eq!(dummy.cmp(&dummy), Ordering::Greater);
+    }
+
+    #[test]
+    fn event_sorting() {
+        let mut event_list = vec![
+            create_start_event(0., 1., 0., 3.),
+            create_start_event(0., 0., 1., 2.),
+            create_start_event(0., 0., 0., 1.)
+        ];
+
+        event_list.sort();
+        assert_eq!(event_list.get(0).unwrap().edge_left.line.point2.y, 1.);
+        assert_eq!(event_list.get(1).unwrap().edge_left.line.point2.y, 2.);
+        assert_eq!(event_list.get(2).unwrap().edge_left.line.point2.y, 3.);
+    }
+
+/*
+    #[test]
+    fn event_list_from_edges_sorted() {
+        let edges = vec![
+            create_edge(3., 4., 1., 2.),
+            create_edge(0., 1., 6., 6.),
+            create_edge(0., 0., 5., 5.),
+        ];
+
+        let event_list = event_list_from_edges(&edges);
+        assert_eq!(event_list.len(), 6);
+    }
+*/
+
+    #[test]
+    fn event_constructor() {
+        let edge = create_edge(0., 0., 0., 0.);
+        let point = Point{x: 0., y: 0.};
+        let event = Event::new(edge, &point, EventType::Start);
+        assert_eq!(event.edge_left.line.point1, edge.line.point1);
+        assert_eq!(event.point, point);
+        assert_eq!(event.event_type, EventType::Start);
     }
 }
