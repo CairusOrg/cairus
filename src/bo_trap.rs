@@ -117,7 +117,9 @@ add_to_traps(SL_edge edge, float bot, int mask, traps *traps)
 use common_geometry::{Point, LineSegment};
 use std::cmp::Ordering;
 use std::clone::Clone;
+use trapezoid_rasterizer::Trapezoid;
 extern crate linked_list;
+use self::linked_list::LinkedList;
 
 #[derive(Eq, PartialEq, Debug)]
 pub enum EventType {
@@ -233,7 +235,6 @@ impl Event {
     }
 }
 
-
 fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
     let mut events = Vec::new();
     for edge in edges {
@@ -279,6 +280,52 @@ fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
     }
     events.sort();
     events
+}
+
+pub struct ScanLineEdge {
+    top: f32,
+    line: LineSegment,
+    right: Option<Box<LineSegment>>,
+}
+
+impl ScanLineEdge {
+    fn new(top: f32, line: LineSegment) -> ScanLineEdge {
+        ScanLineEdge {
+            top: top,
+            line: line,
+            right: None,
+        }
+    }
+}
+
+pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
+    // Create the empty Scan Line Linked List
+    let mut sl_list: LinkedList<ScanLineEdge> = LinkedList::new();
+    // Create the list of events
+    let mut events = event_list_from_edges(edges);
+    // Keep looping until the Event List is empty
+    while !events.is_empty() {
+        // Get the current event
+        let event = events.remove(0);
+        // Set the scan line to the events y value
+        let scan_line = event.point.y;
+        // Process Event
+        if event.event_type == EventType::Start{
+            // create a new node and add it to the list
+            let mut sl_edge = ScanLineEdge::new(scan_line, event.edge_left.line);
+            // Insert the node into the linked list. Need to work on the logic for where to add it.
+            sl_list.push_back(sl_edge);
+            println!("Added Start to the scan line at y: {}", scan_line);
+        }
+        else if event.event_type == EventType::End {
+
+        }
+
+        println!("Scan Line: {}", scan_line);
+    }
+
+
+   Vec::new()
 }
 
 
@@ -418,5 +465,17 @@ mod tests {
         assert_eq!(event.edge_left.line.point1, edge.line.point1);
         assert_eq!(event.point, point);
         assert_eq!(event.event_type, EventType::Start);
+    }
+
+    #[test]
+    fn scan_test() {
+        let edges = vec![
+        create_edge(3., 4., 1., 2.),
+        create_edge(0., 1., 6., 6.),
+        create_edge(0., 0., 5., 5.),
+        ];
+
+        scan(edges);
+
     }
 }
