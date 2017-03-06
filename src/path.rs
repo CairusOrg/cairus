@@ -80,6 +80,9 @@ fn close_path(p: &Point, s: &Slope){
 /// Path Related Operations
 /// This section will define the implementation of all Path related functionality.
 impl Path {
+    pub fn create() -> Path {
+        unimplemented!();
+    }
     ///new_path
     ///
     ///Clears the current path. 
@@ -91,8 +94,7 @@ impl Path {
             return;
         }
         
-        //TODO: Implement context.new_path()
-        //status = context.new_path();
+        status = context.new_path();
         if status != Status::Success {
             context.set_error(status);
         }
@@ -119,8 +121,7 @@ impl Path {
             return;
         }
         
-        //TODO: Implement context.new_sub_path()
-        //status = context.new_sub_path();
+        status = context.new_sub_path();
         if status != Status::Success {
             context.set_error(status);
         }
@@ -137,8 +138,7 @@ impl Path {
             return;
         }
         
-        //TODO: Implement context.move_to(x, y)
-        //status = context.move_to(x, y);
+        status = context.move_to(x, y);
         if status != Status::Success {
             context.set_error(status);
         }
@@ -158,8 +158,7 @@ impl Path {
             return;
         }
         
-        //TODO: Implement context.line_to(x, y)
-        //status = context.line_to(x, y);
+        status = context.line_to(x, y);
         if status != Status::Success {
             context.set_error(status);
         }
@@ -181,8 +180,7 @@ impl Path {
             return;
         }
         
-        //TODO: Implement context.curve_to(x1, y1, x2, y2, x3, y3)
-        //status = context.curve_to(x1, y1, x2, y2, x3, y3);
+        status = context.curve_to(x1, y1, x2, y2, x3, y3);
         if status != Status::Success {
             context.set_error(status);
         }

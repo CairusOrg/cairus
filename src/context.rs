@@ -41,6 +41,7 @@ use types::Rgba;
 use operators::Operator;
 use operators::fetch_operator;
 use status::Status;
+use path::Path;
 
 /// Struct defined for context
 pub struct Context<'a>{
@@ -48,6 +49,7 @@ pub struct Context<'a>{
     pub status: Status,
     target: &'a mut ImageSurface,
     operator: Operator,
+    //path: Path,
 }
 
 /// Implementation of methods for context
@@ -59,7 +61,9 @@ impl<'a> Context<'a> {
             rgba: Rgba::new(0., 0., 0., 0.),
             target: target,
             operator: Operator::Over,
-            status: Status::Success
+            status: Status::Success,
+            //path: Path::create() 
+            //TODO: Figure out how we want to implement the Path instantiation
         }
     }
 
@@ -117,6 +121,26 @@ impl<'a> Context<'a> {
     }
     pub fn set_error(&mut self, status: Status){
         self.status = status;
+    }
+
+    ///Implementation of path related functions
+    ///
+    pub fn new_path(&mut self) -> Status{
+        unimplemented!();
+    }
+    pub fn new_sub_path(&mut self) -> Status{
+        unimplemented!();
+    }
+    pub fn move_to(&mut self, x: f32, y: f32) -> Status{
+        unimplemented!();
+    }
+    pub fn line_to(&mut self, x: f32, y: f32)  -> Status{
+       unimplemented!(); 
+    }
+    pub fn curve_to(&mut self, x1: f32, y1: f32,
+                    x2: f32, y2: f32,
+                    x3: f32, y3: f32)  -> Status{
+        unimplemented!();
     }
 }
 
