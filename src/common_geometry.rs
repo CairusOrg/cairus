@@ -146,7 +146,7 @@ impl LineSegment {
         }
     }
 
-    pub fn highest_point(&self) -> Point {
+    pub fn max_y_point(&self) -> Point {
         if self.point1.y > self.point2.y {
             self.point1
         } else {
@@ -312,8 +312,8 @@ mod tests {
         assert_eq!(line_rev.min_y_point(), p1);
         assert_eq!(line.max_x_point(), p2);
         assert_eq!(line_rev.max_x_point(), p2);
-        assert_eq!(line.highest_point(), p2);
-        assert_eq!(line_rev.highest_point(), p2);
+        assert_eq!(line.max_y_point(), p2);
+        assert_eq!(line_rev.max_y_point(), p2);
     }
 
     // Tests that LineSegment Eq implementation is working
