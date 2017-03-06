@@ -170,7 +170,7 @@ impl LineSegment {
         }
     }
 
-    pub fn rightmost_point(&self) -> Point {
+    pub fn max_x_point(&self) -> Point {
         if self.point1.x > self.point2.x {
             self.point1
         } else {
@@ -183,7 +183,7 @@ impl LineSegment {
     // rasterized.  The algorithm is a straight-forward DDA.
     pub fn into_pixel_coordinates(&self) -> Vec<(i32, i32)> {
         let leftpoint = self.min_x_point();
-        let rightpoint = self.rightmost_point();
+        let rightpoint = self.max_x_point();
 
         let delta_x = rightpoint.x - leftpoint.x;
         let delta_y = rightpoint.y - leftpoint.y;
@@ -310,8 +310,8 @@ mod tests {
         assert_eq!(line_rev.min_x_point(), p1);
         assert_eq!(line.lowest_point(), p1);
         assert_eq!(line_rev.lowest_point(), p1);
-        assert_eq!(line.rightmost_point(), p2);
-        assert_eq!(line_rev.rightmost_point(), p2);
+        assert_eq!(line.max_x_point(), p2);
+        assert_eq!(line_rev.max_x_point(), p2);
         assert_eq!(line.highest_point(), p2);
         assert_eq!(line_rev.highest_point(), p2);
     }
