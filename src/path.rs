@@ -29,43 +29,38 @@
  * The Original Code is the cairus graphics library.
  *
  * Contributor(s):
- *  Bobby Eshleman <bobbyeshleman@gmail.com>
- *
+ *  Kyle Kneitinger <kyle@kneit.in>
+ *  Evan Smelser <evanjsmelser@gmail.com>
  */
 
-//! The main crate for Cairus.
-//!
-//! ## Overview
-//!
-//! Cairus is a 2D graphics library based on the Cairo vector graphics library.  Cairus is designed
-//! to utilize and preserve the Cairo drawing model while providing the benefits of a native Rust
-//! implementation.
+use common_geometry::Point;
+use common_geometry::Slope;
+use status::Status;
 
-/// When we get down to the level of pixels, they are blended together by operations
-/// defined in the operators module.
-#[allow(dead_code)]
-pub mod operators;
 
-#[allow(dead_code)]
-mod types;
+enum Data {
+    MoveTo (  Point ),
+    LineTo (  Point ),
+    CurveTo ( Point, Point, Point),
+    ClosePath,
+}
 
-#[allow(dead_code)]
-pub mod surfaces;
+struct Path {
+   status: Status,
+   data_vec: Vec<Data>,
+   data_num: usize,
+}
 
-#[allow(dead_code)]
-mod splines;
 
-#[allow(dead_code)]
-pub mod context;
+#[cfg(test)]
+mod tests{
 
-#[allow(dead_code)]
-mod trapezoid_rasterizer;
 
-#[allow(dead_code)]
-mod common_geometry;
+    #[test]
+    fn test_something(){
+        assert_eq!(1,1);
+    }
+}
 
-#[allow(dead_code)]
-mod status;
 
-#[allow(dead_code)]
-mod path;
+
