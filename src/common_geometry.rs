@@ -162,7 +162,7 @@ impl LineSegment {
         }
     }
 
-    pub fn leftmost_point(&self) -> Point {
+    pub fn min_x(&self) -> Point {
         if self.point1.x < self.point2.x {
             self.point1
         } else {
@@ -182,7 +182,7 @@ impl LineSegment {
     // Returns a Vector of coordinates indicating which pixels this line should color when
     // rasterized.  The algorithm is a straight-forward DDA.
     pub fn into_pixel_coordinates(&self) -> Vec<(i32, i32)> {
-        let leftpoint = self.leftmost_point();
+        let leftpoint = self.min_x();
         let rightpoint = self.rightmost_point();
 
         let delta_x = rightpoint.x - leftpoint.x;
@@ -306,8 +306,8 @@ mod tests {
         let p2 = Point{x: 1., y: 1.};
         let line = LineSegment::from_points(p1, p2);
         let line_rev = LineSegment::from_points(p2, p1);
-        assert_eq!(line.leftmost_point(), p1);
-        assert_eq!(line_rev.leftmost_point(), p1);
+        assert_eq!(line.min_x(), p1);
+        assert_eq!(line_rev.min_x(), p1);
         assert_eq!(line.lowest_point(), p1);
         assert_eq!(line_rev.lowest_point(), p1);
         assert_eq!(line.rightmost_point(), p2);
