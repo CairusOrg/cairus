@@ -273,7 +273,7 @@ fn bases_from_points(a: Point, b: Point, c: Point, d: Point) -> Vec<TrapezoidBas
 fn lines_from_bases(base1: LineSegment, base2: LineSegment) -> Vec<LineSegment> {
     if base1.slope() == f32::INFINITY {
         let top_leg = LineSegment::from_points(base1.highest_point(), base2.highest_point());
-        let bottom_leg = LineSegment::from_points(base1.lowest_point(), base2.lowest_point());
+        let bottom_leg = LineSegment::from_points(base1.min_y_point(), base2.min_y_point());
         vec![bottom_leg, base1, top_leg, base2]
     } else {
         let left_leg = LineSegment::from_points(base1.min_x_point(), base2.min_x_point());

@@ -154,7 +154,7 @@ impl LineSegment {
         }
     }
 
-    pub fn lowest_point(&self) -> Point {
+    pub fn min_y_point(&self) -> Point {
         if self.point1.y < self.point2.y {
             self.point1
         } else {
@@ -308,8 +308,8 @@ mod tests {
         let line_rev = LineSegment::from_points(p2, p1);
         assert_eq!(line.min_x_point(), p1);
         assert_eq!(line_rev.min_x_point(), p1);
-        assert_eq!(line.lowest_point(), p1);
-        assert_eq!(line_rev.lowest_point(), p1);
+        assert_eq!(line.min_y_point(), p1);
+        assert_eq!(line_rev.min_y_point(), p1);
         assert_eq!(line.max_x_point(), p2);
         assert_eq!(line_rev.max_x_point(), p2);
         assert_eq!(line.highest_point(), p2);
