@@ -40,10 +40,12 @@ use surfaces::ImageSurface;
 use types::Rgba;
 use operators::Operator;
 use operators::fetch_operator;
+use status::Status;
 
 /// Struct defined for context
 pub struct Context<'a>{
     pub rgba: Rgba,
+    pub status: Status,
     target: &'a mut ImageSurface,
     operator: Operator,
 }
@@ -56,7 +58,8 @@ impl<'a> Context<'a> {
         Context{
             rgba: Rgba::new(0., 0., 0., 0.),
             target: target,
-            operator: Operator::Over
+            operator: Operator::Over,
+            status: Status::Success
         }
     }
 
@@ -111,6 +114,9 @@ impl<'a> Context<'a> {
         for mut pixel in self.target.iter_mut() {
             operator(&self.rgba, pixel);
         }
+    }
+    pub fn set_error(&mut self, status: Status){
+        self.status = status;
     }
 }
 
