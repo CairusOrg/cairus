@@ -34,6 +34,7 @@
  *
  */
 
+#[derive(PartialEq)]
 pub enum Status{
 
     Success = 0,
