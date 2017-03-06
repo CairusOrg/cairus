@@ -187,22 +187,12 @@ impl PartialOrd for Event {
 
 impl Ord for Event {
     fn cmp(&self, other: &Event) -> Ordering {
-        let y_compare = match self.point.y.partial_cmp(&other.point.y){
-            Some(val) => val,
-            None => Ordering::Equal, // We choose an Ordering that isn't Ordering::Less because
-                                     // this will cause these events to be compared by other fields
-        };
-
+        let y_compare = self.point.y.partial_cmp(&other.point.y).unwrap_or(Ordering::Equal);
         if y_compare != Ordering::Equal   {
                 return y_compare
         }
 
-        let x_compare = match self.point.x.partial_cmp(&other.point.x){
-            Some(val) => val,
-            None => Ordering::Equal, // We choose an Ordering that isn't Ordering::Less because
-                                     // this will cause these events to be compared by other fields
-        };
-
+        let x_compare = self.point.x.partial_cmp(&other.point.x).unwrap_or(Ordering::Equal);
         if x_compare != Ordering::Equal   {
                 return x_compare
         }
@@ -214,7 +204,6 @@ impl Ord for Event {
         type_compare
     }
 }
-
 
 impl PartialEq for Event {
     fn eq(&self, other:&Event) -> bool {
