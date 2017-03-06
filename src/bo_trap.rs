@@ -243,18 +243,18 @@ fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
             if edge.line.point1.x < edge.line.point2.x {
                 // let start_event = Event::new();
                 events.push(Event::new(edge,
-                                       &Point::create(edge.line.point1.x, edge.line.point1.y),
+                                       &Point::new(edge.line.point1.x, edge.line.point1.y),
                                        EventType::Start));
                 events.push(Event::new(edge,
-                                       &Point::create(edge.line.point2.x, edge.line.point2.y),
+                                       &Point::new(edge.line.point2.x, edge.line.point2.y),
                                        EventType::End));
             }
             else {
                 events.push(Event::new(edge,
-                                       &Point::create(edge.line.point2.x, edge.line.point2.y),
+                                       &Point::new(edge.line.point2.x, edge.line.point2.y),
                                        EventType::Start ));
                 events.push(Event::new(edge,
-                                       &Point::create(edge.line.point1.x, edge.line.point1.y),
+                                       &Point::new(edge.line.point1.x, edge.line.point1.y),
                                        EventType::End ));
             }
         }
@@ -262,19 +262,19 @@ fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
         if edge.top == edge.line.point1.y {
             // Point1 is start event
             events.push(Event::new(edge,
-                                   &Point::create(edge.line.point1.x, edge.line.point1.y),
+                                   &Point::new(edge.line.point1.x, edge.line.point1.y),
                                    EventType::Start ));
             events.push(Event::new(edge,
-                                   &Point::create(edge.line.point2.x, edge.line.point2.y),
+                                   &Point::new(edge.line.point2.x, edge.line.point2.y),
                                    EventType::End ));
 
         } else {
             // Point2 is start event
             events.push(Event::new(edge,
-                                   &Point::create(edge.line.point2.x, edge.line.point2.y),
+                                   &Point::new(edge.line.point2.x, edge.line.point2.y),
                                    EventType::Start ));
             events.push(Event::new(edge,
-                                   &Point::create(edge.line.point1.x, edge.line.point1.y),
+                                   &Point::new(edge.line.point1.x, edge.line.point1.y),
                                    EventType::End ));
         }
     }
@@ -354,7 +354,7 @@ mod tests {
 
     fn create_start_event(x1: f32, y1: f32, x2:f32, y2:f32) -> Event {
         let edge = create_edge(x1, y1, x2, y2);
-        let point = Point::create(x1, y1);
+        let point = Point::new(x1, y1);
         Event::new(edge, &point, EventType::Start)
     }
 
@@ -430,12 +430,12 @@ mod tests {
         ];
 
         let event_list = event_list_from_edges(edges);
-        assert_eq!(event_list.get(0).unwrap().point, Point::create(0., 0.));
-        assert_eq!(event_list.get(1).unwrap().point, Point::create(0., 1.));
-        assert_eq!(event_list.get(2).unwrap().point, Point::create(1., 2.));
-        assert_eq!(event_list.get(3).unwrap().point, Point::create(3., 4.));
-        assert_eq!(event_list.get(4).unwrap().point, Point::create(5., 5.));
-        assert_eq!(event_list.get(5).unwrap().point, Point::create(6., 6.));
+        assert_eq!(event_list.get(0).unwrap().point, Point::new(0., 0.));
+        assert_eq!(event_list.get(1).unwrap().point, Point::new(0., 1.));
+        assert_eq!(event_list.get(2).unwrap().point, Point::new(1., 2.));
+        assert_eq!(event_list.get(3).unwrap().point, Point::new(3., 4.));
+        assert_eq!(event_list.get(4).unwrap().point, Point::new(5., 5.));
+        assert_eq!(event_list.get(5).unwrap().point, Point::new(6., 6.));
     }
 
     #[test]

@@ -56,7 +56,7 @@ impl Point{
         }
     }
     ///Creates a Point with user defined values
-    pub fn create(x:f32, y:f32)->Point{
+    pub fn new(x:f32, y:f32)->Point{
         Point{
             x: x,
             y: y,
