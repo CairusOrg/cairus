@@ -29,15 +29,17 @@
  * The Original Code is the cairus graphics library.
  *
  * Contributor(s):
- *	Sara Ferdousi <ferdousi@pdx.edu>
+ *  Sara Ferdousi <ferdousi@pdx.edu>
  *  Evan Smelser <evanjsmelser@gmail.com>
  */
 
 //use std::f32;
 use common_geometry::Point;
 use common_geometry::Slope;
+use status::Status;
 
 ///SplineKnots for bezier curves
+#[derive(Clone)]
 pub struct SplineKnots{
     pub a: Point,
     pub b: Point,
@@ -48,12 +50,21 @@ pub struct SplineKnots{
 ///Implements SplineKnots methods
 impl SplineKnots{
     ///Creates a new SplineKnots with user defined points
-    fn create(a: &Point, b: &Point, c: &Point, d: &Point)->SplineKnots{
+    fn create_from_points(a: &Point, b: &Point, c: &Point, d: &Point)->SplineKnots{
         SplineKnots{
             a:Point::create(a.x, a.y),
             b:Point::create(b.x, b.y),
             c:Point::create(c.x, c.y),
             d:Point::create(d.x, d.y),
+        }
+    }
+
+    fn new() -> SplineKnots {
+        SplineKnots{
+            a:Point::create(0.0,0.0),
+            b:Point::create(0.0,0.0),
+            c:Point::create(0.0,0.0),
+            d:Point::create(0.0,0.0),
         }
     }
 }
@@ -85,11 +96,11 @@ impl Spline{
         }
 
         //The cairo code calls the add point function here and assigns the closure here, I'm not
-        //sure if we need these concepts or not. 
+        //sure if we need these concepts or not.
         //spline.add_point_func
-        //spline.closure 
+        //spline.closure
 
-        spline.knots = SplineKnots::create(&a, &b, &c, &d);
+        spline.knots = SplineKnots::create_from_points(&a, &b, &c, &d);
 
         if a.x != b.x || a.y != b.y {
             spline.initial_slope = Slope::slope_init(spline.knots.a, spline.knots.b);
@@ -104,7 +115,7 @@ impl Spline{
             //This is just a straight line
             return false;
         }
-       
+
 
         if c.x != d.x || c.y != d.y {
             spline.final_slope = Slope::slope_init(spline.knots.c, spline.knots.d);
@@ -137,6 +148,7 @@ struct DeCasteljauPoints{
     fin: Point,
 }
 
+// This will be refactored in a later commit
 ///Implemetation of Decasteljau methods
 impl DeCasteljauPoints {
     ///Sets all the Points of the bezier curve to 0.0 using origin method of Point
@@ -170,6 +182,22 @@ impl DeCasteljauPoints {
 
 }
 
+fn de_casteljau(s1: & mut SplineKnots, s2: & mut SplineKnots){
+    let ab = lerp_half(&s1.a, &s1.b);
+    let bc = lerp_half(&s1.b, &s1.c);
+    let cd = lerp_half(&s1.c, &s1.d);
+    let abbc = lerp_half(&ab, &bc);
+    let bccd = lerp_half(&bc, &cd);
+    let fin = lerp_half(&abbc, &bccd);
+    s2.a = fin;
+    s2.b = bccd;
+    s2.c = cd;
+    s2.d = s1.d;
+    s1.b = ab;
+    s1.c = abbc;
+    s1.d = fin;
+}
+
 ///Calculates the upper bound on the error (squared) that could result from approximating a
 ///spline as a line segment connecting the two endpoints.
 fn error_squared(knots: & SplineKnots) -> f64{
@@ -177,7 +205,7 @@ fn error_squared(knots: & SplineKnots) -> f64{
     //We are going to compute the distance (squared) between each of the b and c control points and
     //the segment a-b. The maximum of these two distances will be our approximation error.
 
-    //we will use these values to determine the difference in slope between the bezier control 
+    //we will use these values to determine the difference in slope between the bezier control
     //points and point a for comparison with the slope of point d below to see how close we are to
     //a straight line
     let mut bdx = (knots.b.x - knots.a.x) as f64;
@@ -185,14 +213,14 @@ fn error_squared(knots: & SplineKnots) -> f64{
 
     let mut cdx = (knots.c.x - knots.a.x) as f64;
     let mut cdy = (knots.c.y - knots.a.y) as f64;
-    
+
     if knots.a.x != knots.d.x || knots.a.y != knots.d.y {
 
         let dx: f64 = (knots.d.x - knots.a.x) as f64;
         let dy: f64 = (knots.d.y - knots.a.y) as f64;
         //we will compare v and u to see how close our Bezier is to a straight line from a to d.
         let v = dx*dx + dy*dy;
-        
+
         //how close is the slope of a-b to a-d
         let u = bdx*dx + bdy*dy;
         if u <= 0. {}
@@ -230,10 +258,43 @@ fn error_squared(knots: & SplineKnots) -> f64{
 }
 
 //will return false to let us know if it failed rather than a status like in Cairo.
-fn spline_decompose_into (s1: & SplineKnots, 
+fn spline_decompose_into (mut s1: &mut SplineKnots,
                           tolerance_squared: f64,
-                          result: & Spline) -> bool {
-    unimplemented!();
+                          result: &mut Spline) -> Status {
+    let mut s2 = SplineKnots::new();;
+
+    if error_squared(s1) < tolerance_squared {
+        // This actually needs to be a call to add point
+        return Status::Success;
+    }
+
+
+    de_casteljau(&mut s1,&mut s2);
+
+    let status = spline_decompose_into(&mut s1, tolerance_squared, result);
+
+    if status != Status::Success {
+        return status;
+    }
+
+    spline_decompose_into(&mut s2, tolerance_squared, result)
+}
+
+fn spline_decompose (mut spline: &mut Spline, tolerance: f64) -> Status {
+    // TODO: VERIFY THAT CLONING IS ACCEPTABLE HERE!!!!!!
+    let mut s1 = spline.knots.clone();
+
+    spline.last_point = s1.a;
+
+    let status = spline_decompose_into(&mut s1, tolerance*tolerance, &mut spline);
+
+    if status != Status::Success {
+        return status;
+    }
+
+    // This actually needs to be a call to add point func
+    status
+
 }
 
 #[cfg(test)]
@@ -255,7 +316,7 @@ mod tests{
         let p4 = Point::create(2.6, -3.3);
 
         //Call
-        let s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
+        let s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
         //Test
         assert_eq!(s1.a.x, 1.);
         assert_eq!(s1.a.y, 1.);
@@ -452,8 +513,8 @@ mod tests{
         let p7 = Point::create(1.9, 2.4);
         let p8 = Point::create(2.7, 3.3);
         //Splineknots
-        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
-        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);
         //the curve
         let mut d1 = DeCasteljauPoints::create();
 
@@ -494,8 +555,8 @@ mod tests{
         let p7 = Point::create(-1.9, 2.4);
         let p8 = Point::create(-2.7, 3.3);
         //declare splineknots
-        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
-        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);
         //curve
         let mut d1 = DeCasteljauPoints::create();
 
@@ -536,8 +597,8 @@ mod tests{
         let p7 = Point::create(-1.9, -2.4);
         let p8 = Point::create(-2.7, -3.3);
         //declare splineknots
-        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
-        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);
         //curve
         let mut d1 = DeCasteljauPoints::create();
 
@@ -578,8 +639,8 @@ mod tests{
         let p7 = Point::create(1.9, -2.4);
         let p8 = Point::create(2.7, -3.3);
         //declare splineknots
-        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
-        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);
         //curve
         let mut d1 = DeCasteljauPoints::create();
 
@@ -620,8 +681,8 @@ mod tests{
         let p7 = Point::create(-1.9, -2.4);
         let p8 = Point::create(2.7, 3.3);
         //declare splineknots
-        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
-        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);
         //decasteljau points
         let mut d1 = DeCasteljauPoints::create();
 
@@ -662,8 +723,8 @@ mod tests{
         let p7 = Point::origin();
         let p8 = Point::origin();
         //declare splineknots
-        let mut s1 = SplineKnots::create(&p1, &p2, &p3, &p4);
-        let mut s2 = SplineKnots::create(&p5, &p6, &p7, &p8);
+        let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
+        let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);
         //decasteljau points
         let mut d1 = DeCasteljauPoints::create();
 
