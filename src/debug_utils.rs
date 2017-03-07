@@ -74,6 +74,7 @@ macro_rules! debug_render_lines {
             use $crate::types::Rgba;
             use surfaces::ImageSurface;
             use debug_utils::get_target_dir;
+            use types::Pixel;
 
             let color =
                 match $color.as_ref() {
@@ -88,13 +89,13 @@ macro_rules! debug_render_lines {
             let mut max_x = 0 ;
             let mut max_y = 0;
             for line in $lines.iter() {
-                for (x, y) in line.into_pixel_coordinates() {
-                    if x > max_x {
-                        max_x = x;
+                for pixel in line.into_pixels() {
+                    if pixel.x > max_x {
+                        max_x = pixel.x;
                     }
 
-                    if y > max_y {
-                        max_y = y;
+                    if pixel.y > max_y {
+                        max_y = pixel.y;
                     }
                 }
             }
@@ -107,12 +108,16 @@ macro_rules! debug_render_lines {
 
             // Actually color in the pixels
             for line in $lines.iter() {
-                for (x, y) in line.into_pixel_coordinates() {
-                    let mut pixel = surface.get_mut(x as usize, y as usize);
-                    pixel.red = color.red;
-                    pixel.blue = color.blue;
-                    pixel.green = color.green;
-                    pixel.alpha = color.alpha;
+                for pixel in line.into_pixels() {
+                    match surface.get_mut(pixel.x as usize, pixel.y as usize) {
+                        Some(pixel) => {
+                            pixel.red = color.red;
+                            pixel.blue = color.blue;
+                            pixel.green = color.green;
+                            pixel.alpha = color.alpha;
+                        },
+                        None => {},
+                    }
                 }
             }
 

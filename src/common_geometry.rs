@@ -37,6 +37,7 @@
 
 use std::ops::{Add, Sub};
 use std::f32;
+use types::Pixel;
 
 /// ## Point
 ///
@@ -181,7 +182,7 @@ impl LineSegment {
 
     // Returns a Vector of coordinates indicating which pixels this line should color when
     // rasterized.  The algorithm is a straight-forward DDA.
-    pub fn into_pixel_coordinates(&self) -> Vec<(i32, i32)> {
+    pub fn into_pixels(&self) -> Vec<Pixel> {
         let (x_increment, y_increment) = self.dda_xy_increments();
         let steps = self.dda_steps() as i32;
         let start = self.dda_start_point();
@@ -192,7 +193,7 @@ impl LineSegment {
         for _ in 0..steps {
             x += x_increment;
             y += y_increment;
-            coordinates.push((x as i32, y as i32));
+            coordinates.push(Pixel{x: x as i32, y: y as i32});
         }
         coordinates
     }
@@ -325,6 +326,7 @@ impl PartialEq for Vector {
 #[cfg(test)]
 mod tests {
     use super::{LineSegment, Point, Vector};
+    use types::Pixel;
 
     // Tests that point subtraction is working.
     #[test]
@@ -499,7 +501,7 @@ mod tests {
     }
 
     #[test]
-      fn line_into_pixel_coordinates_slope_lt_one() {
+      fn line_into_pixels_slope_lt_one() {
           // The following coordinates were calculated by hand to be known pixels in the defined
           // line.
           let line = LineSegment::new(0., 0., 20., 5.);
@@ -510,20 +512,20 @@ mod tests {
             (4, 1),
             (5, 1),
             (6, 1)
-          ];
+          ].into_iter().map(|(x, y)| Pixel{x: x, y: y}).collect::<Vec<Pixel>>();
 
-          let pixel_coordinates = line.into_pixel_coordinates();
+          let pixels = line.into_pixels();
           for coordinate in expected {
-              assert!(pixel_coordinates.contains(&coordinate));
+              assert!(pixels.contains(&coordinate));
           }
       }
 
       #[test]
-      fn line_into_pixel_coordinates_slope_gt_one() {
+      fn line_into_pixels_slope_gt_one() {
           // The following coordinates were calculated by hand to be known pixels in the defined
           // line.
           let line = LineSegment::new(0., 0., 5., 20.);
-          let expected = vec![
+          let expected : Vec<Pixel> = vec![
               (0, 1),
               (0, 2),
               (0, 3),
@@ -531,11 +533,11 @@ mod tests {
               (1, 5),
               (1, 6),
               (1, 7)
-          ];
+          ].into_iter().map(|(x, y)| Pixel::new(x, y)).collect();
 
-          let pixel_coordinates = line.into_pixel_coordinates();
+          let pixels = line.into_pixels();
           for coordinate in expected {
-              assert!(pixel_coordinates.contains(&coordinate));
+              assert!(pixels.contains(&coordinate));
           }
       }
 
@@ -543,11 +545,9 @@ mod tests {
       #[test]
       fn line_with_negative_slope() {
           let line = LineSegment { point1: Point { x: 3., y: 2. }, point2: Point { x: 4., y: 0. } };
-          for pixel in line.into_pixel_coordinates() {
-              let x = pixel.0;
-              let y = pixel.1;
-              assert!(y >= 0);
-              assert!(x >= 0);
+          for pixel in line.into_pixels() {
+              assert!(pixel.x >= 0);
+              assert!(pixel.y >= 0);
           }
       }
 
@@ -564,10 +564,10 @@ mod tests {
           let a = Point{x: 0., y: 0.};
           let b = Point{x: 0., y: 10.};
           let line = LineSegment{point1: a, point2: b};
-          let coordinates = line.into_pixel_coordinates();
+          let coordinates = line.into_pixels();
           assert!(coordinates.len() != 0);
           for (idx, coordinate) in coordinates.iter().enumerate() {
-              let expected_coordinate = (0, idx as i32 + 1);
+              let expected_coordinate = Pixel::new(0, idx as i32 + 1);
               assert_eq!(*coordinate, expected_coordinate);
           }
       }
@@ -578,10 +578,10 @@ mod tests {
           let a = Point{x: 0., y: 0.};
           let b = Point{x: 10., y: 0.};
           let line = LineSegment{point1: a, point2: b};
-          let coordinates = line.into_pixel_coordinates();
+          let coordinates = line.into_pixels();
           assert!(coordinates.len() != 0);
           for (idx, coordinate) in coordinates.iter().enumerate() {
-              let expected_coordinate = (idx as i32 + 1, 0);
+              let expected_coordinate = Pixel::new(idx as i32 + 1, 0);
               assert_eq!(*coordinate, expected_coordinate);
           }
       }

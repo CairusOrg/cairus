@@ -117,8 +117,9 @@
 
 use surfaces::ImageSurface;
 use common_geometry::{Point, LineSegment};
-use std::{f32, i32};
+use std::f32;
 use std::collections::HashMap;
+use types::Pixel;
 
 /// ## Trapezoid
 ///
@@ -177,33 +178,33 @@ impl Trapezoid {
     fn into_pixels(&self) -> Vec<Pixel> {
         let mut outline_pixels = Vec::new();
         for line in self.lines() {
-            for pixel in line.into_pixel_coordinates() {
+            for pixel in line.into_pixels() {
                 outline_pixels.push(pixel);
             }
         }
 
         // Order by y-value, for scanline from bottom
-        outline_pixels.sort_by(|&a, &b| a.1.cmp(&b.1));
+        outline_pixels.sort_by(|&ref a, &ref b| a.y.cmp(&b.y));
         let mut minmap = HashMap::new();
         let mut maxmap = HashMap::new();
         for pixel in outline_pixels.iter() {
-            minmap.insert(pixel.1, pixel.0);
-            maxmap.insert(pixel.1, pixel.0);
+            minmap.insert(pixel.y, pixel.x);
+            maxmap.insert(pixel.y, pixel.x);
         }
 
         for pixel in outline_pixels.iter() {
-            if pixel.0 < *minmap.get_mut(&pixel.1).unwrap() {
-                minmap.insert(pixel.1, pixel.0);
+            if pixel.x < *minmap.get_mut(&pixel.y).unwrap() {
+                minmap.insert(pixel.y, pixel.x);
             }
 
-            if pixel.0 > *maxmap.get_mut(&pixel.1).unwrap() {
-                maxmap.insert(pixel.1, pixel.0);
+            if pixel.x > *maxmap.get_mut(&pixel.y).unwrap() {
+                maxmap.insert(pixel.y, pixel.x);
             }
         }
 
         let mut pixels = Vec::new();
-        let min_y = outline_pixels[0].1;
-        let max_y = outline_pixels[outline_pixels.len() - 1].1 + 1;
+        let min_y = outline_pixels[0].y;
+        let max_y = outline_pixels[outline_pixels.len() - 1].y + 1;
         for y in min_y..max_y {
             for x in minmap[&y]..(maxmap[&y] + 1) {
                 let pixel = Pixel{x: x, y: y};
@@ -282,30 +283,6 @@ fn lines_from_bases(base1: LineSegment, base2: LineSegment) -> Vec<LineSegment> 
     }
 }
 
-#[derive(Debug)]
-struct Pixel {
-    x: i32,
-    y: i32,
-}
-
-impl Pixel {
-    /// Returns a Vec of Points whose coordinates are the points to be sampled for anti-aliasing.
-    fn sample_points(&self) -> Vec<Point> {
-        let mut points = Vec::new();
-        let x_increment = 1. / 16.;
-        let y_increment = 1. / 14.;
-        for subgrid_x in 0..17 {
-            let x = self.x as f32 + (subgrid_x as f32 * x_increment);
-            for subgrid_y in 0..15 {
-                let y =  self.y as f32 + (subgrid_y as f32 * y_increment);
-                let point = Point{x: x, y: y};
-                points.push(point);
-            }
-        }
-
-        points
-    }
-}
 
 /// Returns true if a ray running along the positive x-axis intersects the line `line`.
 fn ray_from_point_crosses_line(point: &Point, line: &LineSegment) -> bool {
