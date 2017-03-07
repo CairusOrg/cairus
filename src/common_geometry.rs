@@ -585,29 +585,4 @@ mod tests {
               assert_eq!(*coordinate, expected_coordinate);
           }
       }
-
-
-      // Tests that an image is output when the debug-tesselator feature flag is set
-      #[cfg(feature = "debug-tesselator")]
-      #[test]
-      fn test_filename() {
-          let mut lines = Vec::new();
-          for x in 0..500 {
-              if x % 25 == 0 {
-                  let upper_y = ((x + 20) as f32).min(500.);
-                  let lower_y = ((x - 20) as f32).max(1.);
-                  if lower_y < 0. {
-                      panic!("Can not be lower than zero");
-                  }
-                  let line = LineSegment::new(x as f32, lower_y, x as f32, upper_y);
-                  lines.push(line);
-              }
-          }
-
-          let line = LineSegment::new(0., 0., 500., 500.);
-          lines.push(line);
-
-          // Test
-          debug_render_lines!(lines, "black");
-      }
 }
