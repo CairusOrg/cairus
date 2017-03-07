@@ -339,8 +339,6 @@ pub fn mask_from_trapezoids(trapezoids: &Vec<Trapezoid>, width: usize, height: u
 
     for trapezoid in trapezoids {
         for pixel in trapezoid.into_pixels() {
-            let mut rgba = mask.get_mut(pixel.x as usize, pixel.y as usize);
-
             let mut successes = 0;
             for sample_point in pixel.sample_points() {
                 if trapezoid.contains_point(&sample_point) {
@@ -348,8 +346,14 @@ pub fn mask_from_trapezoids(trapezoids: &Vec<Trapezoid>, width: usize, height: u
                 }
             }
 
-            rgba.alpha += successes as f32 / 255.;
-            rgba.alpha.max(1.);
+            let (x, y) = (pixel.x as usize, pixel.y as usize);
+            match mask.get_mut(x, y) {
+                Some(mut rgba) => {
+                    rgba.alpha += successes as f32 / 255.;
+                    rgba.alpha.max(1.);
+                },
+                None => {},
+            }
          }
      }
 

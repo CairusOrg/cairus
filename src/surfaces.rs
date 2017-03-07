@@ -174,9 +174,9 @@ impl ImageSurface {
         self.base.get(position)
     }
 
-    pub fn get_mut(&mut self, x: usize, y: usize) -> &mut Rgba {
+    pub fn get_mut(&mut self, x: usize, y: usize) -> Option<&mut Rgba> {
         let position = ImageSurface::calculate_position(self.width, x, y);
-        &mut self.base[position]
+        self.base.get_mut(position)
     }
 
     fn calculate_position(width: usize, x: usize, y: usize) -> usize {
