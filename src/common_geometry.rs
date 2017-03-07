@@ -182,23 +182,12 @@ impl LineSegment {
     // Returns a Vector of coordinates indicating which pixels this line should color when
     // rasterized.  The algorithm is a straight-forward DDA.
     pub fn into_pixel_coordinates(&self) -> Vec<(i32, i32)> {
-        let leftpoint = self.leftmost_point();
-        let rightpoint = self.rightmost_point();
-
-        let delta_x = rightpoint.x - leftpoint.x;
-        let delta_y = rightpoint.y - leftpoint.y;
-
-        let steps = if delta_x.abs() > delta_y.abs() {
-            delta_x.abs()
-        } else {
-            delta_y.abs()
-        };
-
-        let x_increment = delta_x / steps;
-        let y_increment = delta_y / steps;
-        let (mut x, mut y) = (leftpoint.x, leftpoint.y);
-
-        let mut result = Vec::with_capacity(steps as usize);
+        let (x_increment, y_increment) = self.dda_xy_increments();
+        let steps = self.dda_steps();
+        let mut result = Vec::new();
+        let start = self.dda_start_point();
+        let mut x = start.x;
+        let mut y = start.y;
         for _ in 0..(steps as i32) {
             x += x_increment;
             y += y_increment;
@@ -208,6 +197,47 @@ impl LineSegment {
 
         result
     }
+
+    fn dda_xy_increments(&self) -> (f32, f32) {
+        let steps = self.dda_steps();
+        let (delta_x, delta_y) = self.dda_delta_xy();
+        let x_increment = delta_x / steps;
+        let y_increment = delta_y / steps;
+        (x_increment, y_increment)
+    }
+
+    fn dda_delta_xy(&self) -> (f32, f32) {
+        let start;
+        let end;
+        if self.slope() != f32::INFINITY {
+            start = self.leftmost_point();
+            end = self.rightmost_point();
+        } else {
+            start = self.lowest_point();
+            end = self.highest_point();
+        }
+        let delta_x = end.x - start.x;
+        let delta_y = end.y - start.y;
+
+        (delta_x, delta_y)
+    }
+
+    fn dda_start_point(&self) -> Point {
+        if self.slope() != f32::INFINITY {
+            self.leftmost_point()
+        } else {
+            self.lowest_point()
+        }
+    }
+
+    fn dda_steps(&self) -> f32 {
+        let (delta_x, delta_y) = self.dda_delta_xy();
+        if delta_x.abs() > delta_y.abs() {
+            delta_x.abs()
+        } else {
+            delta_y.abs()
+        }
+    }
 }
 
 impl PartialEq for LineSegment {
@@ -216,7 +246,6 @@ impl PartialEq for LineSegment {
         (self.point1 == other.point2 && self.point2 == other.point1)
     }
 }
-
 
 /// ## Vector
 ///
@@ -505,4 +534,31 @@ mod tests {
           assert_eq!(line.length(), 2.);
       }
 
+      // Passes if a vertical line converts to the correct collection of pixel coordinates
+      #[test]
+      fn vertical_line_segment_into_pixels() {
+          let a = Point{x: 0., y: 0.};
+          let b = Point{x: 0., y: 10.};
+          let line = LineSegment{point1: a, point2: b};
+          let coordinates = line.into_pixel_coordinates();
+          assert!(coordinates.len() != 0);
+          for (idx, coordinate) in coordinates.iter().enumerate() {
+              let expected_coordinate = (0, idx as i32 + 1);
+              assert_eq!(*coordinate, expected_coordinate);
+          }
+      }
+
+      // Passes if a horizontal line converts to the correct collection of pixel coordinates
+      #[test]
+      fn horizontal_line_segment_into_pixels() {
+          let a = Point{x: 0., y: 0.};
+          let b = Point{x: 10., y: 0.};
+          let line = LineSegment{point1: a, point2: b};
+          let coordinates = line.into_pixel_coordinates();
+          assert!(coordinates.len() != 0);
+          for (idx, coordinate) in coordinates.iter().enumerate() {
+              let expected_coordinate = (idx as i32 + 1, 0);
+              assert_eq!(*coordinate, expected_coordinate);
+          }
+      }
 }
