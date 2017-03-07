@@ -37,7 +37,7 @@
 
 use std::ops::{Add, Sub};
 use std::f32;
-use types::Pixel;
+use types::{Pixel, IntoPixels};
 
 /// ## Point
 ///
@@ -179,25 +179,6 @@ impl LineSegment {
         }
     }
 
-
-    // Returns a Vector of coordinates indicating which pixels this line should color when
-    // rasterized.  The algorithm is a straight-forward DDA.
-    pub fn into_pixels(&self) -> Vec<Pixel> {
-        let (x_increment, y_increment) = self.dda_xy_increments();
-        let steps = self.dda_steps() as i32;
-        let start = self.dda_start_point();
-        let mut x = start.x;
-        let mut y = start.y;
-
-        let mut coordinates = Vec::with_capacity(steps as usize);
-        for _ in 0..steps {
-            x += x_increment;
-            y += y_increment;
-            coordinates.push(Pixel{x: x as i32, y: y as i32});
-        }
-        coordinates
-    }
-
     fn dda_xy_increments(&self) -> (f32, f32) {
         let steps = self.dda_steps();
         let (delta_x, delta_y) = self.dda_delta_xy();
@@ -244,6 +225,26 @@ impl PartialEq for LineSegment {
     fn eq(&self, other: &LineSegment) -> bool {
         (self.point1 == other.point1 && self.point2 == other.point2) ||
         (self.point1 == other.point2 && self.point2 == other.point1)
+    }
+}
+
+impl IntoPixels for LineSegment {
+    // Returns a Vector of coordinates indicating which pixels this line should color when
+    // rasterized.  The algorithm is a straight-forward DDA.
+    fn into_pixels(&self) -> Vec<Pixel> {
+        let (x_increment, y_increment) = self.dda_xy_increments();
+        let steps = self.dda_steps() as i32;
+        let start = self.dda_start_point();
+        let mut x = start.x;
+        let mut y = start.y;
+
+        let mut coordinates = Vec::with_capacity(steps as usize);
+        for _ in 0..steps {
+            x += x_increment;
+            y += y_increment;
+            coordinates.push(Pixel{x: x as i32, y: y as i32});
+        }
+        coordinates
     }
 }
 
@@ -326,7 +327,7 @@ impl PartialEq for Vector {
 #[cfg(test)]
 mod tests {
     use super::{LineSegment, Point, Vector};
-    use types::Pixel;
+    use types::{Pixel, IntoPixels};
 
     // Tests that point subtraction is working.
     #[test]

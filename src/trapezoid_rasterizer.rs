@@ -119,7 +119,7 @@ use surfaces::ImageSurface;
 use common_geometry::{Point, LineSegment};
 use std::f32;
 use std::collections::HashMap;
-use types::Pixel;
+use types::{Pixel, IntoPixels};
 
 /// ## Trapezoid
 ///
@@ -171,10 +171,10 @@ impl Trapezoid {
         crossing_count % 2 != 0
     }
 
+}
+
+impl IntoPixels for Trapezoid {
     /// Converts this trapezoid into a Vec of Pixels
-    ///
-    /// The returned pixels don't contain color or alpha information, they are just the coordinates
-    /// for the pixels that this trapezoid covers.
     fn into_pixels(&self) -> Vec<Pixel> {
         let mut outline_pixels = Vec::new();
         for line in self.lines() {
@@ -215,6 +215,7 @@ impl Trapezoid {
         pixels
     }
 }
+
 
 // Defines a collection for holding a Trapezoid's bases.
 //

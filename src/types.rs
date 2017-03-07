@@ -137,6 +137,10 @@ impl Pixel {
     }
 }
 
+pub trait IntoPixels {
+    fn into_pixels(&self) -> Vec<Pixel>;
+}
+
 #[cfg(test)]
 mod tests {
     use super::Rgba;

@@ -74,7 +74,7 @@ macro_rules! debug_render_lines {
             use $crate::types::Rgba;
             use surfaces::ImageSurface;
             use debug_utils::get_target_dir;
-            use types::Pixel;
+            use types::{Pixel, IntoPixels};
 
             let color =
                 match $color.as_ref() {
