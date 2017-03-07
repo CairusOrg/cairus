@@ -19,3 +19,5 @@ license = "LGPL-2.1/MPL-2.0"
 [dependencies]
 image = '0.12.2'
 
+[features]
+debug-tesselator = []
