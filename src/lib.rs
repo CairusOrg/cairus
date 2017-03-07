@@ -44,6 +44,10 @@
 /// When we get down to the level of pixels, they are blended together by operations
 /// defined in the operators module.
 #[allow(dead_code)]
+#[macro_use]
+mod debug_utils;
+
+#[allow(dead_code)]
 pub mod operators;
 
 #[allow(dead_code)]
@@ -63,6 +67,3 @@ mod trapezoid_rasterizer;
 
 #[allow(dead_code)]
 mod common_geometry;
-
-#[allow(dead_code)]
-mod debug_utils;

@@ -141,7 +141,6 @@ mod tests {
         // Cleanup
         fs::remove_file(path).unwrap();
         assert!(passed);
-
     }
 
     // Tests that an image is output when the debug-tesselator feature flag is set
