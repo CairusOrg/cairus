@@ -37,6 +37,7 @@ use common_geometry::Point;
 use status::Status;
 use splines::Spline;
 use context::Context;
+use std::f32;
 
 pub enum Data {
     MoveTo (  Point ),
@@ -49,6 +50,7 @@ pub struct Path {
    status: Status,
    data_vec: Vec<Data>,
    data_num: usize,
+   current_point: Point,
 }
 /*
 ///In cairo these take in a closure, point, and slope
@@ -58,19 +60,24 @@ pub fn add_point_func(d: &Data) -> fn(&Point, &Slope)  {
     match *d {
         Data::MoveTo    => move_to,
         Data::LineTo    => line_to,
-        Data::CurveTo   => curve_to,
-        Data::ClosePath => close_path,
+        _               => panic!("add_point_func Data ERROR");
+        //Data::CurveTo   => curve_to,
+        //Data::ClosePath => close_path,
     }
-    unimplemented!();
 }
-
+pub fn spline_add_point_func(d: &Data) -> fn(&Point, &Point, &Point, &Slope) {
+    match *d {
+        Data::CurveTo   => curve_to,
+        _               => panic!("spline_add_point_func Data ERROR");
+    }
+}
 fn move_to(p: &Point, s: &Slope){
     unimplemented!();
 }
 fn line_to(p: &Point, s: &Slope){
     unimplemented!();
 }
-fn curve_to(p: &Point, s: &Slope){
+fn curve_to(p1: &Point, p2: &Point, p3: &Point, s: &Slope){
     unimplemented!();
 }
 fn close_path(p: &Point, s: &Slope){
@@ -80,25 +87,32 @@ fn close_path(p: &Point, s: &Slope){
 /// Path Related Operations
 /// This section will define the implementation of all Path related functionality.
 impl Path {
+    ///Path::create()
+    ///
+    ///This will create a new (empty) path with no current point signified by the point having NAN
+    ///as both it's x and y value.
     pub fn create() -> Path {
-        unimplemented!();
+        Path{
+            status: Status::Success,
+            //may want to use Vec::with_capacity here, not sure of syntax restrictions
+            data_vec: Vec::new(),
+            data_num: 0,
+            current_point: Point::create(f32::NAN, f32::NAN),
+        }
     }
     ///new_path
     ///
     ///Clears the current path. 
     ///After this call there will be no path and no current point.
-    pub fn new_path(context: & mut Context) {
-        let mut status = Status::Success;
-
-        if context.status != Status::Success {
-            return;
-        }
-        
-        status = context.new_path();
-        if status != Status::Success {
-            context.set_error(status);
-        }
-        unimplemented!();
+    ///The current point will be signified empty by it's x and y coordinate value both being
+    ///f32::NAN values.
+    pub fn new_path(&mut self) -> Status {
+        self.status = Status::Success;
+        //may want to use Vec::with_capacity here, not sure of syntax restrictions
+        self.data_vec = Vec::new();
+        self.data_num = 0;
+        self.current_point = Point::create(f32::NAN, f32::NAN);
+        self.status
     }
 
     ///new_sub_path
@@ -114,56 +128,33 @@ impl Path {
     ///makes things easier as it is no longer necessary to manually
     ///compute the arc's initial coordinates for a call to
     ///cairo_move_to().
-    pub fn new_sub_path(context: & mut Context) {
-        let mut status = Status::Success;
-
-        if context.status != Status::Success {
-            return;
-        }
-        
-        status = context.new_sub_path();
-        if status != Status::Success {
-            context.set_error(status);
-        }
+    pub fn new_sub_path(&mut self) -> Status {
+        //This will not be a part of our MVP, so has yet to be implemented as it relates more to
+        //Arc implementation then our general line_to and curve_to
         unimplemented!();
     }
 
     ///move_to
     ///
     ///Begin a new sub-path. After this call the current point will be (x, y).
-    pub fn move_to(context: & mut Context, x: f32, y: f32){
-        let mut status = Status::Success;
-
-        if context.status != Status::Success {
-            return;
-        }
-        
-        status = context.move_to(x, y);
-        if status != Status::Success {
-            context.set_error(status);
-        }
-        unimplemented!();
-
-        unimplemented!();
+    pub fn move_to(&mut self, x: f32, y: f32) -> Status {
+        let point = Point::create(x, y);
+        self.data_vec.push(Data::MoveTo(point));
+        self.data_num += 1;
+        self.current_point = point;
+        self.status
     }
 
     ///line_to
     ///
     ///Adds a line to the path from the current point to position (x, y) in user-space coordinates.
     ///After this call the current point will be (x, y)
-    pub fn line_to(context: & mut Context, x: f32, y: f32){
-        let mut status = Status::Success;
-
-        if context.status != Status::Success {
-            return;
-        }
-        
-        status = context.line_to(x, y);
-        if status != Status::Success {
-            context.set_error(status);
-        }
-        unimplemented!();
-
+    pub fn line_to(&mut self, x: f32, y: f32) -> Status {
+        let point = Point::create(x, y);
+        self.data_vec.push(Data::LineTo(point));
+        self.data_num += 1;
+        self.current_point = point;
+        self.status
     }
 
     ///curve_to
@@ -171,30 +162,40 @@ impl Path {
     ///Adds a cubic Bezier spline to the path from the current point to position (x3, y3) in
     ///user-space coordinates, using (x1, y1) and (x2, y2) as the control points. After this call
     ///the current point will be (x3, y3).
-    pub fn curve_to(context: & mut Context, x1: f32, y1: f32,
+    pub fn curve_to(&mut self, x1: f32, y1: f32,
                     x2: f32, y2: f32,
-                    x3: f32, y3: f32){
-        let mut status = Status::Success;
-
-        if context.status != Status::Success {
-            return;
-        }
-        
-        status = context.curve_to(x1, y1, x2, y2, x3, y3);
-        if status != Status::Success {
-            context.set_error(status);
-        }
-        unimplemented!();
-        unimplemented!();
+                    x3: f32, y3: f32) -> Status{
+        let b = Point::create(x1, y1);
+        let c = Point::create(x2, y2);
+        let d = Point::create(x3, y3);
+        //call path related functions here?? Not sure how this all works with Splines etc...
+        self.data_vec.push(Data::CurveTo(b, c, d));
+        self.data_num += 1;
+        self.current_point = d;
+        self.status
     }
 }
 
 #[cfg(test)]
 mod tests{
 
+    use path::Path;
+    use context::Context;
+
 
     #[test]
-    fn test_something(){
+    fn test_create_new_path(){
+        assert_eq!(1,1);
+    }
+    
+    #[test]
+    fn test_move_to_different_location(){
+        assert_eq!(1,1);
+    }
+
+    #[test]
+    fn test_move_to_same_location(){
+        //should fail
         assert_eq!(1,1);
     }
 }

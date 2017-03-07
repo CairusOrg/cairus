@@ -49,7 +49,7 @@ pub struct Context<'a>{
     pub status: Status,
     target: &'a mut ImageSurface,
     operator: Operator,
-    //path: Path,
+    path: Path,
 }
 
 /// Implementation of methods for context
@@ -62,8 +62,7 @@ impl<'a> Context<'a> {
             target: target,
             operator: Operator::Over,
             status: Status::Success,
-            //path: Path::create() 
-            //TODO: Figure out how we want to implement the Path instantiation
+            path: Path::create() 
         }
     }
 
@@ -119,28 +118,81 @@ impl<'a> Context<'a> {
             operator(&self.rgba, pixel);
         }
     }
-    pub fn set_error(&mut self, status: Status){
+    pub fn set_error(&mut self, status: Status) {
         self.status = status;
     }
 
-    ///Implementation of path related functions
+    ///Implementation of user facing path related functions
+    
+    ///new_path
     ///
-    pub fn new_path(&mut self) -> Status{
-        unimplemented!();
+    ///Clears the current path. 
+    ///After this call there will be no path and no current point.
+    pub fn new_path(&mut self) -> Status {
+        //let mut status = Status::Success;
+        if self.status != Status::Success {
+            return Status::InvalidPathData;
+        }
+        
+        let status = self.path.new_path();
+        if status != Status::Success {
+            self.set_error(status);
+        }
+        self.status        
     }
+    
     pub fn new_sub_path(&mut self) -> Status{
-        unimplemented!();
+        //let mut status = Status::Success;
+        if self.status != Status::Success {
+            return Status::InvalidPathData;
+        }
+        
+        let status = self.path.new_sub_path();
+        if status != Status::Success {
+            self.set_error(status);
+        }
+        self.status
     }
+    
     pub fn move_to(&mut self, x: f32, y: f32) -> Status{
-        unimplemented!();
+        //let mut status = Status::Success;
+        if self.status != Status::Success {
+            return Status::InvalidPathData;
+        }
+        
+        let status = self.path.move_to(x, y);
+        if status != Status::Success {
+            self.set_error(status);
+        }
+        self.status
     }
+    
     pub fn line_to(&mut self, x: f32, y: f32)  -> Status{
-       unimplemented!(); 
+        //let mut status = Status::Success;
+        if self.status != Status::Success {
+            return Status::InvalidPathData;
+        }
+        
+        let status = self.path.line_to(x, y);
+        if status != Status::Success {
+            self.set_error(status);
+        }
+        self.status
     }
+
     pub fn curve_to(&mut self, x1: f32, y1: f32,
                     x2: f32, y2: f32,
                     x3: f32, y3: f32)  -> Status{
-        unimplemented!();
+        //let mut status = Status::Success;
+        if self.status != Status::Success {
+            return Status::InvalidPathData;
+        }
+        
+        let status = self.path.curve_to(x1, y1, x2, y2, x3, y3);
+        if status != Status::Success {
+            self.set_error(status);
+        }
+        self.status
     }
 }
 
