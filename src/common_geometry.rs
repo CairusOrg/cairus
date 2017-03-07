@@ -233,9 +233,9 @@ impl PartialEq for LineSegment {
 #[derive(Copy)]
 pub struct Edge {
     line: LineSegment,
-    top: f32, // highest y value
-    bottom: f32, // lowest y value
-    direction: i32, // positive or negative
+    top: f32,
+    bottom: f32,
+    direction: i32,
 }
 
 impl Clone for Edge {
