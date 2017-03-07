@@ -75,7 +75,7 @@ macro_rules! debug_render_lines {
                 "red" => Rgba{red: 1., green: 0., blue: 0., alpha: 1.},
                 "blue" => Rgba{red: 0., green: 0., blue: 1., alpha: 1.},
                 "green" => Rgba{red: 0., green: 1., blue: 0., alpha: 1.},
-                "black" | _ => Rgba{red: 1., green: 1., blue: 1., alpha: 1.}
+                "black" | _ => Rgba{red: 0., green: 0., blue: 0., alpha: 1.}
             };
 
         let mut surface = ImageSurface::create($width, $height);
@@ -142,6 +142,46 @@ mod tests {
         fs::remove_file(path).unwrap();
         assert!(passed);
     }
+
+    // Tests that an image is output when the debug-tesselator feature flag is set
+    #[cfg(feature = "debug-tesselator")]
+    #[test]
+    fn test_debug_render_fancy_lines_flag_on() {
+
+        // Setup
+        let mut lines = Vec::new();
+        for x in 0..500 {
+            if x % 25 == 0 {
+                let upper_y = ((x + 20) as f32).min(500.);
+                let lower_y = ((x - 20) as f32).max(1.);
+                if lower_y < 0. {
+                    panic!("Can not be lower than zero");
+                }
+                let line = LineSegment::new(x as f32, lower_y, x as f32, upper_y);
+                lines.push(line);
+            }
+        }
+
+        let line = LineSegment::new(0., 0., 500., 500.);
+        lines.push(line);
+
+        let path = Path::new("debug_test.png");
+        // Test
+        debug_render_lines!(lines, "black", 520, 520, "debug_test.png");
+        let img = image::open(path).unwrap().to_rgba();
+        let mut passed = false;
+        for pixel in img.pixels() {
+            let alpha = pixel.data[3];
+            if alpha > 0 {
+                passed = true;
+            }
+        }
+
+        // Cleanup
+        fs::remove_file(path).unwrap();
+        assert!(passed);
+    }
+
 
     // Tests that an image is output when the debug-tesselator feature flag is set
     #[cfg(not(feature = "debug-tesselator"))]
