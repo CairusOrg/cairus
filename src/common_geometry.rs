@@ -183,19 +183,18 @@ impl LineSegment {
     // rasterized.  The algorithm is a straight-forward DDA.
     pub fn into_pixel_coordinates(&self) -> Vec<(i32, i32)> {
         let (x_increment, y_increment) = self.dda_xy_increments();
-        let steps = self.dda_steps();
-        let mut result = Vec::new();
+        let steps = self.dda_steps() as i32;
         let start = self.dda_start_point();
         let mut x = start.x;
         let mut y = start.y;
-        for _ in 0..(steps as i32) {
+
+        let mut coordinates = Vec::with_capacity(steps as usize);
+        for _ in 0..steps {
             x += x_increment;
             y += y_increment;
-            let point = (x as i32 , y as i32);
-            result.push(point);
+            coordinates.push((x as i32, y as i32));
         }
-
-        result
+        coordinates
     }
 
     fn dda_xy_increments(&self) -> (f32, f32) {
