@@ -35,6 +35,10 @@
 
 //! This module provides some debugging tools.
 
+use std::env;
+use std::path::PathBuf;
+use std::ffi::OsStr;
+
 // ## Renders a Vec of LineSegments to a '.png' file.
 // This will only compile when the '--feature debug-tesselator' flag is passed to Cargo.
 //
@@ -43,8 +47,11 @@
 //  or:
 //       cargo run --features debug-tesselator
 //
-// The following example will render the two LineSegments in red to a 25x25 png file called
-// "debug_lines.png".
+// The following example will render the two LineSegments in red to a png file called
+// located at "{project_root}/target/debug/images/{filename}_{linenumber}.png".
+//
+//  If debug_render_lines! gets called in common_geometry.rs at line 611, then the file location
+//  would be "/target/debug/images/common_geometry_611.png".
 //
 // ## Usage:
 //
@@ -54,54 +61,92 @@
 //          LineSegment::new(20., 0., 0., 20.),
 //      ];
 //
-//      debug_render_lines!(lines, "red", 25, 25, "debug_lines.png");
+//      debug_render_lines!(lines, "red");
 //
 // ```
 //
 //
-//  Warning! Make sure your LineSegments are smaller than the width/height you pass the macro,
-//  otherwise it will throw an error.
-//
 // The debug version
 #[cfg(feature = "debug-tesselator")]
 macro_rules! debug_render_lines {
-    ($lines:expr, $color:expr, $width:expr, $height:expr, $pathname:expr) => {
-        use types::Rgba;
-        use surfaces::ImageSurface;
-        use std::path::Path;
+    ($lines:expr, $color:expr) => {
+        {
+            use $crate::types::Rgba;
+            use surfaces::ImageSurface;
+            use debug_utils::get_target_dir;
 
-        let color =
-            match $color.as_ref() {
-                "red" => Rgba{red: 1., green: 0., blue: 0., alpha: 1.},
-                "blue" => Rgba{red: 0., green: 0., blue: 1., alpha: 1.},
-                "green" => Rgba{red: 0., green: 1., blue: 0., alpha: 1.},
-                "black" | _ => Rgba{red: 0., green: 0., blue: 0., alpha: 1.}
-            };
+            let color =
+                match $color.as_ref() {
+                    "red" => Rgba{red: 1., green: 0., blue: 0., alpha: 1.},
+                    "blue" => Rgba{red: 0., green: 0., blue: 1., alpha: 1.},
+                    "green" => Rgba{red: 0., green: 1., blue: 0., alpha: 1.},
+                    "black" | _ => Rgba{red: 0., green: 0., blue: 0., alpha: 1.}
+                };
 
-        let mut surface = ImageSurface::create($width, $height);
 
-        for line in $lines {
-            for (x, y) in line.into_pixel_coordinates() {
-                let mut pixel = surface.get_mut(x as usize, y as usize);
-                pixel.red = color.red;
-                pixel.blue = color.blue;
-                pixel.green = color.green;
-                pixel.alpha = color.alpha;
+            // Get the surface size by finding the positions of the most extreme pixels
+            let mut max_x = 0 ;
+            let mut max_y = 0;
+            for line in $lines.iter() {
+                for (x, y) in line.into_pixel_coordinates() {
+                    if x > max_x {
+                        max_x = x;
+                    }
+
+                    if y > max_y {
+                        max_y = y;
+                    }
+                }
             }
-        }
 
-        let path = Path::new($pathname);
-        surface.to_file(path);
+            // Buffer edges by 20 pixels
+            max_x = max_x + 20;
+            max_y = max_y + 20;
+
+            let mut surface = ImageSurface::create(max_x as usize, max_y as usize);
+
+            // Actually color in the pixels
+            for line in $lines.iter() {
+                for (x, y) in line.into_pixel_coordinates() {
+                    let mut pixel = surface.get_mut(x as usize, y as usize);
+                    pixel.red = color.red;
+                    pixel.blue = color.blue;
+                    pixel.green = color.green;
+                    pixel.alpha = color.alpha;
+                }
+            }
+
+
+            let lineno = format!("{}.png", line!());
+            let split_path: Vec<&str> = file!().split("/").collect();
+            let filename = split_path[1].replace(".rs", "_") + &lineno.to_string();
+            let mut path = get_target_dir();
+            path.push("debug");
+            path.push("images");
+            path.push(filename);
+            surface.to_file(path.as_path());
+            path
+        }
     }
 }
 
+
+// Get absolute path to the "target" directory ("build" dir)
+pub fn get_target_dir() -> PathBuf {
+    let bin = env::current_exe().expect("exe path");
+    let mut target_dir = PathBuf::from(bin.parent().expect("bin parent"));
+    while target_dir.file_name() != Some(OsStr::new("target")) {
+        target_dir.pop();
+    }
+    target_dir
+}
 
 // Non-debug version
 // This is here so that when the '--feature debug-tesselator' flag is not set
 // the compiler will still compile but this macro won't generate any code.
 #[cfg(not(feature = "debug-tesselator"))]
 macro_rules! debug_render_lines {
-    ($lines:expr, $color:expr, $width:expr, $height:expr, $pathname:expr) => {}
+    ($lines:expr, $color:expr) => {}
 }
 
 // Unused imports are allowed because as the 'debug-tesselator' flag is turned on and off,
@@ -114,6 +159,7 @@ mod tests {
     use std::fs;
     extern crate image;
     use common_geometry::LineSegment;
+    use super::get_target_dir;
 
     // Tests that an image is output when the debug-tesselator feature flag is set
     #[cfg(feature = "debug-tesselator")]
@@ -125,11 +171,18 @@ mod tests {
             LineSegment::new(0., 0., 20., 20.),
             LineSegment::new(20., 0., 0., 20.),
         ];
-        let path = Path::new("debug_test.png");
+
+        let lineno = "166.png"; // Must be the
+        let split_path: Vec<&str> = file!().split("/").collect();
+        let filename = split_path[1].replace(".rs", "_") + &lineno.to_string();
+        let mut path = get_target_dir();
+        path.push("debug");
+        path.push("images");
+        path.push(filename);
 
         // Test
-        debug_render_lines!(lines, "red", 25, 25, "debug_test.png");
-        let img = image::open(path).unwrap().to_rgba();
+        let path = debug_render_lines!(lines, "red");
+        let img = image::open(&path).unwrap().to_rgba();
         let mut passed = false;
         for pixel in img.pixels() {
             let r = pixel.data[0];
@@ -165,10 +218,9 @@ mod tests {
         let line = LineSegment::new(0., 0., 500., 500.);
         lines.push(line);
 
-        let path = Path::new("debug_test.png");
         // Test
-        debug_render_lines!(lines, "black", 520, 520, "debug_test.png");
-        let img = image::open(path).unwrap().to_rgba();
+        let path = debug_render_lines!(lines, "black");
+        let img = image::open(&path).unwrap().to_rgba();
         let mut passed = false;
         for pixel in img.pixels() {
             let alpha = pixel.data[3];
@@ -188,8 +240,9 @@ mod tests {
     #[test]
     fn test_debug_render_lines_flag_off() {
         // Test
-        debug_render_lines!(lines, "red", 25, 25, "debug_test.png");
-        let path = Path::new("debug_test.png");
+        debug_render_lines!(lines, "red");
+        let path_str = format!("/target/debug/images/{}_{}.png", file!(), line!());
+        let path = Path::new(&path_str);
         let exists = path.exists();
 
         // Cleanup
