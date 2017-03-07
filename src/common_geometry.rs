@@ -246,6 +246,31 @@ impl PartialEq for LineSegment {
     }
 }
 
+/// ## Edge
+///
+/// Defines a Edge
+/// Edge is a LineSegment, Top, Bottom, and Direction
+/// Top is the y value closest to zero
+/// Bottom is the y value closes to infinity
+/// Direction should come from whatever initially 'drew' the lines and should be
+///  +1 for a segment that is being drawn in the positive y direction, 0 for a
+/// a horizontal line, and -1 for a segment being dawn in the negative y direction.
+///  For example: a clockwise drawn square wouold have a right sfe with a + 1 direction,
+/// the next line would be horizontal with a 0 direction, followed by a -1 line, then
+/// a second 0 direction line.
+
+#[derive(Copy)]
+pub struct Edge {
+    line: LineSegment,
+    top: f32,
+    bottom: f32,
+    direction: i32,
+}
+
+impl Clone for Edge {
+    fn clone(&self) -> Edge { *self }
+}
+
 /// ## Vector
 ///
 /// Defines a vector by (x, y) direction.
