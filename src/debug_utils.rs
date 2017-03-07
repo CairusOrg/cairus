@@ -33,6 +33,35 @@
  *
  */
 
+//! This module provides some debugging tools.
+
+// ## Renders a Vec of LineSegments to a '.png' file.
+// This will only compile when the '--feature debug-tesselator' flag is passed to Cargo.
+//
+// ## How to Compile:
+//       cargo test --features debug-tesselator
+//  or:
+//       cargo run --features debug-tesselator
+//
+// The following example will render the two LineSegments in red to a 25x25 png file called
+// "debug_lines.png".
+//
+// ## Usage:
+//
+// ```
+//      let lines = vec![
+//          LineSegment::new(0., 0., 20., 20.),
+//          LineSegment::new(20., 0., 0., 20.),
+//      ];
+//
+//      debug_render_lines!(lines, "red", 25, 25, "debug_lines.png");
+//
+// ```
+//
+//
+//  Warning! Make sure your LineSegments are smaller than the width/height you pass the macro,
+//  otherwise it will throw an error.
+//
 // The debug version
 #[cfg(feature = "debug-tesselator")]
 macro_rules! debug_render_lines {
@@ -40,7 +69,6 @@ macro_rules! debug_render_lines {
         use types::Rgba;
         use surfaces::ImageSurface;
         use std::path::Path;
-
 
         let color =
             match $color.as_ref() {
@@ -67,15 +95,17 @@ macro_rules! debug_render_lines {
     }
 }
 
+
 // Non-debug version
+// This is here so that when the '--feature debug-tesselator' flag is not set
+// the compiler will still compile but this macro won't generate any code.
 #[cfg(not(feature = "debug-tesselator"))]
 macro_rules! debug_render_lines {
     ($lines:expr, $color:expr, $width:expr, $height:expr, $pathname:expr) => {}
 }
 
-
 // Unused imports are allowed because as the 'debug-tesselator' flag is turned on and off,
-// certain imports become used and unused. 
+// certain imports become used and unused.
 #[allow(unused_imports)]
 #[macro_use]
 #[cfg(test)]
@@ -130,5 +160,4 @@ mod tests {
 
         assert_eq!(exists, false);
     }
-
 }
