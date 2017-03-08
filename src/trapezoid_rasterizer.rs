@@ -131,19 +131,19 @@ use types::{Pixel, IntoPixels};
 /// TODO: Implement `fn points()` or `fn a()`, `fn b()` , etc...
 /// TODO: Test/verify degenerate Trapezoid (a triangle) is still valid
 pub struct Trapezoid {
-    lines: Vec<LineSegment>
+    pub lines: Vec<LineSegment>
 }
 
 impl Trapezoid {
 
     // Returns a new Trapezoid defined by points.
-    fn from_points(a: Point, b: Point, c: Point, d: Point) -> Trapezoid {
+    pub fn from_points(a: Point, b: Point, c: Point, d: Point) -> Trapezoid {
         let bases = bases_from_points(a, b, c, d);
         Trapezoid::from_bases(bases[0].0, bases[0].1)
     }
 
     // Returns a new Trapezoid from two bases
-    fn from_bases(base1: LineSegment, base2: LineSegment) -> Trapezoid {
+    pub fn from_bases(base1: LineSegment, base2: LineSegment) -> Trapezoid {
         if base1.length() != 0. &&
            base2.length() != 0. &&
            base1.slope() != base2.slope() {
@@ -155,12 +155,12 @@ impl Trapezoid {
         }
     }
 
-    fn lines(&self) -> &Vec<LineSegment> {
+    pub fn lines(&self) -> &Vec<LineSegment> {
         &self.lines
     }
 
     /// Returns true if this Trapezoid contains `point`, otherwise returns false
-    fn contains_point(&self, point: &Point) -> bool {
+    pub fn contains_point(&self, point: &Point) -> bool {
         let mut crossing_count = 0;
         for line in self.lines().iter() {
             if ray_from_point_crosses_line(point, line) {

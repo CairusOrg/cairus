@@ -50,7 +50,7 @@ use std::ffi::OsStr;
 // The following example will render the two LineSegments in red to a png file called
 // located at "{project_root}/target/debug/images/{filename}_{linenumber}.png".
 //
-//  If debug_render_lines! gets called in common_geometry.rs at line 611, then the file location
+//  If debug_render! gets called in common_geometry.rs at line 611, then the file location
 //  would be "/target/debug/images/common_geometry_611.png".
 //
 // ## Usage:
@@ -61,14 +61,14 @@ use std::ffi::OsStr;
 //          LineSegment::new(20., 0., 0., 20.),
 //      ];
 //
-//      debug_render_lines!(lines, "red");
+//      debug_render!(lines, "red");
 //
 // ```
 //
 //
 // The debug version
 #[cfg(feature = "debug-tesselator")]
-macro_rules! debug_render_lines {
+macro_rules! debug_render {
     ($lines:expr, $color:expr) => {
         {
             use $crate::types::Rgba;
@@ -98,8 +98,8 @@ macro_rules! debug_render_lines {
                         max_y = pixel.y;
                     }
                 }
-            }
 
+            }
             // Buffer edges by 20 pixels
             max_x = max_x + 20;
             max_y = max_y + 20;
@@ -120,7 +120,6 @@ macro_rules! debug_render_lines {
                     }
                 }
             }
-
 
             let lineno = format!("{}.png", line!());
             let split_path: Vec<&str> = file!().split("/").collect();
@@ -150,8 +149,14 @@ pub fn get_target_dir() -> PathBuf {
 // This is here so that when the '--feature debug-tesselator' flag is not set
 // the compiler will still compile but this macro won't generate any code.
 #[cfg(not(feature = "debug-tesselator"))]
-macro_rules! debug_render_lines {
-    ($lines:expr, $color:expr) => {}
+macro_rules! debug_render {
+    ($lines:expr, $color:expr) => {
+        {
+            use std::path::Path;
+            let path = Path::new("not a real path");
+            path
+        }
+    };
 }
 
 // Unused imports are allowed because as the 'debug-tesselator' flag is turned on and off,
@@ -160,10 +165,11 @@ macro_rules! debug_render_lines {
 #[macro_use]
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
     use std::fs;
     extern crate image;
     use common_geometry::LineSegment;
+    use trapezoid_rasterizer::Trapezoid;
     use super::get_target_dir;
 
     // Tests that an image is output when the debug-tesselator feature flag is set
@@ -177,16 +183,8 @@ mod tests {
             LineSegment::new(20., 0., 0., 20.),
         ];
 
-        let lineno = "166.png"; // Must be the
-        let split_path: Vec<&str> = file!().split("/").collect();
-        let filename = split_path[1].replace(".rs", "_") + &lineno.to_string();
-        let mut path = get_target_dir();
-        path.push("debug");
-        path.push("images");
-        path.push(filename);
-
         // Test
-        let path = debug_render_lines!(lines, "red");
+        let path = debug_render!(lines, "red");
         let img = image::open(&path).unwrap().to_rgba();
         let mut passed = false;
         for pixel in img.pixels() {
@@ -224,7 +222,7 @@ mod tests {
         lines.push(line);
 
         // Test
-        let path = debug_render_lines!(lines, "black");
+        let path = debug_render!(lines, "black");
         let img = image::open(&path).unwrap().to_rgba();
         let mut passed = false;
         for pixel in img.pixels() {
@@ -245,16 +243,39 @@ mod tests {
     #[test]
     fn test_debug_render_lines_flag_off() {
         // Test
-        debug_render_lines!(lines, "red");
-        let path_str = format!("/target/debug/images/{}_{}.png", file!(), line!());
-        let path = Path::new(&path_str);
-        let exists = path.exists();
-
+        debug_render!(lines, "red");
+        let mut path = PathBuf::new();
+        path.push(get_target_dir());
+        path.push("images");
+        path.push("debug_utils_246.png"); // Must be line number of debug_render! call
         // Cleanup
-        if exists {
-            fs::remove_file(path).unwrap();
+        assert_eq!(path.exists(), false);
+    }
+
+
+    // Tests that an image is output when the debug-tesselator feature flag is set
+    #[cfg(feature = "debug-tesselator")]
+    #[test]
+    fn test_debug_render_traps_flag_on() {
+        let base1 = LineSegment::new(0., 0., 400., 0.);
+        let base2 = LineSegment::new(100., 500., 300., 500.);
+
+        // Setup
+        let trapezoids = vec![Trapezoid::from_bases(base1, base2)];
+
+        // Test
+        let path = debug_render!(trapezoids, "red");
+        let img = image::open(&path).unwrap().to_rgba();
+        let mut passed = false;
+        for pixel in img.pixels() {
+            let r = pixel.data[0];
+            if r > 0 {
+                passed = true;
+            }
         }
 
-        assert_eq!(exists, false);
+        // Cleanup
+        fs::remove_file(path).unwrap();
+        assert!(passed);
     }
 }
