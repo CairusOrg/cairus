@@ -33,6 +33,8 @@
  *  Evan Smelser <evanjsmelser@gmail.com>
  */
 
+//extern crate cairus;
+
 use common_geometry::Point;
 use status::Status;
 use splines::Spline;
@@ -111,10 +113,10 @@ impl Path {
     ///
     /// # Example
     /// ```
-    /// use path::Path;
-    /// use status::Status;
+    /// use cairus::path::Path;
+    /// use cairus::status::Status;
     ///
-    /// let path = Path::create();
+    /// let mut path = Path::create();
     /// ```
     pub fn create() -> Path {
         Path{
@@ -138,11 +140,11 @@ impl Path {
     ///
     /// # Examples
     /// ```
-    /// use path::Path;
-    /// use status::Status;
+    /// use cairus::path::Path;
+    /// use cairus::status::Status;
     /// 
-    /// let path = Path::create();
-    /// let status = path.move_to(1., 1.5);
+    /// let mut path = Path::create();
+    /// let mut status = path.move_to(1., 1.5);
     /// ```
     pub fn new_path(&mut self) -> Status {
         self.status = Status::Success;
@@ -171,11 +173,11 @@ impl Path {
     ///
     /// # Examples
     /// ```
-    /// use path::Path;
-    /// use status::Status;
+    /// use cairus::path::Path;
+    /// use cairus::status::Status;
     /// 
-    /// let path = Path::create();
-    /// let status = path.new_sub_path();
+    /// let mut path = Path::create();
+    /// let mut status = path.new_sub_path();
     /// ```
     pub fn new_sub_path(&mut self) -> Status {
         //This will not be a part of our MVP, so has yet to be implemented as it relates more to
@@ -195,11 +197,11 @@ impl Path {
     ///
     /// # Examples
     /// ```
-    /// use path::Path;
-    /// use status::Status;
+    /// use cairus::path::Path;
+    /// use cairus::status::Status;
     /// 
-    /// let path = Path::create();
-    /// let status = path.move_to(1., 1.5);
+    /// let mut path = Path::create();
+    /// let mut status = path.move_to(1., 1.5);
     /// ```
     pub fn move_to(&mut self, x: f32, y: f32) -> Status {
         let point = Point::create(x, y);
@@ -229,13 +231,17 @@ impl Path {
     ///
     /// # Examples
     /// ```
-    /// use path::Path;
-    /// use status::Status;
+    /// use cairus::path::Path;
+    /// use cairus::status::Status;
     /// 
-    /// let path = Path::create();
-    /// let status = path.line_to(2.5, 3.);
+    /// let mut path = Path::create();
+    /// let mut status = path.line_to(2.5, 3.);
     /// ```
     pub fn line_to(&mut self, x: f32, y: f32) -> Status {
+        //Disallow line_to() if no current_point
+        if self.current_point.x.is_nan() || self.current_point.y.is_nan(){
+            return Status::InvalidPathData;
+        }
         let point = Point::create(x, y);
         if  x < 0. || y < 0. {
             return Status::InvalidPathData;
@@ -267,20 +273,25 @@ impl Path {
     ///
     /// # Examples
     /// ```
-    /// use path::Path;
-    /// use status::Status;
+    /// use cairus::path::Path;
+    /// use cairus::status::Status;
     /// 
-    /// let status = Path::curve_to(1., 2., 3., 4., 5., 6.);
+    /// let mut status = Path::curve_to(1., 2., 3., 4., 5., 6.);
     /// ```
     pub fn curve_to(&mut self, x1: f32, y1: f32,
                     x2: f32, y2: f32,
                     x3: f32, y3: f32) -> Status{
+        //Disallow curve_to() from empty current_point
+        if self.current_point.x.is_nan() || self.current_point.y.is_nan(){
+            return Status::InvalidPathData;
+        }
+        if x1<0. || y1<0. || x2<0. || y2<0. || x3<0. || y3<0. {
+            return Status::InvalidPathData;
+        }
+
         let b = Point::create(x1, y1);
         let c = Point::create(x2, y2);
         let d = Point::create(x3, y3);
-        if x1<0. || y1<0. || x2<0. || y2<0. || x3<0. || y3<0. {
-            return Status::InvalidPathData;
-        }        
         if self.current_point == d {
             return Status::InvalidPathData;
         }
@@ -373,15 +384,28 @@ mod tests{
         let mut path = Path::create();
         let p1 = Point::create(1., 1.5);
         let p2 = Point::create(2., 2.5);
-        let mut status = path.line_to(p1.x, p1.y);
+        let origin = Point::origin();
+        
+        let mut status = path.move_to(origin.x, origin.y);
+        status = path.line_to(p1.x, p1.y);
         status = path.line_to(p2.x, p2.y);
 
         assert_eq!(status, Status::Success);
         assert_eq!(path.current_point, p2);
-        assert_eq!(path.data_vec.len(), 2);
-        assert_eq!(path.data_vec[0], Data::LineTo(p1));     
-        assert_eq!(path.data_vec[1], Data::LineTo(p2));
-        assert_eq!(path.data_num, 2);
+        assert_eq!(path.data_vec.len(), 3);
+        assert_eq!(path.data_vec[1], Data::LineTo(p1));     
+        assert_eq!(path.data_vec[2], Data::LineTo(p2));
+        assert_eq!(path.data_num, 3);
+    }
+
+    #[test]
+    fn test_line_to_from_empty_default_point(){
+        let mut path = Path::create();
+        let p1 = Point::create(1., 1.5);
+
+        let mut status = path.line_to(p1.x, p1.y);
+
+        assert_eq!(status, Status::InvalidPathData);
     }
 
     #[test]
@@ -414,17 +438,36 @@ mod tests{
         let p4 = Point::create(4., 4.5);
         let p5 = Point::create(5., 5.5);
         let p6 = Point::create(6., 6.5);
-        let mut status = path.curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+        let origin = Point::origin();
+
+        let mut status = path.move_to(origin.x, origin.y);
+        status = path.curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
         let p7 = path.current_point;
         status = path.curve_to(p4.x, p4.y, p5.x, p5.y, p6.x, p6.y);
 
         assert_eq!(status, Status::Success);
         assert_eq!(path.current_point, p6);
         assert_eq!(p3, p7);
-        assert_eq!(path.data_vec.len(), 2);
-        assert_eq!(path.data_vec[0], Data::CurveTo(p1, p2, p3));     
-        assert_eq!(path.data_vec[1], Data::CurveTo(p4, p5, p6));
-        assert_eq!(path.data_num, 2);
+        assert_eq!(path.data_vec.len(), 3);
+        assert_eq!(path.data_vec[1], Data::CurveTo(p1, p2, p3));     
+        assert_eq!(path.data_vec[2], Data::CurveTo(p4, p5, p6));
+        assert_eq!(path.data_num, 3);
+    }
+
+    #[test]
+    fn test_curve_to_from_default_empty_point(){
+        let mut path = Path::create();
+        let p1 = Point::create(1., 1.5);
+        let p2 = Point::create(2., 2.5);
+        let p3 = Point::create(3., 3.5);
+        let p4 = Point::create(4., 4.5);
+        let p5 = Point::create(5., 5.5);
+        let p6 = Point::create(6., 6.5);
+        let mut status = path.curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+        let p7 = path.current_point;
+        status = path.curve_to(p4.x, p4.y, p5.x, p5.y, p6.x, p6.y);
+
+        assert_eq!(status, Status::InvalidPathData);
     }
 
     #[test]
