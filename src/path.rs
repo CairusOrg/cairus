@@ -103,11 +103,11 @@ fn close_path(p: &Point, s: &Slope){
 /// Implementation of `Path` related operations.
 impl Path {
     
-    ///Constructs a new `Path`.
-    ///
-    ///This will create a new (empty) path with no current point signified by the point having NAN
-    ///as both it's x and y value.
+    /// Constructs a new `Path`.
     /// 
+    /// This will create a new (empty) path with no current point signified by the point having NAN
+    /// as both it's x and y value.
+    ///  
     /// # Return
     /// * `Path` - A new empty path object
     ///
@@ -128,11 +128,11 @@ impl Path {
         }
     }
     
-    ///Clears the current path. 
-    ///
-    ///After this call there will be no path and no current point.
-    ///The current point will be signified empty by it's x and y coordinate value both being
-    ///f32::NAN values.
+    /// Clears the current path. 
+    /// 
+    /// After this call there will be no path and no current point.
+    /// The current point will be signified empty by it's x and y coordinate value both being
+    /// f32::NAN values.
     ///
     /// # Return
     /// * `Status` - A status which is indicative of the current truthiness of the Path related
@@ -155,17 +155,36 @@ impl Path {
         self.status
     }
 
-    ///Begin a new sub-path. Note that the existing path is not
-    ///affected. After this call there will be no current point.
+    /// Returns the current point of the path.
+    /// 
+    /// # Return
+    /// * `Point` - The current _last_ point in the path.
     ///
-    ///In many cases, this call is not needed since new sub-paths are
-    ///frequently started with cairo_move_to().
+    /// # Examples
+    /// ```
+    /// use cairus::path::Path;
+    /// use cairus::status::Status;
+    /// use cairus::common_geometry::Point;
     ///
-    ///A call to cairo_new_sub_path() is particularly useful when
-    ///beginning a new sub-path with one of the cairo_arc() calls. This
-    ///makes things easier as it is no longer necessary to manually
-    ///compute the arc's initial coordinates for a call to
-    ///cairo_move_to().
+    /// let mut path = Path::create();
+    /// let status = path.move_to(0., 0.);
+    /// let point = path.get_current_point();
+    /// ```
+    pub fn get_current_point(&mut self) -> Point {
+        self.current_point
+    }
+
+    /// Begin a new sub-path. Note that the existing path is not
+    /// affected. After this call there will be no current point.
+    /// 
+    /// In many cases, this call is not needed since new sub-paths are
+    /// frequently started with cairo_move_to().
+    /// 
+    /// A call to cairo_new_sub_path() is particularly useful when
+    /// beginning a new sub-path with one of the cairo_arc() calls. This
+    /// makes things easier as it is no longer necessary to manually
+    /// compute the arc's initial coordinates for a call to
+    /// cairo_move_to().
     ///
     /// # Return
     /// * `Status` - A status which is indicative of the current truthiness of the Path related
@@ -177,7 +196,7 @@ impl Path {
     /// use cairus::status::Status;
     /// 
     /// let mut path = Path::create();
-    /// let mut status = path.new_sub_path();
+    /// //let status: Status = path.new_sub_path();
     /// ```
     pub fn new_sub_path(&mut self) -> Status {
         //This will not be a part of our MVP, so has yet to be implemented as it relates more to
@@ -201,7 +220,7 @@ impl Path {
     /// use cairus::status::Status;
     /// 
     /// let mut path = Path::create();
-    /// let mut status = path.move_to(1., 1.5);
+    /// let status = path.move_to(1., 1.5);
     /// ```
     pub fn move_to(&mut self, x: f32, y: f32) -> Status {
         let point = Point::create(x, y);
@@ -218,8 +237,8 @@ impl Path {
         self.status
     }
 
-    ///Adds a line to the path from the current point to position (x, y) in user-space coordinates.
-    ///After this call the current point will be (x, y)
+    /// Adds a line to the path from the current point to position (x, y) in user-space coordinates.
+    /// After this call the current point will be (x, y)
     ///
     /// # Arguments
     /// * `x` - The x coordinate of the point to join the path with.
@@ -235,7 +254,7 @@ impl Path {
     /// use cairus::status::Status;
     /// 
     /// let mut path = Path::create();
-    /// let mut status = path.line_to(2.5, 3.);
+    /// let status = path.line_to(2.5, 3.);
     /// ```
     pub fn line_to(&mut self, x: f32, y: f32) -> Status {
         //Disallow line_to() if no current_point
@@ -255,9 +274,9 @@ impl Path {
         self.status
     }
 
-    ///Adds a cubic Bezier spline to the path from the current point to position (x3, y3) in
-    ///user-space coordinates, using (x1, y1) and (x2, y2) as the control points. After this call
-    ///the current point will be (x3, y3).
+    /// Adds a cubic Bezier spline to the path from the current point to position (x3, y3) in
+    /// user-space coordinates, using (x1, y1) and (x2, y2) as the control points. After this call
+    /// the current point will be (x3, y3).
     ///
     /// # Arguments
     /// * `x1` - The x coordinate of the first control point of the Bezier.
@@ -276,7 +295,8 @@ impl Path {
     /// use cairus::path::Path;
     /// use cairus::status::Status;
     /// 
-    /// let mut status = Path::curve_to(1., 2., 3., 4., 5., 6.);
+    /// let mut path = Path::create();
+    /// let status = path.curve_to(1., 2., 3., 4., 5., 6.);
     /// ```
     pub fn curve_to(&mut self, x1: f32, y1: f32,
                     x2: f32, y2: f32,

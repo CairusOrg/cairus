@@ -62,7 +62,7 @@ pub mod context;
 mod trapezoid_rasterizer;
 
 #[allow(dead_code)]
-mod common_geometry;
+pub mod common_geometry;
 
 #[allow(dead_code)]
 pub mod status;
