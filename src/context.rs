@@ -124,10 +124,8 @@ impl<'a> Context<'a> {
 
     ///Implementation of user facing path related functions
     
-    ///new_path
-    ///
     ///Clears the current path. 
-    ///After this call there will be no path and no current point.
+    ///After this call there will be no path and the current point will be set t.
     pub fn new_path(&mut self) -> Status {
         //let mut status = Status::Success;
         if self.status != Status::Success {
@@ -141,6 +139,19 @@ impl<'a> Context<'a> {
         self.status        
     }
     
+    ///new_sub_path
+    ///
+    ///Begin a new sub-path. Note that the existing path is not
+    ///affected. After this call there will be no current point.
+    ///
+    ///In many cases, this call is not needed since new sub-paths are
+    ///frequently started with cairo_move_to().
+    ///
+    ///A call to cairo_new_sub_path() is particularly useful when
+    ///beginning a new sub-path with one of the cairo_arc() calls. This
+    ///makes things easier as it is no longer necessary to manually
+    ///compute the arc's initial coordinates for a call to
+    ///cairo_move_to().
     pub fn new_sub_path(&mut self) -> Status{
         //let mut status = Status::Success;
         if self.status != Status::Success {
@@ -154,6 +165,9 @@ impl<'a> Context<'a> {
         self.status
     }
     
+    ///move_to
+    ///
+    ///Begin a new sub-path. After this call the current point will be (x, y).
     pub fn move_to(&mut self, x: f32, y: f32) -> Status{
         //let mut status = Status::Success;
         if self.status != Status::Success {
@@ -167,6 +181,10 @@ impl<'a> Context<'a> {
         self.status
     }
     
+    ///line_to
+    ///
+    ///Adds a line to the path from the current point to position (x, y) in user-space coordinates.
+    ///After this call the current point will be (x, y)
     pub fn line_to(&mut self, x: f32, y: f32)  -> Status{
         //let mut status = Status::Success;
         if self.status != Status::Success {
@@ -180,6 +198,11 @@ impl<'a> Context<'a> {
         self.status
     }
 
+    ///curve_to
+    ///
+    ///Adds a cubic Bezier spline to the path from the current point to position (x3, y3) in
+    ///user-space coordinates, using (x1, y1) and (x2, y2) as the control points. After this call
+    ///the current point will be (x3, y3).
     pub fn curve_to(&mut self, x1: f32, y1: f32,
                     x2: f32, y2: f32,
                     x3: f32, y3: f32)  -> Status{

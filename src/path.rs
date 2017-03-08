@@ -38,7 +38,26 @@ use status::Status;
 use splines::Spline;
 use context::Context;
 use std::f32;
+use std::vec::Vec;
 
+/// A data structure for holding a path. 
+///
+/// The `data_num` member gives the number of elements in the `data_vec` vector. This number is larger than
+/// the number of independent path portions (defined in path::Data), since the data includes both 
+/// headers and coordinates for each portion. The `current_point` is the "endpoint" of the path. The
+/// `status` maintains the truthiness of the path.
+//#[derive(Debug, Copy, Clone, PartialEq)]
+//Can't implement Copy or Clone for Path because of the Vec<Data>
+//TODO: More research on implementing copy and clone for better testing.
+pub struct Path {
+   status: Status,
+   data_vec: Vec<Data>,
+   data_num: usize,
+   current_point: Point,
+}
+
+///An enumeration of the possible Data elements which describe a `Path`.
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Data {
     MoveTo (  Point ),
     LineTo (  Point ),
@@ -46,12 +65,6 @@ pub enum Data {
     ClosePath,
 }
 
-pub struct Path {
-   status: Status,
-   data_vec: Vec<Data>,
-   data_num: usize,
-   current_point: Point,
-}
 /*
 ///In cairo these take in a closure, point, and slope
 //Starting to think this implementation won't work because the curve_to should take in three points
@@ -84,13 +97,25 @@ fn close_path(p: &Point, s: &Slope){
     unimplemented!();
 }
 */
-/// Path Related Operations
-/// This section will define the implementation of all Path related functionality.
+
+/// Implementation of `Path` related operations.
 impl Path {
-    ///Path::create()
+    
+    ///Constructs a new `Path`.
     ///
     ///This will create a new (empty) path with no current point signified by the point having NAN
     ///as both it's x and y value.
+    /// 
+    /// # Return
+    /// * `Path` - A new empty path object
+    ///
+    /// # Example
+    /// ```
+    /// use path::Path;
+    /// use status::Status;
+    ///
+    /// let path = Path::create();
+    /// ```
     pub fn create() -> Path {
         Path{
             status: Status::Success,
@@ -100,12 +125,25 @@ impl Path {
             current_point: Point::create(f32::NAN, f32::NAN),
         }
     }
-    ///new_path
-    ///
+    
     ///Clears the current path. 
+    ///
     ///After this call there will be no path and no current point.
     ///The current point will be signified empty by it's x and y coordinate value both being
     ///f32::NAN values.
+    ///
+    /// # Return
+    /// * `Status` - A status which is indicative of the current truthiness of the Path related
+    /// operations.
+    ///
+    /// # Examples
+    /// ```
+    /// use path::Path;
+    /// use status::Status;
+    /// 
+    /// let path = Path::create();
+    /// let status = path.move_to(1., 1.5);
+    /// ```
     pub fn new_path(&mut self) -> Status {
         self.status = Status::Success;
         //may want to use Vec::with_capacity here, not sure of syntax restrictions
@@ -115,8 +153,6 @@ impl Path {
         self.status
     }
 
-    ///new_sub_path
-    ///
     ///Begin a new sub-path. Note that the existing path is not
     ///affected. After this call there will be no current point.
     ///
@@ -128,46 +164,126 @@ impl Path {
     ///makes things easier as it is no longer necessary to manually
     ///compute the arc's initial coordinates for a call to
     ///cairo_move_to().
+    ///
+    /// # Return
+    /// * `Status` - A status which is indicative of the current truthiness of the Path related
+    /// operations.
+    ///
+    /// # Examples
+    /// ```
+    /// use path::Path;
+    /// use status::Status;
+    /// 
+    /// let path = Path::create();
+    /// let status = path.new_sub_path();
+    /// ```
     pub fn new_sub_path(&mut self) -> Status {
         //This will not be a part of our MVP, so has yet to be implemented as it relates more to
         //Arc implementation then our general line_to and curve_to
         unimplemented!();
     }
 
-    ///move_to
+    /// Begin a new sub-path. After this call the current point will be (x, y).
     ///
-    ///Begin a new sub-path. After this call the current point will be (x, y).
+    /// # Arguments
+    /// * `x` - The x coordinate of the point to move the current point to.
+    /// * `y` - The y coordinate of the point to move the current point to.
+    ///
+    /// # Return
+    /// * `Status` - A status which is indicative of the current truthiness of the Path related
+    /// operations.
+    ///
+    /// # Examples
+    /// ```
+    /// use path::Path;
+    /// use status::Status;
+    /// 
+    /// let path = Path::create();
+    /// let status = path.move_to(1., 1.5);
+    /// ```
     pub fn move_to(&mut self, x: f32, y: f32) -> Status {
         let point = Point::create(x, y);
+        if x < 0. || y < 0. {
+            return Status::InvalidPathData;
+        }        
+        if self.current_point == point {
+            return Status::InvalidPathData;
+        }
+        
         self.data_vec.push(Data::MoveTo(point));
         self.data_num += 1;
         self.current_point = point;
         self.status
     }
 
-    ///line_to
-    ///
     ///Adds a line to the path from the current point to position (x, y) in user-space coordinates.
     ///After this call the current point will be (x, y)
+    ///
+    /// # Arguments
+    /// * `x` - The x coordinate of the point to join the path with.
+    /// * `y` - The y coordinate of the point to join the path with.
+    ///
+    /// # Return
+    /// * `Status` - A status which is indicative of the current truthiness of the Path related
+    /// operations.
+    ///
+    /// # Examples
+    /// ```
+    /// use path::Path;
+    /// use status::Status;
+    /// 
+    /// let path = Path::create();
+    /// let status = path.line_to(2.5, 3.);
+    /// ```
     pub fn line_to(&mut self, x: f32, y: f32) -> Status {
         let point = Point::create(x, y);
+        if  x < 0. || y < 0. {
+            return Status::InvalidPathData;
+        }        
+        if self.current_point == point {
+            return Status::InvalidPathData;
+        }
         self.data_vec.push(Data::LineTo(point));
         self.data_num += 1;
         self.current_point = point;
         self.status
     }
 
-    ///curve_to
-    ///
     ///Adds a cubic Bezier spline to the path from the current point to position (x3, y3) in
     ///user-space coordinates, using (x1, y1) and (x2, y2) as the control points. After this call
     ///the current point will be (x3, y3).
+    ///
+    /// # Arguments
+    /// * `x1` - The x coordinate of the first control point of the Bezier.
+    /// * `y1` - The y coordinate of the first control point of the Bezier.
+    /// * `x2` - The x coordinate of the second control point of the Bezier.
+    /// * `y2` - The y coordinate of the second control point of the Bezier.
+    /// * `x3` - The x coordinate of the end point of the Bezier.
+    /// * `y3` - The y coordinate of the end point of the Bezier.
+    ///
+    /// # Return
+    /// * `Status` - A status which is indicative of the current truthiness of the Path related
+    /// operations.
+    ///
+    /// # Examples
+    /// ```
+    /// use path::Path;
+    /// use status::Status;
+    /// 
+    /// let status = Path::curve_to(1., 2., 3., 4., 5., 6.);
+    /// ```
     pub fn curve_to(&mut self, x1: f32, y1: f32,
                     x2: f32, y2: f32,
                     x3: f32, y3: f32) -> Status{
         let b = Point::create(x1, y1);
         let c = Point::create(x2, y2);
         let d = Point::create(x3, y3);
+        if x1<0. || y1<0. || x2<0. || y2<0. || x3<0. || y3<0. {
+            return Status::InvalidPathData;
+        }        
+        if self.current_point == d {
+            return Status::InvalidPathData;
+        }
         //call path related functions here?? Not sure how this all works with Splines etc...
         self.data_vec.push(Data::CurveTo(b, c, d));
         self.data_num += 1;
@@ -179,25 +295,164 @@ impl Path {
 #[cfg(test)]
 mod tests{
 
-    use path::Path;
+    use common_geometry::Point;
+    use status::Status;
+    use splines::Spline;
     use context::Context;
+    use std::f32;
+    use path::Path;
+    use path::Data;
 
-
+    //test Path::create()
     #[test]
-    fn test_create_new_path(){
-        assert_eq!(1,1);
+    fn test_create_path(){
+        let path = Path::create();
+        
+        assert_eq!(path.status, Status::Success);
+        assert_eq!(path.data_vec.len(), 0);
+        assert_eq!(path.data_num, 0);
+        assert!(path.current_point.x.is_nan());
+        assert!(path.current_point.y.is_nan());
+    }
+
+    //test Path::new_path()
+    #[test]
+    fn test_new_path(){
+        let mut path = Path::create();
+        let p1 = Point::create(1., 1.5);
+        let mut status = path.move_to(p1.x, p1.y);
+        status = path.new_path();
+     
+        assert_eq!(path.status, Status::Success);
+        assert_eq!(path.data_vec.len(), 0);
+        assert_eq!(path.data_num, 0);
+        assert!(path.current_point.x.is_nan());
+        assert!(path.current_point.y.is_nan());
     }
     
+    //test Path::move_to()
     #[test]
     fn test_move_to_different_location(){
-        assert_eq!(1,1);
+        let mut path = Path::create();
+        let p1 = Point::create(1., 1.5);
+        let p2 = Point::create(2., 2.5);
+        let mut status = path.move_to(p1.x, p1.y);
+        status = path.move_to(p2.x, p2.y);
+
+        assert_eq!(status, Status::Success);
+        assert_eq!(path.current_point, p2);
+        assert_eq!(path.data_vec.len(), 2);
+        assert_eq!(path.data_vec[0], Data::MoveTo(p1));     
+        assert_eq!(path.data_vec[1], Data::MoveTo(p2));
+        assert_eq!(path.data_num, 2);
     }
 
     #[test]
     fn test_move_to_same_location(){
-        //should fail
-        assert_eq!(1,1);
+        let mut path = Path::create();
+        let p1 = Point::create(1., 1.5);
+        let p2 = Point::create(1., 1.5);
+        let mut status = path.move_to(p1.x, p1.y);
+        status = path.move_to(p2.x, p2.y);
+
+        assert_eq!(status, Status::InvalidPathData);
     }
+
+    #[test]
+    fn test_move_to_negative_location(){
+        let mut path = Path::create();
+        let p1 = Point::create(-1., 1.5);
+        let mut status = path.move_to(p1.x, p1.y);
+
+        assert_eq!(status, Status::InvalidPathData);
+    }
+
+    //test Path::line_to()
+    #[test]
+    fn test_line_to_different_location(){
+        let mut path = Path::create();
+        let p1 = Point::create(1., 1.5);
+        let p2 = Point::create(2., 2.5);
+        let mut status = path.line_to(p1.x, p1.y);
+        status = path.line_to(p2.x, p2.y);
+
+        assert_eq!(status, Status::Success);
+        assert_eq!(path.current_point, p2);
+        assert_eq!(path.data_vec.len(), 2);
+        assert_eq!(path.data_vec[0], Data::LineTo(p1));     
+        assert_eq!(path.data_vec[1], Data::LineTo(p2));
+        assert_eq!(path.data_num, 2);
+    }
+
+    #[test]
+    fn test_line_to_same_location(){
+        let mut path = Path::create();
+        let p1 = Point::create(1., 1.5);
+        let p2 = Point::create(1., 1.5);
+        let mut status = path.line_to(p1.x, p1.y);
+        status = path.line_to(p2.x, p2.y);
+
+        assert_eq!(status, Status::InvalidPathData);
+    }
+
+    #[test]
+    fn test_line_to_negative_location(){
+        let mut path = Path::create();
+        let p1 = Point::create(-1., 1.5);
+        let mut status = path.line_to(p1.x, p1.y);
+
+        assert_eq!(status, Status::InvalidPathData);
+    }
+
+   //test Path::curve_to() 
+    #[test]
+    fn test_curve_to_different_location(){
+        let mut path = Path::create();
+        let p1 = Point::create(1., 1.5);
+        let p2 = Point::create(2., 2.5);
+        let p3 = Point::create(3., 3.5);
+        let p4 = Point::create(4., 4.5);
+        let p5 = Point::create(5., 5.5);
+        let p6 = Point::create(6., 6.5);
+        let mut status = path.curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+        let p7 = path.current_point;
+        status = path.curve_to(p4.x, p4.y, p5.x, p5.y, p6.x, p6.y);
+
+        assert_eq!(status, Status::Success);
+        assert_eq!(path.current_point, p6);
+        assert_eq!(p3, p7);
+        assert_eq!(path.data_vec.len(), 2);
+        assert_eq!(path.data_vec[0], Data::CurveTo(p1, p2, p3));     
+        assert_eq!(path.data_vec[1], Data::CurveTo(p4, p5, p6));
+        assert_eq!(path.data_num, 2);
+    }
+
+    #[test]
+    fn test_curve_to_same_location(){
+        let mut path = Path::create();
+        let p1 = Point::create(1., 1.5);
+        let p2 = Point::create(2., 2.5);
+        let p3 = Point::create(3., 3.5);
+        let p4 = Point::create(1., 1.5);
+        let p5 = Point::create(2., 2.5);
+        let p6 = Point::create(3., 3.5);
+        let mut status = path.curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+        status = path.curve_to(p4.x, p4.y, p5.x, p5.y, p6.x, p6.y);
+
+        assert_eq!(status, Status::InvalidPathData);
+    }
+
+    #[test]
+    fn test_curve_to_negative_location(){
+        let mut path = Path::create();
+        let p1 = Point::create(-1., 1.5);
+        let p2 = Point::create(1., 1.5);
+        let p3 = Point::create(2., 1.5);
+        let mut status = path.curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+
+        assert_eq!(status, Status::InvalidPathData);
+    }
+
 }
 
 

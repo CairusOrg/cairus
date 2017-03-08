@@ -30,7 +30,7 @@
  *
  * Contributor(s):
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
- *
+ *  Evan Smelser <evanjsmelser@gmail.com>
  */
 
 //! The main crate for Cairus.
@@ -68,4 +68,4 @@ mod common_geometry;
 mod status;
 
 #[allow(dead_code)]
-mod path;
+pub mod path;
