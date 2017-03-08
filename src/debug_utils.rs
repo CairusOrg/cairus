@@ -75,6 +75,7 @@ macro_rules! debug_render {
             use surfaces::ImageSurface;
             use debug_utils::get_target_dir;
             use types::{Pixel, IntoPixels};
+            use std::env;
 
             let color =
                 match $color.as_ref() {
@@ -121,13 +122,39 @@ macro_rules! debug_render {
                 }
             }
 
-            let lineno = format!("{}.png", line!());
-            let split_path: Vec<&str> = file!().split("/").collect();
-            let filename = split_path[1].replace(".rs", "_") + &lineno.to_string();
+
+            // Push folders onto path
             let mut path = get_target_dir();
             path.push("debug");
             path.push("images");
-            path.push(filename);
+
+            // If this macro is in a loop, the filename and line number will be the same
+            // Here we store the number of times we call this function an a environment variable
+            // with key={filename}{lineno}
+            let copy = path.clone();
+            let string = match copy.to_str() {
+                Some(val) => val,
+                _ => "",
+            };
+
+            let lineno = line!().to_string();
+            let split_path: Vec<&str> = file!().split("/").collect();
+            let filename = split_path[1].replace(".rs", "_") + &lineno.to_string();
+            let count = match env::var(string) {
+                Ok(val) => {
+                    val.parse::<i32>().unwrap() + 1
+                },
+                Err(_) => {
+                    1
+                }
+            };
+
+            let key = string.clone();
+            env::set_var(key, count.to_string());
+            let count = format!("_{}", count);
+            let filename = filename + &count.to_string();
+            let extension = ".png";
+            path.push(filename + &extension.to_string());
             surface.to_file(path.as_path());
             path
         }
@@ -252,7 +279,6 @@ mod tests {
         assert_eq!(path.exists(), false);
     }
 
-
     // Tests that an image is output when the debug-tesselator feature flag is set
     #[cfg(feature = "debug-tesselator")]
     #[test]
@@ -277,5 +303,31 @@ mod tests {
         // Cleanup
         fs::remove_file(path).unwrap();
         assert!(passed);
+    }
+
+    // Tests that an image is output when the debug-tesselator feature flag is set
+    #[cfg(feature = "debug-tesselator")]
+    #[test]
+    fn test_debug_render_in_loop() {
+        // Setup
+        let line1 = LineSegment::new(0., 0., 400., 0.);
+        let line2 = LineSegment::new(100., 500., 300., 500.);
+
+        for line in vec![line1, line2] {
+            // Test
+            let path = debug_render!(vec![line], "red");
+            let img = image::open(&path).unwrap().to_rgba();
+            let mut passed = false;
+            for pixel in img.pixels() {
+                let r = pixel.data[0];
+                if r > 0 {
+                }
+                    passed = true;
+                }
+
+            // Cleanup
+            fs::remove_file(path).unwrap();
+            assert!(passed);
+        }
     }
 }
