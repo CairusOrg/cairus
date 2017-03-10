@@ -117,8 +117,9 @@
 
 use surfaces::ImageSurface;
 use common_geometry::{Point, LineSegment};
-use std::{f32, i32};
+use std::f32;
 use std::collections::HashMap;
+use types::{Pixel, IntoPixels};
 
 /// ## Trapezoid
 ///
@@ -130,19 +131,19 @@ use std::collections::HashMap;
 /// TODO: Implement `fn points()` or `fn a()`, `fn b()` , etc...
 /// TODO: Test/verify degenerate Trapezoid (a triangle) is still valid
 pub struct Trapezoid {
-    lines: Vec<LineSegment>
+    pub lines: Vec<LineSegment>
 }
 
 impl Trapezoid {
 
     // Returns a new Trapezoid defined by points.
-    fn from_points(a: Point, b: Point, c: Point, d: Point) -> Trapezoid {
+    pub fn from_points(a: Point, b: Point, c: Point, d: Point) -> Trapezoid {
         let bases = bases_from_points(a, b, c, d);
         Trapezoid::from_bases(bases[0].0, bases[0].1)
     }
 
     // Returns a new Trapezoid from two bases
-    fn from_bases(base1: LineSegment, base2: LineSegment) -> Trapezoid {
+    pub fn from_bases(base1: LineSegment, base2: LineSegment) -> Trapezoid {
         if base1.length() != 0. &&
            base2.length() != 0. &&
            base1.slope() != base2.slope() {
@@ -154,12 +155,12 @@ impl Trapezoid {
         }
     }
 
-    fn lines(&self) -> &Vec<LineSegment> {
+    pub fn lines(&self) -> &Vec<LineSegment> {
         &self.lines
     }
 
     /// Returns true if this Trapezoid contains `point`, otherwise returns false
-    fn contains_point(&self, point: &Point) -> bool {
+    pub fn contains_point(&self, point: &Point) -> bool {
         let mut crossing_count = 0;
         for line in self.lines().iter() {
             if ray_from_point_crosses_line(point, line) {
@@ -170,40 +171,40 @@ impl Trapezoid {
         crossing_count % 2 != 0
     }
 
+}
+
+impl IntoPixels for Trapezoid {
     /// Converts this trapezoid into a Vec of Pixels
-    ///
-    /// The returned pixels don't contain color or alpha information, they are just the coordinates
-    /// for the pixels that this trapezoid covers.
     fn into_pixels(&self) -> Vec<Pixel> {
         let mut outline_pixels = Vec::new();
         for line in self.lines() {
-            for pixel in line.into_pixel_coordinates() {
+            for pixel in line.into_pixels() {
                 outline_pixels.push(pixel);
             }
         }
 
         // Order by y-value, for scanline from bottom
-        outline_pixels.sort_by(|&a, &b| a.1.cmp(&b.1));
+        outline_pixels.sort_by(|&ref a, &ref b| a.y.cmp(&b.y));
         let mut minmap = HashMap::new();
         let mut maxmap = HashMap::new();
         for pixel in outline_pixels.iter() {
-            minmap.insert(pixel.1, pixel.0);
-            maxmap.insert(pixel.1, pixel.0);
+            minmap.insert(pixel.y, pixel.x);
+            maxmap.insert(pixel.y, pixel.x);
         }
 
         for pixel in outline_pixels.iter() {
-            if pixel.0 < *minmap.get_mut(&pixel.1).unwrap() {
-                minmap.insert(pixel.1, pixel.0);
+            if pixel.x < *minmap.get_mut(&pixel.y).unwrap() {
+                minmap.insert(pixel.y, pixel.x);
             }
 
-            if pixel.0 > *maxmap.get_mut(&pixel.1).unwrap() {
-                maxmap.insert(pixel.1, pixel.0);
+            if pixel.x > *maxmap.get_mut(&pixel.y).unwrap() {
+                maxmap.insert(pixel.y, pixel.x);
             }
         }
 
         let mut pixels = Vec::new();
-        let min_y = outline_pixels[0].1;
-        let max_y = outline_pixels[outline_pixels.len() - 1].1 + 1;
+        let min_y = outline_pixels[0].y;
+        let max_y = outline_pixels[outline_pixels.len() - 1].y + 1;
         for y in min_y..max_y {
             for x in minmap[&y]..(maxmap[&y] + 1) {
                 let pixel = Pixel{x: x, y: y};
@@ -214,6 +215,7 @@ impl Trapezoid {
         pixels
     }
 }
+
 
 // Defines a collection for holding a Trapezoid's bases.
 //
@@ -282,30 +284,6 @@ fn lines_from_bases(base1: LineSegment, base2: LineSegment) -> Vec<LineSegment> 
     }
 }
 
-#[derive(Debug)]
-struct Pixel {
-    x: i32,
-    y: i32,
-}
-
-impl Pixel {
-    /// Returns a Vec of Points whose coordinates are the points to be sampled for anti-aliasing.
-    fn sample_points(&self) -> Vec<Point> {
-        let mut points = Vec::new();
-        let x_increment = 1. / 16.;
-        let y_increment = 1. / 14.;
-        for subgrid_x in 0..17 {
-            let x = self.x as f32 + (subgrid_x as f32 * x_increment);
-            for subgrid_y in 0..15 {
-                let y =  self.y as f32 + (subgrid_y as f32 * y_increment);
-                let point = Point{x: x, y: y};
-                points.push(point);
-            }
-        }
-
-        points
-    }
-}
 
 /// Returns true if a ray running along the positive x-axis intersects the line `line`.
 fn ray_from_point_crosses_line(point: &Point, line: &LineSegment) -> bool {
@@ -339,8 +317,6 @@ pub fn mask_from_trapezoids(trapezoids: &Vec<Trapezoid>, width: usize, height: u
 
     for trapezoid in trapezoids {
         for pixel in trapezoid.into_pixels() {
-            let mut rgba = mask.get_mut(pixel.x as usize, pixel.y as usize);
-
             let mut successes = 0;
             for sample_point in pixel.sample_points() {
                 if trapezoid.contains_point(&sample_point) {
@@ -348,8 +324,14 @@ pub fn mask_from_trapezoids(trapezoids: &Vec<Trapezoid>, width: usize, height: u
                 }
             }
 
-            rgba.alpha += successes as f32 / 255.;
-            rgba.alpha.max(1.);
+            let (x, y) = (pixel.x as usize, pixel.y as usize);
+            match mask.get_mut(x, y) {
+                Some(mut rgba) => {
+                    rgba.alpha += successes as f32 / 255.;
+                    rgba.alpha.max(1.);
+                },
+                None => {},
+            }
          }
      }
 
