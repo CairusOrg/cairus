@@ -232,10 +232,10 @@ impl PartialEq for LineSegment {
 
 #[derive(Copy)]
 pub struct Edge {
-    line: LineSegment,
-    top: f32,
-    bottom: f32,
-    direction: i32,
+    pub line: LineSegment,
+    pub top: f32,
+    pub bottom: f32,
+    pub direction: i32,
 }
 
 impl Clone for Edge {
