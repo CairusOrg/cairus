@@ -114,7 +114,7 @@ add_to_traps(SL_edge edge, float bot, int mask, traps *traps)
         right = edge.deferred_trap->right->LineSegment
         traps_push(left, right, edge.deferred_trap.top, bot)
 */
-use common_geometry::{Point, LineSegment};
+use common_geometry::{Edge, Point, LineSegment};
 use std::cmp::Ordering;
 use std::clone::Clone;
 use trapezoid_rasterizer::Trapezoid;
@@ -158,19 +158,6 @@ impl Ord for EventType {
         }
     }
 }
-
-#[derive(Copy)]
-pub struct Edge {
-    line: LineSegment,
-    top: f32, // highest y value
-    bottom: f32, // lowest y value
-    direction: i32, // positive or negative
-}
-
-impl Clone for Edge {
-    fn clone(&self) -> Edge { *self }
-}
-
 
 pub struct Event {
     edge_left: Edge,
@@ -271,18 +258,28 @@ fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
     events
 }
 
+/// Defines a ScanLineEdge for our ScanLineList
+///
+/// The ScanLineEdges will be used to create trapezoids.
+/// Top will be set by our ScanLine to mark the top of our trapezoid.
+/// Left will be set based on the leftmost point of our line to determine where in our ScanLineList
+///     we need to insert our ScanLineEdge.
+/// Line our current line.
+/// Note: We may need to add a Right (right: Option<Box<LineSegment>>) to track the right side of
+///     our trapezoid but for now we will let the ScanLineList determine this based on if there is a
+///     ScanLineEdge after the current ScanLineEdge in our ScanLineList.
 pub struct ScanLineEdge {
     top: f32,
+    left: f32,
     line: LineSegment,
-    right: Option<Box<LineSegment>>,
 }
 
 impl ScanLineEdge {
-    fn new(top: f32, line: LineSegment) -> ScanLineEdge {
+    fn new(top: f32, left: f32, line: LineSegment) -> ScanLineEdge {
         ScanLineEdge {
             top: top,
+            left: left,
             line: line,
-            right: None,
         }
     }
 }
@@ -300,8 +297,10 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
         let scan_line = event.point.y;
         // Process Event
         if event.event_type == EventType::Start{
+            // find the left most point of the edge_left line
+            let left = event.edge_left.line.point1.x.min(event.edge_left.line.point2.x);
             // create a new node and add it to the list
-            let mut sl_edge = ScanLineEdge::new(scan_line, event.edge_left.line);
+            let mut sl_edge = ScanLineEdge::new(scan_line, left, event.edge_left.line);
             // Insert the node into the linked list. Need to work on the logic for where to add it.
             sl_list.push_back(sl_edge);
             println!("Added Start to the scan line at y: {}", scan_line);
@@ -321,7 +320,7 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common_geometry::{LineSegment, Point};
+    use common_geometry::{LineSegment, Point, Edge};
     use std::cmp::Ordering;
 
     fn create_edge(x1: f32, y1: f32, x2: f32, y2:f32) -> Edge{
