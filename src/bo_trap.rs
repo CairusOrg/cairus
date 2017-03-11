@@ -388,8 +388,15 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
                         break;
                     }
                 }
+                // **** ADD TRAPEZOID *****
+                // If before we add our new sl_edge there is a previous and next we need to make a
+                // new Trapezoid and set the prev top
                 cursor.insert(sl_edge);
             }
+            // **** CHECK FOR INTERSECTIONS ****
+            // Check to see if the new edge intersects with the previous or next
+            // if it does after the current scan line then we add it to our event list.
+
 
 
             println!("Added Start to the scan line at y: {}", scan_line);
@@ -436,9 +443,17 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
                 }
 
             }
+            // **** CREATE TRAPEZOIDS *****
+            // we will be at the point of removal here, so we need to see about building trapezoids
+            // before and after this point before we remove it. We will want to update the TOP of the
+            // node before if we create a trapezoid
             cursor.remove();
-            // before we remove we need to build possible trapezoids for both the left and right
-            // could get complicated since we cant move the cursor easily.
+            // ****** CHECK FOR INTERSECTIONS ****
+            // After we remove it we will want to see if there is any intersections with the lines
+            // before and after the cursor. If yes, and it happens after our current y we add it to
+            // our event list.
+
+
         }
 
         // print the Scan Line List
