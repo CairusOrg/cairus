@@ -178,6 +178,38 @@ impl LineSegment {
         }
     }
 
+    pub fn intersection(&self, line2 : &LineSegment) -> Option<Point> {
+        //check if the one line is entirely to the left of the other
+        if self.min_x_point().x < line2.min_x_point().x {
+            if self.max_x_point().x <= line2.min_x_point().x {
+                return None;
+            }
+        } else {
+            if self.min_x_point().x >= line2.max_x_point().x {
+                return None;
+            }
+        }
+        // mx+b=y
+        // b = y-mx
+        // mx+b-y = 0
+        //if the line's bounding boxes do overlap, we need to look at slopes
+        let m1 = self.slope();
+        let m2 = line2.slope();
+        let b1 = self.point1.y - m1*self.point1.x;
+        let b2 = line2.point1.y - m2*line2.point1.x;
+        if m1 == m2 {
+            //parallel lines
+            //if b1 == b2 {
+                //colinear lines
+            //}
+            return None;
+        }
+        else {
+            let intersection_x = (b2 - b1) / (m1 - m2);
+            Some(Point::new(intersection_x,
+                m1*intersection_x + b1))
+        }
+    }
 
     // Returns a Vector of coordinates indicating which pixels this line should color when
     // rasterized.  The algorithm is a straight-forward DDA.
@@ -296,6 +328,7 @@ impl PartialEq for Vector {
 #[cfg(test)]
 mod tests {
     use super::{LineSegment, Point, Vector};
+    use std::f32;
 
     // Tests that point subtraction is working.
     #[test]
@@ -427,7 +460,58 @@ mod tests {
         let vertical2 = LineSegment::new(2., 2., 2., -1.);
         assert_eq!(vertical1.slope(), vertical2.slope());
     }
+    // Tests no slope returns infinity
+    #[test]
+    fn infinite_slope() {
+        let vertical = LineSegment::new(0., 0., 0., 1.);
+        assert_eq!(vertical.slope(), f32::INFINITY);
+    }
+    // Tests zero slope
+    #[test]
+    fn zero_slope() {
+        let horizontal = LineSegment::new(0., 0., 1., 0.);
+        assert_eq!(horizontal.slope(), 0.);
+    }
 
+    // Tests intersection of self bounding box to left of line2 bounding box
+    #[test]
+    fn self_left_of_line2() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(1., 1., 3., 1.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Tests intersection of self bounding box to right of line2 bounding box
+    #[test]
+    fn self_right_of_line2() {
+        let line2 = LineSegment::new(0., 0., 1., 1.);
+        let line1 = LineSegment::new(1., 1., 3., 1.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Test intersection of parallel lines
+    #[test]
+    fn parallel_intersection() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(0., 1., 1., 2.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Test intersection of colinear lines
+    #[test]
+    fn colinear_intersection() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(0., 0., 2., 2.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Test intersection of lines
+    #[test]
+    fn intersection_of_lines() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(1., 0., 0., 1.);
+        assert_eq!(line1.intersection(&line2).unwrap(), Point::new(0.5,0.5));
+    }
     // Tests Vector::new()
     #[test]
     fn vector_new() {
