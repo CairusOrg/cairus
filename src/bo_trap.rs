@@ -274,22 +274,22 @@ fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
 pub struct SweepLineEdge {
     trap_top: f32,
     left: f32,
-    line: LineSegment,
+    edge: Edge,
 }
 
 impl SweepLineEdge {
-    fn new(trap_top: f32, left: f32, line: LineSegment) -> SweepLineEdge {
+    fn new(trap_top: f32, left: f32, edge: Edge) -> SweepLineEdge {
         SweepLineEdge {
             trap_top: trap_top,
             left: left,
-            line: line,
+            edge: edge,
         }
     }
 
     /// Returns the x value on the line that intersects with the current y value.
     pub fn current_x_for_y(&self, y: f32) -> f32 {
-        let min = self.line.min_y_point();
-        (y - min.y) / self.line.slope() + min.x
+        let min = self.edge.line.min_y_point();
+        (y - min.y) / self.edge.line.slope() + min.x
     }
 }
 
@@ -314,13 +314,13 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
             // find the left most point of the edge_left line
             let left = event.edge_left.line.min_x_point().x;
             // create a new node and add it to the list
-            let mut sl_edge = SweepLineEdge::new(sweep_line, left, event.edge_left.line);
+            let mut sl_edge = SweepLineEdge::new(sweep_line, left, event.edge_left);
             // Set the cursor back to the beginning
             cursor.reset();
             if cursor.peek_next().is_none() {
                 cursor.insert(sl_edge);
             } else {
-                while find_line_place(event.point, event.edge_left.line, *cursor.peek_next().unwrap()) == Comparator::Less {
+                while find_line_place(event.point, event.edge_left, *cursor.peek_next().unwrap()) == Comparator::Less {
                     cursor.next();
                     if cursor.peek_next().is_none() {
                         break;
@@ -364,7 +364,7 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
                     cursor.prev();
                     continue;
                 }
-                result = find_line_place(event.point, event.edge_left.line, *cursor.peek_next().unwrap());
+                result = find_line_place(event.point, event.edge_left, *cursor.peek_next().unwrap());
 
                 if result == Comparator::Equal {
                     println!("Next is Equal");
@@ -457,11 +457,11 @@ pub enum Comparator {
 // Returns Equal if line and next_sl_edge.line are equal
 // Returns Greater if Next current x is greater then events, if points are equal compares slopes
 // Returns Less if Next current x is less then events, if points are equal compares slopes
-pub fn find_line_place(point: Point, line: LineSegment, next_sl_edge : SweepLineEdge) -> Comparator {
-    let next_line = next_sl_edge.line;
+pub fn find_line_place(point: Point, edge: Edge, next_sl_edge : SweepLineEdge) -> Comparator {
+    let next_line = next_sl_edge.edge.line;
     // if the lines are the same line we return equal because we have a duplicate
     // will probably need to change this for intersections
-    if line == next_line {
+    if edge.line == next_line {
         println!("Lines are equal");
         return Comparator::Equal;
     }
@@ -473,7 +473,7 @@ pub fn find_line_place(point: Point, line: LineSegment, next_sl_edge : SweepLine
     // look at the x values
     if point.x == next_x {
         // compare the slopes of the lines
-        if line.slope() < next_line.slope() {
+        if edge.line.slope() < next_line.slope() {
             println!("Points are equal, Next slope is greater then Events");
             return Comparator::Greater;
         }
@@ -496,7 +496,7 @@ pub fn find_line_place(point: Point, line: LineSegment, next_sl_edge : SweepLine
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common_geometry::{LineSegment, Point, Edge};
+    use common_geometry::{Edge, Point, LineSegment};
     use std::cmp::Ordering;
 
     fn create_edge(x1: f32, y1: f32, x2: f32, y2:f32) -> Edge{
