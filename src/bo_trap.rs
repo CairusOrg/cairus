@@ -192,6 +192,7 @@ impl Ord for Event {
     }
 }
 
+// Need to check this code
 impl PartialEq for Event {
     fn eq(&self, other:&Event) -> bool {
         true
@@ -311,30 +312,87 @@ impl ScanLine {
 pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
     // Create the empty Scan Line Linked List
     let mut sl_list: LinkedList<ScanLineEdge> = LinkedList::new();
+    // Create a cursor to move over the list
+    let mut cursor = sl_list.cursor();
     // Create the list of events
     let mut events = event_list_from_edges(edges);
     // Keep looping until the Event List is empty
     while !events.is_empty() {
         // Get the current event
         let event = events.remove(0);
-
         // Set the scan line to the events y value
         let scan_line = event.point.y;
-
-        // Create a cursor to move over the list
-        let mut cursor = sl_list.cursor();
 
         // Process Event
         // START CASE
         if event.event_type == EventType::Start{
+//            println!("adding SLEdge");
+//            // find the left most point of the edge_left line
+//            let left = event.edge_left.line.min_x_point().x;
+//            // create a new node and add it to the list
+//            let mut sl_edge = ScanLineEdge::new(scan_line, left, event.edge_left.line);
+//
+//            // Insert the node into the linked list. Need to work on the logic for where to add it.
+//            if cursor.peek_next().is_none() {
+//                // if the next is empty we check our previous to see if its also empty
+//                // if it is we insert, otherwise we move our cursor back on position
+//                if cursor.peek_prev().is_none() {
+//                    cursor.insert(sl_edge);
+//                }
+//            // if the list is not empty we need to find where to put the element
+//            } else {
+//                if cursor.peek_next().is_none() {
+//                    cursor.prev();
+//                }
+//                let mut insert = false;
+//                while !insert {
+//                    if cursor.peek_next().is_none() {
+//                        insert == true;
+//                    } else {
+//                        let result = find_line_place(event.point, event.edge_left.line, *cursor.peek_next().unwrap());
+//                        if result == Comparator::Greater {
+//                            cursor.next();
+//                        } else if result == Comparator::Less {
+//                            // if its less then the next we need to see if it is also greater then the previous
+//                            if cursor.peek_prev().is_none() {
+//                                insert = true;
+//                            } else {
+//                                let result2 = find_line_place(event.point, event.edge_left.line, *cursor.peek_prev().unwrap());
+//                                if result2 == Comparator::Greater {
+//                                    insert == true;
+//                                } else {
+//                                    cursor.prev();
+//                                }
+//                            }
+//                        } else if result == Comparator::Equal {
+//                            // this case means the line is already in our list so we dont add it
+//                            break;
+//                        } else if result == Comparator::Empty {}
+//                    }
+//
+//                }
+//                cursor.insert(sl_edge);
+//            }
             // find the left most point of the edge_left line
             let left = event.edge_left.line.min_x_point().x;
             // create a new node and add it to the list
             let mut sl_edge = ScanLineEdge::new(scan_line, left, event.edge_left.line);
-            // Insert the node into the linked list. Need to work on the logic for where to add it.
-            cursor.insert(sl_edge);
+            // Set the cursor back to the beginning
+            cursor.reset();
+            if cursor.peek_next().is_none() {
+                cursor.insert(sl_edge);
+            } else {
+                while find_line_place(event.point, event.edge_left.line, *cursor.peek_next().unwrap()) == Comparator::Greater {
+                    cursor.next();
+                    if cursor.peek_next().is_none() {
+                        break;
+                    }
+                }
+                cursor.insert(sl_edge);
+            }
+
+
             println!("Added Start to the scan line at y: {}", scan_line);
-  //          println!("Cursor Indexes top: {:?}",  cursor.next().unwrap().line);
             println!("current x, y value: {} {}",cursor.next().unwrap().current_x_for_y(scan_line), scan_line );
         }
 
@@ -347,24 +405,31 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
             // the events will always be sorted by the current left point
             // We know what line to remove based on the current event which will tell us what that
             // left point will be
-            // if our event line is equal to our cursor_left line then see if our lines are euqal, is yes remove
+
+            // REMOVE FROM SL_LIST
+            // if our event line is equal to our cursor_left line then see if our lines are equal, if yes remove
             // if no then we need to see which direction to move...
             // if our event line is greater then our cursor left line then we need to move right and repeat
             // if our event line is less then our cursor left line then we need to move left
             let mut result = Comparator::Empty;
+            // ***** need to remove after i fix a bug *****
+            cursor.reset();
             while result != Comparator::Equal {
                 // Not sure if i need this. could if the cursor is at the end of the list
                 if cursor.peek_next().is_none() {
                     cursor.prev();
                 }
                 result = find_line_place(event.point, event.edge_left.line, *cursor.peek_next().unwrap());
+                // Code just for testing and debugging
                 match result{
                     Comparator::Greater => println!("Next is Greater"),
                     Comparator::Less => println!("Next is Less"),
                     Comparator::Equal => println!("Next is Equal"),
                     Comparator::Empty => println!("Next is Empty"),
                 }
-                if result == Comparator::Greater {
+                if result == Comparator::Equal {
+                    break;
+                } else if result == Comparator::Greater {
                     cursor.prev();
                 } else if result == Comparator::Greater {
                     cursor.next();
@@ -377,45 +442,23 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
             cursor.remove();
             // before we remove we need to build possible trapezoids for both the left and right
             // could get complicated since we cant move the cursor easily.
-
         }
+
+        // print the Scan Line List
+        cursor.reset();
+        let mut index = 0;
+        while cursor.peek_next().is_some(){
+            println!("Index {}:  y:{}", index, cursor.peek_next().unwrap().top);
+            index = index + 1;
+            cursor.next();
+        }
+
 
         println!("Scan Line: {}", scan_line);
     }
-    println!("SLL: {:?}", sl_list);
+//    println!("SLL: {:?}", sl_list);
 
    Vec::new()
-}
-
-pub fn cursor_loop_test(mut list: LinkedList<ScanLineEdge>){
-    println!("List length: {}", list.len());
-    let mut cursor = list.cursor();
-    while cursor.peek_next().is_some() {
-       // let temp = cursor.peek_next().unwrap();
-        if cursor.peek_next().is_some() { println!("Number Next: {:?}", cursor.peek_next().unwrap()); }
-        if cursor.peek_next().is_some() { println!("Number Next: {:?}", cursor.peek_next().unwrap()); }
-        if cursor.peek_next().is_some() { println!("Number Next: {:?}", cursor.peek_next().unwrap()); }
-        if cursor.peek_prev().is_some() { println!("Number Prev: {:?}", cursor.peek_prev().unwrap()); }
-        println!("1");
-        cursor.remove();
-    }
-
-}
-
-pub fn cursor_loop_test2(mut list: LinkedList<i32>){
-    println!("List length: {}", list.len());
-    let mut cursor = list.cursor();
-        while cursor.peek_next() != None {
-            if cursor.peek_next().is_some() { println!("Number Next: {}", cursor.peek_next().unwrap()); }
-            if cursor.peek_next().is_some() { println!("Number Next: {}", cursor.peek_next().unwrap()); }
-            if cursor.peek_next().is_some() { println!("Number Next: {}", cursor.peek_next().unwrap()); }
-            if cursor.peek_prev().is_some() { println!("Number Prev: {}", cursor.peek_prev().unwrap()); }
-            cursor.next();
-        }
-}
-
-pub fn sll_insert(sl_list: LinkedList<ScanLineEdge>) {
-
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -606,31 +649,5 @@ mod tests {
         ];
 
         scan(edges);
-    }
-
-    #[test]
-    fn cursor_test() {
-        let sle1 = ScanLineEdge::new(1., 1., LineSegment::new(1., 1., 2., 2.));
-        let sle2 = ScanLineEdge::new(2., 2., LineSegment::new(2., 2., 3., 3.));
-        let sle3 = ScanLineEdge::new(3., 3., LineSegment::new(3., 3., 3., 4.));
-        let sle4 = ScanLineEdge::new(4., 4., LineSegment::new(4., 4., 5., 5.));
-        let mut list : LinkedList<ScanLineEdge> = LinkedList::new();
-        list.push_back(sle1);
-        list.push_back(sle2);
-        list.push_back(sle3);
-        list.push_back(sle4);
-
-        cursor_loop_test(list);
-    }
-
-    #[test]
-    fn cursor_test2() {
-        let mut list : LinkedList<i32> = LinkedList::new();
-        let mut list : LinkedList<i32> = LinkedList::new();
-        for x in 1..5 {
-            list.push_back(x);
-        }
-
-        cursor_loop_test2(list);
     }
 }
