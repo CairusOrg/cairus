@@ -119,7 +119,7 @@ use std::cmp::Ordering;
 use std::clone::Clone;
 use trapezoid_rasterizer::Trapezoid;
 extern crate linked_list;
-use self::linked_list::LinkedList;
+use self::linked_list::{LinkedList, Cursor};
 
 #[derive(Eq, PartialEq, Debug)]
 pub enum EventType {
@@ -263,11 +263,13 @@ fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
 /// The ScanLineEdges will be used to create trapezoids.
 /// Top will be set by our ScanLine to mark the top of our trapezoid.
 /// Left will be set based on the leftmost point of our line to determine where in our ScanLineList
-///     we need to insert our ScanLineEdge.
-/// Line our current line.
+///     we need to insert our ScanLineEdge. This is used for sorting our ScanLineList and is updated
+///     when it intersects another line.
+/// Line is our current line.
 /// Note: We may need to add a Right (right: Option<Box<LineSegment>>) to track the right side of
 ///     our trapezoid but for now we will let the ScanLineList determine this based on if there is a
 ///     ScanLineEdge after the current ScanLineEdge in our ScanLineList.
+#[derive(Debug, Copy, Clone)]
 pub struct ScanLineEdge {
     top: f32,
     left: f32,
@@ -282,8 +284,30 @@ impl ScanLineEdge {
             line: line,
         }
     }
+
+    /// Returns the x value on the line that intersects with the current y value.
+    pub fn current_x_for_y(&self, y: f32) -> f32 {
+        let min = self.line.min_y_point();
+        (y - min.y) / self.line.slope() + min.x
+    }
 }
 
+#[derive(Debug)]
+pub struct ScanLine {
+    y: f32,
+    index: Option<Box<i32>>,
+}
+
+impl ScanLine {
+    fn new(y: f32) -> ScanLine{
+        ScanLine {
+            y: y,
+            index: None,
+        }
+    }
+}
+
+/// Scan will loop over all of the Edges in the vector and build Trapezoids out of them.
 pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
     // Create the empty Scan Line Linked List
     let mut sl_list: LinkedList<ScanLineEdge> = LinkedList::new();
@@ -293,27 +317,148 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
     while !events.is_empty() {
         // Get the current event
         let event = events.remove(0);
+
         // Set the scan line to the events y value
         let scan_line = event.point.y;
+
+        // Create a cursor to move over the list
+        let mut cursor = sl_list.cursor();
+
         // Process Event
+        // START CASE
         if event.event_type == EventType::Start{
             // find the left most point of the edge_left line
-            let left = event.edge_left.line.point1.x.min(event.edge_left.line.point2.x);
+            let left = event.edge_left.line.min_x_point().x;
             // create a new node and add it to the list
             let mut sl_edge = ScanLineEdge::new(scan_line, left, event.edge_left.line);
             // Insert the node into the linked list. Need to work on the logic for where to add it.
-            sl_list.push_back(sl_edge);
+            cursor.insert(sl_edge);
             println!("Added Start to the scan line at y: {}", scan_line);
+  //          println!("Cursor Indexes top: {:?}",  cursor.next().unwrap().line);
+            println!("current x, y value: {} {}",cursor.next().unwrap().current_x_for_y(scan_line), scan_line );
         }
+
+        // END CASE
         else if event.event_type == EventType::End {
+        // how do we know which event to remove?
+            // when we call remove on the cursor it will remove the next element.
+            // when we call cursor.next or cursor.prev it moves the cursor left or right
+            // when we call cursor.peek_left or right it gets the next element without moving the cursor
+            // the events will always be sorted by the current left point
+            // We know what line to remove based on the current event which will tell us what that
+            // left point will be
+            // if our event line is equal to our cursor_left line then see if our lines are euqal, is yes remove
+            // if no then we need to see which direction to move...
+            // if our event line is greater then our cursor left line then we need to move right and repeat
+            // if our event line is less then our cursor left line then we need to move left
+            let mut result = Comparator::Empty;
+            while result != Comparator::Equal {
+                result = find_line_place(event.point, event.edge_left.line, cursor);
+                match result{
+                    Comparator::Greater => println!("Next is Greater"),
+                    Comparator::Less => println!("Next is Less"),
+                    Comparator::Equal => println!("Next is Equal"),
+                    Comparator::Empty => println!("Next is Empty"),
+                }
+                if result == Comparator::Greater {
+                    cursor.prev();
+                } else if result == Comparator::Greater {
+                    cursor.next();
+                } else {
+                    println!("Failed to remove a SL_Edge from the List");
+                    break;
+                }
+
+            }
+            cursor.remove();
+            // before we remove we need to build possible trapezoids for both the left and right
+            // could get complicated since we cant move the cursor easily.
 
         }
 
         println!("Scan Line: {}", scan_line);
     }
-
+    println!("SLL: {:?}", sl_list);
 
    Vec::new()
+}
+
+pub fn cursor_loop_test(mut list: LinkedList<ScanLineEdge>){
+    println!("List length: {}", list.len());
+    let mut cursor = list.cursor();
+    while cursor.peek_next().is_some() {
+       // let temp = cursor.peek_next().unwrap();
+        if cursor.peek_next().is_some() { println!("Number Next: {:?}", cursor.peek_next().unwrap()); }
+        if cursor.peek_next().is_some() { println!("Number Next: {:?}", cursor.peek_next().unwrap()); }
+        if cursor.peek_next().is_some() { println!("Number Next: {:?}", cursor.peek_next().unwrap()); }
+        if cursor.peek_prev().is_some() { println!("Number Prev: {:?}", cursor.peek_prev().unwrap()); }
+        println!("1");
+        cursor.remove();
+    }
+
+}
+
+pub fn cursor_loop_test2(mut list: LinkedList<i32>){
+    println!("List length: {}", list.len());
+    let mut cursor = list.cursor();
+        while cursor.peek_next() != None {
+            if cursor.peek_next().is_some() { println!("Number Next: {}", cursor.peek_next().unwrap()); }
+            if cursor.peek_next().is_some() { println!("Number Next: {}", cursor.peek_next().unwrap()); }
+            if cursor.peek_next().is_some() { println!("Number Next: {}", cursor.peek_next().unwrap()); }
+            if cursor.peek_prev().is_some() { println!("Number Prev: {}", cursor.peek_prev().unwrap()); }
+            cursor.next();
+        }
+}
+
+pub fn sll_insert(sl_list: LinkedList<ScanLineEdge>) {
+
+}
+
+#[derive(Eq, PartialEq, Debug)]
+pub enum Comparator {
+    Greater,
+    Less,
+    Equal,
+    Empty,
+}
+
+// need to rename function. it will compare a line to the next one in the list
+// may want to pass in a point as well so that we can use this same function for insert
+pub fn find_line_place(point: Point, line: LineSegment, mut cursor: Cursor<ScanLineEdge>) -> Comparator {
+    let next = cursor.peek_next();
+    if next.is_none() {
+        return Comparator::Empty;
+    }
+    else {
+        let next_sl_edge = next.unwrap();
+        let next_line = next_sl_edge.line;
+
+        // if the lines are the same line we return equal because we have a duplicate
+        if line == next_line {
+            return Comparator::Equal;
+        }
+
+        // Get the point on the next line for the current y value we are at since that is how the
+        // linked list is sorted.
+        let next_x = next_sl_edge.current_x_for_y(point.y);
+        // if the point is the same as the next point or lines intersect and we need to look at the
+        // slope to determine the sorting order. We already know they have the same y value so we just
+        // look at the x values
+        if point.x == next_x {
+            // compare the slopes of the lines
+            if line.slope() > next_line.slope() {
+                return Comparator::Greater;
+            }
+            else {
+                return Comparator::Less;
+            }
+            // if the point is not on the nextLine we just need to see if it comes before or after
+        } else if point.x > next_x {
+            return Comparator::Greater;
+        } else {
+            return Comparator::Less;
+        }
+    }
 }
 
 
@@ -458,12 +603,37 @@ mod tests {
     #[test]
     fn scan_test() {
         let edges = vec![
+        create_edge(0., 0., 5., 5.),
         create_edge(3., 4., 1., 2.),
         create_edge(0., 1., 6., 6.),
-        create_edge(0., 0., 5., 5.),
         ];
 
         scan(edges);
+    }
 
+    #[test]
+    fn cursor_test() {
+        let sle1 = ScanLineEdge::new(1., 1., LineSegment::new(1., 1., 2., 2.));
+        let sle2 = ScanLineEdge::new(2., 2., LineSegment::new(2., 2., 3., 3.));
+        let sle3 = ScanLineEdge::new(3., 3., LineSegment::new(3., 3., 3., 4.));
+        let sle4 = ScanLineEdge::new(4., 4., LineSegment::new(4., 4., 5., 5.));
+        let mut list : LinkedList<ScanLineEdge> = LinkedList::new();
+        list.push_back(sle1);
+        list.push_back(sle2);
+        list.push_back(sle3);
+        list.push_back(sle4);
+
+        cursor_loop_test(list);
+    }
+
+    #[test]
+    fn cursor_test2() {
+        let mut list : LinkedList<i32> = LinkedList::new();
+        let mut list : LinkedList<i32> = LinkedList::new();
+        for x in 1..5 {
+            list.push_back(x);
+        }
+
+        cursor_loop_test2(list);
     }
 }
