@@ -353,7 +353,11 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
             // if our event line is less then our cursor left line then we need to move left
             let mut result = Comparator::Empty;
             while result != Comparator::Equal {
-                result = find_line_place(event.point, event.edge_left.line, cursor);
+                // Not sure if i need this. could if the cursor is at the end of the list
+                if cursor.peek_next().is_none() {
+                    cursor.prev();
+                }
+                result = find_line_place(event.point, event.edge_left.line, *cursor.peek_next().unwrap());
                 match result{
                     Comparator::Greater => println!("Next is Greater"),
                     Comparator::Less => println!("Next is Less"),
@@ -424,41 +428,34 @@ pub enum Comparator {
 
 // need to rename function. it will compare a line to the next one in the list
 // may want to pass in a point as well so that we can use this same function for insert
-pub fn find_line_place(point: Point, line: LineSegment, mut cursor: Cursor<ScanLineEdge>) -> Comparator {
-    let next = cursor.peek_next();
-    if next.is_none() {
-        return Comparator::Empty;
+pub fn find_line_place(point: Point, line: LineSegment, next_sl_edge : ScanLineEdge) -> Comparator {
+    let next_line = next_sl_edge.line;
+
+    // if the lines are the same line we return equal because we have a duplicate
+    if line == next_line {
+        return Comparator::Equal;
     }
-    else {
-        let next_sl_edge = next.unwrap();
-        let next_line = next_sl_edge.line;
-
-        // if the lines are the same line we return equal because we have a duplicate
-        if line == next_line {
-            return Comparator::Equal;
-        }
-
-        // Get the point on the next line for the current y value we are at since that is how the
-        // linked list is sorted.
-        let next_x = next_sl_edge.current_x_for_y(point.y);
-        // if the point is the same as the next point or lines intersect and we need to look at the
-        // slope to determine the sorting order. We already know they have the same y value so we just
-        // look at the x values
-        if point.x == next_x {
-            // compare the slopes of the lines
-            if line.slope() > next_line.slope() {
-                return Comparator::Greater;
-            }
-            else {
-                return Comparator::Less;
-            }
-            // if the point is not on the nextLine we just need to see if it comes before or after
-        } else if point.x > next_x {
+    // Get the point on the next line for the current y value we are at since that is how the
+    // linked list is sorted.
+    let next_x = next_sl_edge.current_x_for_y(point.y);
+    // if the point is the same as the next point or lines intersect and we need to look at the
+    // slope to determine the sorting order. We already know they have the same y value so we just
+    // look at the x values
+    if point.x == next_x {
+        // compare the slopes of the lines
+        if line.slope() > next_line.slope() {
             return Comparator::Greater;
-        } else {
+        }
+        else {
             return Comparator::Less;
         }
+        // if the point is not on the nextLine we just need to see if it comes before or after
+    } else if point.x > next_x {
+        return Comparator::Greater;
+    } else {
+        return Comparator::Less;
     }
+
 }
 
 
