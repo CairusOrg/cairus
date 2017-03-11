@@ -295,6 +295,8 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
     let mut cursor = sl_list.cursor();
     // Create the list of events
     let mut events = event_list_from_edges(edges);
+    // Create empty traps list for eventual return
+    let mut traps: Vec<Trapezoid> = Vec::new();
     // Keep looping until the Event List is empty
     while !events.is_empty() {
         // Get the current event
@@ -323,6 +325,11 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
                 // **** ADD TRAPEZOID *****
                 // If before we add our new sl_edge there is a previous and next we need to make a
                 // new Trapezoid and set the prev top
+                if cursor.peek_prev().is_some() && cursor.peek_next().is_some() {
+                    // passing -1 for mask as winding rule default 0xFFFFFFFF
+                    add_to_traps(&mut cursor, sweep_line, -1 , &mut traps);
+                    cursor.peek_prev().unwrap().trap_top = sweep_line;
+                }
 
                 // **** CHECK FOR INTERSECTIONS ****
                 // Check to see if the new edge intersects with the previous or next
