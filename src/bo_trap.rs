@@ -382,7 +382,7 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
             if cursor.peek_next().is_none() {
                 cursor.insert(sl_edge);
             } else {
-                while find_line_place(event.point, event.edge_left.line, *cursor.peek_next().unwrap()) == Comparator::Greater {
+                while find_line_place(event.point, event.edge_left.line, *cursor.peek_next().unwrap()) == Comparator::Less {
                     cursor.next();
                     if cursor.peek_next().is_none() {
                         break;
@@ -412,26 +412,23 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
             // if our event line is greater then our cursor left line then we need to move right and repeat
             // if our event line is less then our cursor left line then we need to move left
             let mut result = Comparator::Empty;
-            // ***** need to remove after i fix a bug *****
-            cursor.reset();
             while result != Comparator::Equal {
                 // Not sure if i need this. could if the cursor is at the end of the list
                 if cursor.peek_next().is_none() {
+                    println!("Next is Empty");
                     cursor.prev();
+                    continue;
                 }
                 result = find_line_place(event.point, event.edge_left.line, *cursor.peek_next().unwrap());
-                // Code just for testing and debugging
-                match result{
-                    Comparator::Greater => println!("Next is Greater"),
-                    Comparator::Less => println!("Next is Less"),
-                    Comparator::Equal => println!("Next is Equal"),
-                    Comparator::Empty => println!("Next is Empty"),
-                }
+
                 if result == Comparator::Equal {
+                    println!("Next is Equal");
                     break;
                 } else if result == Comparator::Greater {
+                    println!("Next is Greater");
                     cursor.prev();
-                } else if result == Comparator::Greater {
+                } else if result == Comparator::Less {
+                    println!("Next is Less");
                     cursor.next();
                 } else {
                     println!("Failed to remove a SL_Edge from the List");
@@ -471,11 +468,15 @@ pub enum Comparator {
 
 // need to rename function. it will compare a line to the next one in the list
 // may want to pass in a point as well so that we can use this same function for insert
+// Returns Equal if line and next_sl_edge.line are equal
+// Returns Greater if Next current x is greater then events, if points are equal compares slopes
+// Returns Less if Next current x is less then events, if points are equal compares slopes
 pub fn find_line_place(point: Point, line: LineSegment, next_sl_edge : ScanLineEdge) -> Comparator {
     let next_line = next_sl_edge.line;
-
     // if the lines are the same line we return equal because we have a duplicate
+    // will probably need to change this for intersections
     if line == next_line {
+        println!("Lines are equal");
         return Comparator::Equal;
     }
     // Get the point on the next line for the current y value we are at since that is how the
@@ -486,16 +487,20 @@ pub fn find_line_place(point: Point, line: LineSegment, next_sl_edge : ScanLineE
     // look at the x values
     if point.x == next_x {
         // compare the slopes of the lines
-        if line.slope() > next_line.slope() {
+        if line.slope() < next_line.slope() {
+            println!("Points are equal, Next slope is greater then Events");
             return Comparator::Greater;
         }
         else {
+            println!("Points are equal, Next slope is less then Events");
             return Comparator::Less;
         }
         // if the point is not on the nextLine we just need to see if it comes before or after
-    } else if point.x > next_x {
+    } else if point.x < next_x {
+        println!("Next current x is greater then Events point.x");
         return Comparator::Greater;
     } else {
+        println!("Next current x is less then Events point.x");
         return Comparator::Less;
     }
 
