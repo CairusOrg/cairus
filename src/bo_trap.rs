@@ -512,12 +512,12 @@ add_to_traps(SL_edge edge, float bot, int mask, traps *traps)
         traps_push(left, right, edge.deferred_trap.top, bot)
 */
 
-fn add_to_traps(cursor: &mut Cursor<ScanLineEdge>, bottom: f32, mask: i32, traps: &mut Vec<Trapezoid>) {
+fn add_to_traps(cursor: &mut Cursor<SweepLineEdge>, bottom: f32, mask: i32, traps: &mut Vec<Trapezoid>) {
     // We unwrap because it should be considered a bug if this gets called when the value is
     // incorrect
     let mut sl_edge = cursor.next().unwrap();
 
-    if sl_edge.top >= bottom {
+    if sl_edge.trap_top >= bottom {
         return;
     }
 
@@ -532,10 +532,10 @@ fn add_to_traps(cursor: &mut Cursor<ScanLineEdge>, bottom: f32, mask: i32, traps
 
     // Add a trapezoid if in_out isn't zero
     if in_out != 0 {
-        let left = sl_edge.line;
-        let right = right.line;
-        let top_y = sl_edge.top;
-        trap = bo_trap_from_lines(&left, &right, top_y, bottom);
+        let left = sl_edge.edge.line;
+        let right = right.edge.line;
+        let top_y = sl_edge.trap_top;
+        let trap = bo_trap_from_lines(&left, &right, top_y, bottom);
         traps.push(trap)
     }
 }
@@ -697,22 +697,27 @@ mod tests {
         sweep(edges);
     }
 
-    // Tests that add_to_traps doesn't change the traps vector if the ScanLineEdge's top
+    // Tests that add_to_traps doesn't change the traps vector if the SweepLineEdge's top
     // is greater than the `bottom` arg passed in.
     #[test]
     fn add_to_traps_edge_top_gt_bottom() {
         // Setup
-        let edge = ScanLineEdge {
-            top: 1.,
+        let edge = SweepLineEdge {
+            trap_top: 1.,
             left: 0.,
-            line: LineSegment::new(0., 0., 0., 0.)
+            edge: Edge {
+                line: LineSegment::new(0., 0., 0., 0.),
+                top: 0.,
+                bottom: 0.,
+                direction: 0
+            }
         };
 
         // bottom is less than edge.top!
         let bottom = 0.;
         let mask = 1;
         let mut traps: Vec<Trapezoid> = Vec::new();
-        let mut sl_list: LinkedList<ScanLineEdge> = LinkedList::new();
+        let mut sl_list: LinkedList<SweepLineEdge> = LinkedList::new();
         sl_list.push_front(edge);
         let mut cursor = sl_list.cursor();
         // Call
