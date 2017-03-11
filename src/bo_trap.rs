@@ -767,6 +767,5 @@ mod tests {
         // Call
         add_to_traps(&mut cursor, bottom, mask, &mut traps);
         assert!(traps.len() > 0);
-
     }
 }
