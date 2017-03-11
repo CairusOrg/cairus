@@ -211,6 +211,17 @@ impl LineSegment {
         }
     }
 
+    // return x value of line for a given y value
+    // if y is out of range of line, x will be too.
+    // (y2-y1)/(x2-x1) = m
+    // (y2-y1) = m(x2-x1)
+    // (y2-y1) + mx1 = mx2
+    // x2 = (y2-y1)/m + x1
+    pub fn current_x_for_y(&self, y: f32) -> f32 {
+        let min = self.min_y_point();
+        (y - min.y) / self.slope() + min.x
+    }
+
     // Returns a Vector of coordinates indicating which pixels this line should color when
     // rasterized.  The algorithm is a straight-forward DDA.
     pub fn into_pixel_coordinates(&self) -> Vec<(i32, i32)> {
@@ -262,7 +273,7 @@ impl PartialEq for LineSegment {
 /// the next line would be horizontal with a 0 direction, followed by a -1 line, then
 /// a second 0 direction line.
 
-#[derive(Copy)]
+#[derive(Debug,Copy)]
 pub struct Edge {
     pub line: LineSegment,
     pub top: f32,
@@ -512,6 +523,14 @@ mod tests {
         let line2 = LineSegment::new(1., 0., 0., 1.);
         assert_eq!(line1.intersection(&line2).unwrap(), Point::new(0.5,0.5));
     }
+
+    // Test current x for y of line
+    #[test]
+    fn test_current_x() {
+        let line = LineSegment::new(0., 0., 2., 1.);
+        assert_eq!(line.current_x_for_y(2.),4.);
+    }
+
     // Tests Vector::new()
     #[test]
     fn vector_new() {
