@@ -158,7 +158,7 @@ impl Ord for EventType {
         }
     }
 }
-
+#[derive(Debug)]
 pub struct Event {
     edge_left: Edge,
     edge_right: Option<Box<Edge>>,
@@ -285,12 +285,6 @@ impl SweepLineEdge {
             edge: edge,
         }
     }
-
-    /// Returns the x value on the line that intersects with the current y value.
-    pub fn current_x_for_y(&self, y: f32) -> f32 {
-        let min = self.edge.line.min_y_point();
-        (y - min.y) / self.edge.line.slope() + min.x
-    }
 }
 
 /// /sweep will loop over all of the Edges in the vector and build Trapezoids out of them.
@@ -329,16 +323,18 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
                 // **** ADD TRAPEZOID *****
                 // If before we add our new sl_edge there is a previous and next we need to make a
                 // new Trapezoid and set the prev top
+
+                // **** CHECK FOR INTERSECTIONS ****
+                // Check to see if the new edge intersects with the previous or next
+                // if it does after the current sweep line then we add it to our event list.
                 cursor.insert(sl_edge);
             }
-            // **** CHECK FOR INTERSECTIONS ****
-            // Check to see if the new edge intersects with the previous or next
-            // if it does after the current sweep line then we add it to our event list.
+
 
 
 
             println!("Added Start to the sweep line at y: {}", sweep_line);
-            println!("current x, y value: {} {}",cursor.next().unwrap().current_x_for_y(sweep_line), sweep_line );
+            println!("current x, y value: {} {}",cursor.next().unwrap().edge.line.current_x_for_y(sweep_line), sweep_line );
         }
 
         // END CASE
@@ -467,7 +463,7 @@ pub fn find_line_place(point: Point, edge: Edge, next_sl_edge : SweepLineEdge) -
     }
     // Get the point on the next line for the current y value we are at since that is how the
     // linked list is sorted.
-    let next_x = next_sl_edge.current_x_for_y(point.y);
+    let next_x = next_sl_edge.edge.line.current_x_for_y(point.y);
     // if the point is the same as the next point or lines intersect and we need to look at the
     // slope to determine the sorting order. We already know they have the same y value so we just
     // look at the x values
@@ -623,15 +619,15 @@ mod tests {
     #[test]
     fn event_sorting() {
         let mut event_list = vec![
-            create_start_event(0., 1., 0., 3.),
-            create_start_event(0., 0., 1., 2.),
-            create_start_event(0., 0., 0., 1.)
+            create_start_event(0., 2., 9., 9.),
+            create_start_event(0., 1., 9., 9.),
+            create_start_event(0., 3., 9., 9.)
         ];
 
         event_list.sort();
-        assert_eq!(event_list.get(0).unwrap().edge_left.line.point2.y, 1.);
-        assert_eq!(event_list.get(1).unwrap().edge_left.line.point2.y, 2.);
-        assert_eq!(event_list.get(2).unwrap().edge_left.line.point2.y, 3.);
+        assert_eq!(event_list.get(0).unwrap().point.y, 1.);
+        assert_eq!(event_list.get(1).unwrap().point.y, 2.);
+        assert_eq!(event_list.get(2).unwrap().point.y, 3.);
     }
 
 
