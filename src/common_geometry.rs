@@ -262,7 +262,7 @@ impl PartialEq for LineSegment {
 /// the next line would be horizontal with a 0 direction, followed by a -1 line, then
 /// a second 0 direction line.
 
-#[derive(Copy)]
+#[derive(Debug,Copy)]
 pub struct Edge {
     pub line: LineSegment,
     pub top: f32,
