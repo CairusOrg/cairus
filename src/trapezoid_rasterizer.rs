@@ -136,13 +136,13 @@ pub struct Trapezoid {
 impl Trapezoid {
 
     // Returns a new Trapezoid defined by points.
-    fn from_points(a: Point, b: Point, c: Point, d: Point) -> Trapezoid {
+    pub fn from_points(a: Point, b: Point, c: Point, d: Point) -> Trapezoid {
         let bases = bases_from_points(a, b, c, d);
         Trapezoid::from_bases(bases[0].0, bases[0].1)
     }
 
     // Returns a new Trapezoid from two bases
-    fn from_bases(base1: LineSegment, base2: LineSegment) -> Trapezoid {
+    pub fn from_bases(base1: LineSegment, base2: LineSegment) -> Trapezoid {
         if base1.length() != 0. &&
            base2.length() != 0. &&
            base1.slope() != base2.slope() {
