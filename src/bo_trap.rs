@@ -272,15 +272,15 @@ fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
 ///     ScanLineEdge after the current ScanLineEdge in our ScanLineList.
 #[derive(Debug, Copy, Clone)]
 pub struct ScanLineEdge {
-    top: f32,
+    trap_top: f32,
     left: f32,
     line: LineSegment,
 }
 
 impl ScanLineEdge {
-    fn new(top: f32, left: f32, line: LineSegment) -> ScanLineEdge {
+    fn new(trap_top: f32, left: f32, line: LineSegment) -> ScanLineEdge {
         ScanLineEdge {
-            top: top,
+            trap_top: trap_top,
             left: left,
             line: line,
         }
@@ -326,53 +326,6 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
         // Process Event
         // START CASE
         if event.event_type == EventType::Start{
-//            println!("adding SLEdge");
-//            // find the left most point of the edge_left line
-//            let left = event.edge_left.line.min_x_point().x;
-//            // create a new node and add it to the list
-//            let mut sl_edge = ScanLineEdge::new(scan_line, left, event.edge_left.line);
-//
-//            // Insert the node into the linked list. Need to work on the logic for where to add it.
-//            if cursor.peek_next().is_none() {
-//                // if the next is empty we check our previous to see if its also empty
-//                // if it is we insert, otherwise we move our cursor back on position
-//                if cursor.peek_prev().is_none() {
-//                    cursor.insert(sl_edge);
-//                }
-//            // if the list is not empty we need to find where to put the element
-//            } else {
-//                if cursor.peek_next().is_none() {
-//                    cursor.prev();
-//                }
-//                let mut insert = false;
-//                while !insert {
-//                    if cursor.peek_next().is_none() {
-//                        insert == true;
-//                    } else {
-//                        let result = find_line_place(event.point, event.edge_left.line, *cursor.peek_next().unwrap());
-//                        if result == Comparator::Greater {
-//                            cursor.next();
-//                        } else if result == Comparator::Less {
-//                            // if its less then the next we need to see if it is also greater then the previous
-//                            if cursor.peek_prev().is_none() {
-//                                insert = true;
-//                            } else {
-//                                let result2 = find_line_place(event.point, event.edge_left.line, *cursor.peek_prev().unwrap());
-//                                if result2 == Comparator::Greater {
-//                                    insert == true;
-//                                } else {
-//                                    cursor.prev();
-//                                }
-//                            }
-//                        } else if result == Comparator::Equal {
-//                            // this case means the line is already in our list so we dont add it
-//                            break;
-//                        } else if result == Comparator::Empty {}
-//                    }
-//
-//                }
-//                cursor.insert(sl_edge);
-//            }
             // find the left most point of the edge_left line
             let left = event.edge_left.line.min_x_point().x;
             // create a new node and add it to the list
@@ -456,11 +409,44 @@ pub fn scan(edges: Vec<Edge>) -> Vec<Trapezoid> {
 
         }
 
+
+        // INTERSECT CASE
+        // Move the cursor to the correct position
+        // if there is a previous then we need to make a trapezoid for it
+        //
+
+        /*
+                case: event.type = intersection
+                    if SL_edgeL.deferred_trap->right != null (should be SL_edgeR.edge)
+                        add_to_traps(SL_edgeL, SL.y)
+                    SL_edgeL.deferred_trap->right = SL_edgeR.deferred_trap->right
+                    SL_edgeL.deferred_trap.top = SL.y
+                    if SL_edgeR.deferred_trap->right != null
+                        add_to_traps(SL_edgeR, SL.y)
+                    SL_edgeR.deferred_trap->right = SL_edgeL->edge
+                    SL_edgeR.deferred_trap.top = SL.y
+                    if SL_edgeL->prev.deferred_trap->right != null (should be SL_edgeL.edge)
+                        add_to_traps(SL_edgeL->prev, SL.y)
+                    SL_edgeL->prev.deferred_trap->right = SL_edgeR->edge
+                    SL_edgeL->prev.deferred_trap.top = SL.y
+                    swap SL_edgeL and SL_edgeR:
+                        SL_edgeL->prev->next = SL_edgeR (if L->prev == null, SL->head = R)
+                        SL_edgeR->prev = SL_edgeL->prev
+                        SL_edgeL->next = SL_edgeR->next
+                        SL_edgeL->prev = SL_edgeR
+                        SL_edgeR->next->prev = SL_edgeL (if R->next != null)
+                        SL_edgeR->next = SL_edgeL
+                    check if SL_edgeR.prev intersects with SL_edgeR
+                        add intersection to EQ
+                    check if SL_edgeL.next intersects with SL_edgeL
+                        add intersection to EQ
+        */
+
         // print the Scan Line List
         cursor.reset();
         let mut index = 0;
         while cursor.peek_next().is_some(){
-            println!("Index {}:  y:{}", index, cursor.peek_next().unwrap().top);
+            println!("Index {}:  y:{}", index, cursor.peek_next().unwrap().trap_top);
             index = index + 1;
             cursor.next();
         }
