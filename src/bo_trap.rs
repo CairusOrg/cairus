@@ -521,12 +521,67 @@ pub fn find_line_place(point: Point, line: LineSegment, next_sl_edge : ScanLineE
 
 }
 
+/*
+add_to_traps(SL_edge edge, float bot, int mask, traps *traps)
+    //mask is 0xFFFFFFFF if using winding rule, 0x1 if using even/odd rule
+    //only output traps with positive area
+    if edge.deferred_trap.top >= bot
+        return
+    //count edge directions for ray right to infinity
+    in_out = 0
+    pos = edge.deferred_trap->right (or pos = edge->next? should be same, no?)
+    while (pos != null)
+        in_out += pos.dir
+        pos = pos.deferred_trap->right (or pos = pos->next? should be same, no?)
+    //in_out & mask is zero means do not fill (0 or even)
+    if in_out & mask != 0
+        LineSegment left, right
+        left = edge->LineSegment
+        right = edge.deferred_trap->right->LineSegment
+        traps_push(left, right, edge.deferred_trap.top, bot)
+*/
+
+fn add_to_traps(cursor: &mut Cursor<ScanLineEdge>, bottom: f32, mask: i32, traps: &mut Vec<Trapezoid>) {
+    // We unwrap because it should be considered a bug if this gets called when the value is
+    // incorrect
+    let mut sl_edge = cursor.next().unwrap();
+
+    if sl_edge.top >= bottom {
+        return;
+    }
+
+    let mut right = cursor.peek_next().unwrap();
+
+    let mut in_out = 0;
+    while let Some(edge) = cursor.next() {
+        in_out += edge.edge.direction;
+    }
+
+    in_out &= mask;
+
+    // Add a trapezoid if in_out isn't zero
+    if in_out != 0 {
+        let left = sl_edge.line;
+        let right = right.line;
+        let top_y = sl_edge.top;
+        trap = bo_trap_from_lines(&left, &right, top_y, bottom);
+        traps.push(trap)
+    }
+}
+
+fn bo_trap_from_lines(left: &LineSegment,
+                      right: &LineSegment,
+                      top: f32,
+                      bottom: f32) -> Trapezoid {
+  unimplemented!();
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use common_geometry::{LineSegment, Point, Edge};
     use std::cmp::Ordering;
+    use trapezoid_rasterizer::Trapezoid;
 
     fn create_edge(x1: f32, y1: f32, x2: f32, y2:f32) -> Edge{
         let mut top = y1;
@@ -669,5 +724,28 @@ mod tests {
         ];
 
         scan(edges);
+    }
+
+    // Tests that add_to_traps doesn't change the traps vector if the ScanLineEdge's top
+    // is greater than the `bottom` arg passed in.
+    #[test]
+    fn add_to_traps_edge_top_gt_bottom() {
+        // Setup
+        let edge = ScanLineEdge {
+            top: 1.,
+            left: 0.,
+            line: LineSegment::new(0., 0., 0., 0.)
+        };
+
+        // bottom is less than edge.top!
+        let bottom = 0.;
+        let mask = 1;
+        let mut traps: Vec<Trapezoid> = Vec::new();
+        let mut sl_list: LinkedList<ScanLineEdge> = LinkedList::new();
+        sl_list.push_front(edge);
+        let mut cursor = sl_list.cursor();
+        // Call
+        add_to_traps(&mut cursor, bottom, mask, &mut traps);
+        assert_eq!(traps.len(), 0);
     }
 }
