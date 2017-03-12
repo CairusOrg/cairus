@@ -786,8 +786,6 @@ mod tests {
         sl_list.push_front(edge1);
         sl_list.push_back(edge2);
 
-
-        // bottom is less than edge.top!
         let bottom = 20.;
         let mask = 1;
         let mut traps: Vec<Trapezoid> = Vec::new();
@@ -798,5 +796,4 @@ mod tests {
         add_to_traps(&mut cursor, bottom, mask, &mut traps);
         assert!(traps.len() > 0);
     }
-
 }

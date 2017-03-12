@@ -36,6 +36,8 @@
 //!
 //! Currently the only types here are for representing color.
 
+use common_geometry::Point;
+
 /// Represents color with red, green, blue, and alpha channels.
 #[derive(Debug, Clone, Copy)]
 pub struct Rgba {
@@ -103,6 +105,40 @@ impl PartialEq for Rgba {
         self.red == other.red && self.green == other.green &&
         self.blue == other.blue && self.alpha == other.alpha
     }
+}
+
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct Pixel {
+    pub x: i32,
+    pub y: i32,
+}
+
+impl Pixel {
+    /// Returns a Vec of Points whose coordinates are the points to be sampled for anti-aliasing.
+    pub fn sample_points(&self) -> Vec<Point> {
+        let mut points = Vec::new();
+        let x_increment = 1. / 16.;
+        let y_increment = 1. / 14.;
+        for subgrid_x in 0..17 {
+            let x = self.x as f32 + (subgrid_x as f32 * x_increment);
+            for subgrid_y in 0..15 {
+                let y =  self.y as f32 + (subgrid_y as f32 * y_increment);
+                let point = Point{x: x, y: y};
+                points.push(point);
+            }
+        }
+
+        points
+    }
+
+    pub fn new(x: i32, y: i32) -> Pixel {
+        Pixel {x: x, y: y}
+    }
+}
+
+pub trait IntoPixels {
+    fn into_pixels(&self) -> Vec<Pixel>;
 }
 
 #[cfg(test)]
