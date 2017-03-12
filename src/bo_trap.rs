@@ -316,6 +316,8 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
         // Process Event
         // START CASE
         if event.event_type == EventType::Start{
+            println!("Starting START case for point: ({},{})", event.point.x, event.point.y);
+            println!("Sweep Line is: {}", sweep_line );
             // find the left most point of the edge_left line
             let left = event.edge_left.line.min_x_point().x;
             // create a new node and add it to the list
@@ -362,13 +364,14 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
                 }
 
             }
-
-            println!("Added Start to the sweep line at y: {}", sweep_line);
-            println!("current x, y value: {} {}",cursor.next().unwrap().edge.line.current_x_for_y(sweep_line), sweep_line );
+            println!("Finished START Case");
+         //   println!("current x, y value: {} {}",cursor.next().unwrap().edge.line.current_x_for_y(sweep_line), sweep_line );
         }
 
         // END CASE
         else if event.event_type == EventType::End {
+            println!("Starting END case for point: ({},{})", event.point.x, event.point.y);
+            println!("Sweep Line is: {}", sweep_line );
             // when we call remove on the cursor it will remove the next element.
             // when we call cursor.next or cursor.prev it moves the cursor left or right
             // when we call cursor.peek_left or right it gets the next element without moving the cursor
@@ -385,39 +388,51 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
             while result != Comparator::Equal {
                 // Not sure if i need this. could if the cursor is at the end of the list
                 if cursor.peek_next().is_none() {
-                    println!("Next is Empty");
+//                    println!("Next is Empty");
                     cursor.prev();
                     continue;
                 }
                 result = find_line_place(event.point, event.edge_left, *cursor.peek_next().unwrap());
 
                 if result == Comparator::Equal {
-                    println!("Next is Equal");
+ //                   println!("Next is Equal");
                     break;
                 } else if result == Comparator::Greater {
-                    println!("Next is Greater");
+ //                   println!("Next is Greater");
                     cursor.prev();
                 } else if result == Comparator::Less {
-                    println!("Next is Less");
+ //                   println!("Next is Less");
                     cursor.next();
                 } else {
-                    println!("Failed to remove a SL_Edge from the List");
+  //                  println!("Failed to remove a SL_Edge from the List");
                     break;
                 }
 
             }
+            let line = cursor.peek_next().unwrap().edge.line.clone();
+            println!("Cursor Next point is: ({},{})", line.current_x_for_y(sweep_line), sweep_line);
+
             // **** CREATE TRAPEZOIDS *****
             // we will be at the point of removal here, so we need to see about building trapezoids
             // before and after this point before we remove it. We will want to update the TOP of the
             // node before if we create a trapezoid
             if cursor.peek_prev().is_some() {
                 // passing -1 for mask as winding rule default 0xFFFFFFFF
+                println!("Calling add_to_traps for trap before current cursor");
                 add_to_traps(&mut cursor, sweep_line, -1 , &mut traps);
                 cursor.peek_prev().unwrap().trap_top = sweep_line;
             }
             if cursor.peek_next().is_some() {
                 cursor.next();
                 if cursor.peek_next().is_some() {
+                    if cursor.peek_prev().is_none() {
+                        println!("HOW IS THIS POSSIBLE??");
+                    }
+                    println!("Calling add_to_traps for trap after current cursor");
+                    let line_before = cursor.peek_prev().unwrap().edge.line.clone();
+                    let line_after = cursor.peek_next().unwrap().edge.line.clone();
+                    println!("   Line Previous point is: ({},{})", line_before.current_x_for_y(sweep_line), sweep_line);
+                    println!("   Line Next point is: ({},{})", line_after.current_x_for_y(sweep_line), sweep_line);
                     // passing -1 for mask as winding rule default 0xFFFFFFFF
                     add_to_traps(&mut cursor, sweep_line, -1, &mut traps);
                     cursor.peek_prev().unwrap().trap_top = sweep_line;
@@ -425,6 +440,7 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
                 cursor.prev();
             }
             cursor.remove();
+
             // ****** CHECK FOR INTERSECTIONS ****
             // After we remove it we will want to see if there is any intersections with the lines
             // before and after the cursor. If yes, and it happens after our current y we add it to
@@ -433,7 +449,7 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
                 check_for_intersection(sweep_line, &mut cursor, &mut events);
             }
 
-
+            println!("Finished END Case");
         }
 
 
@@ -471,15 +487,18 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
 
         // print the Sweep Line List
         cursor.reset();
+        println!("***Printing Sweep Line List***");
         let mut index = 0;
         while cursor.peek_next().is_some(){
-            println!("Index {}:  y:{}", index, cursor.peek_next().unwrap().trap_top);
+            let line = cursor.peek_next().unwrap().edge.line.clone();
+            println!("     Index {}:  point:({},{})", index, line.current_x_for_y(sweep_line), cursor.peek_next().unwrap().trap_top) ;
             index = index + 1;
             cursor.next();
         }
+        println!("********");
 
-
-        println!("Sweep Line: {}", sweep_line);
+        println!("EVENT COMPLETE at sweep: {}", sweep_line);
+        println!("")
     }
     // Return the list of trapezoids
     traps
@@ -500,19 +519,23 @@ pub fn check_for_intersection(sweep_line: f32, cursor: &mut Cursor<SweepLineEdge
         let point = result.unwrap();
         // if the event has already happened, do not add it
         if point.y < sweep_line {
+            println!("Ending Intersection Checks: No Intersection");
             return;
         }
         // if the intersection happens at the end of either line, do not add it
         if point == cursor.peek_prev().unwrap().edge.line.max_y_point() {
+            println!("Ending Intersection Checks: No Intersection");
             return;
         }
         if point == cursor.peek_next().unwrap().edge.line.max_y_point() {
+            println!("Ending Intersection Checks: No Intersection");
             return;
         }
         // add the intersection
         println!("Adding intersect to events");
         events.push(Event::new_intersection(cursor.peek_prev().unwrap().edge, cursor.peek_next().unwrap().edge, &point));
         events.sort();
+        println!("Ending Intersection Checks: Intersect Added");
     }
 }
 
@@ -534,7 +557,7 @@ pub fn find_line_place(point: Point, edge: Edge, next_sl_edge : SweepLineEdge) -
     // if the lines are the same line we return equal because we have a duplicate
     // will probably need to change this for intersections
     if edge.line == next_line {
-        println!("Lines are equal");
+//        println!("Lines are equal");
         return Comparator::Equal;
     }
     // Get the point on the next line for the current y value we are at since that is how the
@@ -546,19 +569,19 @@ pub fn find_line_place(point: Point, edge: Edge, next_sl_edge : SweepLineEdge) -
     if point.x == next_x {
         // compare the slopes of the lines
         if edge.line.slope() < next_line.slope() {
-            println!("Points are equal, Next slope is greater then Events");
+ //           println!("Points are equal, Next slope is greater then Events");
             return Comparator::Greater;
         }
         else {
-            println!("Points are equal, Next slope is less then Events");
+ //           println!("Points are equal, Next slope is less then Events");
             return Comparator::Less;
         }
         // if the point is not on the nextLine we just need to see if it comes before or after
     } else if point.x < next_x {
-        println!("Next current x is greater then Events point.x");
+ //       println!("Next current x is greater then Events point.x");
         return Comparator::Greater;
     } else {
-        println!("Next current x is less then Events point.x");
+ //       println!("Next current x is less then Events point.x");
         return Comparator::Less;
     }
 
@@ -586,6 +609,10 @@ add_to_traps(SL_edge edge, float bot, int mask, traps *traps)
 // *** QUESTION: Do we need to reset the sl_edge top when we add to the traps so that
 //               the next one continues where the last left off?
 fn add_to_traps(cursor: &mut Cursor<SweepLineEdge>, bottom: f32, mask: i32, traps: &mut Vec<Trapezoid>) {
+    println!("Starting add_to_traps");
+    if cursor.peek_prev().is_none() || cursor.peek_next().is_none() {
+        println!("Error: add_to_traps called when it shouldnt have");
+    }
     // We unwrap because it should be considered a bug if this gets called when the value is
     // incorrect
     let mut sl_edge = *cursor.peek_prev().unwrap();
@@ -597,10 +624,12 @@ fn add_to_traps(cursor: &mut Cursor<SweepLineEdge>, bottom: f32, mask: i32, trap
     let mut right = *cursor.peek_next().unwrap();
     let mut in_out = 0;
     let mut count = 0;
+    println!("   Starting cursor count loop");
     while let Some(edge) = cursor.next() {
         count += 1;
         in_out += edge.edge.direction;
     }
+    println!("   Ending cursor count loop");
 
     in_out &= mask;
 
@@ -614,13 +643,14 @@ fn add_to_traps(cursor: &mut Cursor<SweepLineEdge>, bottom: f32, mask: i32, trap
     }
     //rewind cursor to starting position (+1 because loop advances past end)
     cursor.seek_backward(count+1);
-
+    println!("Ending add_to_traps");
 }
 
 fn bo_trap_from_lines(left: &LineSegment,
                       right: &LineSegment,
                       top: f32,
                       bottom: f32) -> Trapezoid {
+    println!("Starting Create Trap");
     let min_x = left.min_x_point().x.min(right.min_x_point().x);
     let max_x = left.max_x_point().x.min(right.max_x_point().x);
     let top_line = LineSegment::new(min_x, top, max_x, top);
@@ -631,6 +661,7 @@ fn bo_trap_from_lines(left: &LineSegment,
     let bottom_left = bottom_line.intersection(&left).unwrap();
     let bottom_right = bottom_line.intersection(&right).unwrap();
 
+    println!("Ending Create Trap");
     Trapezoid::from_points(top_left, top_right, bottom_left, bottom_right)
 }
 
@@ -787,6 +818,17 @@ mod tests {
 
     #[test]
     fn sweep_test_traps_one() {
+        let edges = vec![
+        create_edge(0., 0., 1., 4.),
+        create_edge(2., 0., 3., 4.),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 1);
+    }
+
+    #[test]
+    fn sweep_test_traps_two() {
         // test needs to be re-worked. It should produce 2 traps with this set of points.
         let edges = vec![
         create_edge(0., 0., 2., 4.),
