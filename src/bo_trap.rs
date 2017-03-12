@@ -210,6 +210,15 @@ impl Event {
             event_type: event_type,
         }
     }
+    // Creates a new Event for an Intersection
+    fn new_intersection(edge_left: Edge, edge_right: Edge, point: &Point) -> Event {
+        Event {
+            point: *point,
+            edge_left: edge_left,
+            edge_right: Some(Box::new(edge_right)),
+            event_type: EventType::Intersection,
+        }
+    }
 }
 
 fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
@@ -334,6 +343,37 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
                 // **** CHECK FOR INTERSECTIONS ****
                 // Check to see if the new edge intersects with the previous or next
                 // if it does after the current sweep line then we add it to our event list.
+                // Check if there is an intersection with the left line, if yes check for interaction
+                if cursor.peek_prev().is_some() {
+                    // gets the point if there is an intersection or none if not.
+                    let point = event.edge_left.line.intersection(&cursor.peek_prev().unwrap().edge.line);
+                    // Add the event if it exists
+                    if point.is_some() {
+                        // add the intersection
+
+                        let should_insert = add_intersection_to_events(sweep_line, point.unwrap(), cursor.peek_prev().unwrap().edge, event.edge_left);
+                        if should_insert {
+                            println!("Adding intersect to events");
+                            events.push(Event::new_intersection(cursor.peek_prev().unwrap().edge, event.edge_left, &point.unwrap()));
+                            events.sort();
+                        }
+                    }
+                }
+                if cursor.peek_next().is_some() {
+                    // gets the point if there is an intersection or none if not.
+                    let point = event.edge_left.line.intersection(&cursor.peek_next().unwrap().edge.line);
+                    // Add the event if it exists
+                    if point.is_some() {
+                        // add the intersection
+                        let should_insert = add_intersection_to_events(sweep_line, point.unwrap(), event.edge_left, cursor.peek_next().unwrap().edge);
+                        if should_insert {
+                            println!("Adding intersect to events");
+                            events.push(Event::new_intersection(event.edge_left, cursor.peek_next().unwrap().edge, &point.unwrap()));
+                            events.sort();
+                        }
+                    }
+                }
+
                 cursor.insert(sl_edge);
             }
 
@@ -346,7 +386,6 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
 
         // END CASE
         else if event.event_type == EventType::End {
-        // how do we know which event to remove?
             // when we call remove on the cursor it will remove the next element.
             // when we call cursor.next or cursor.prev it moves the cursor left or right
             // when we call cursor.peek_left or right it gets the next element without moving the cursor
@@ -459,6 +498,24 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
 //    println!("SLL: {:?}", sl_list);
 
    Vec::new()
+}
+
+// Checks to see if we should add the intersection to the event list
+pub fn add_intersection_to_events(sweep_line: f32, point: Point, left: Edge, right: Edge) -> bool {
+    // if the event has already happened, do not add it
+    if point.y < sweep_line {
+        return false;
+    }
+    // if the intersection happens at the end of either line, do not add it
+    if point == left.line.max_y_point() {
+        return false;
+    }
+    if point == right.line.max_y_point() {
+        return false;
+    }
+
+    // if we havent returned yet we need to add it to our list and sort
+    return true
 }
 
 #[derive(Eq, PartialEq, Debug)]
