@@ -491,7 +491,8 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
         let mut index = 0;
         while cursor.peek_next().is_some(){
             let line = cursor.peek_next().unwrap().edge.line.clone();
-            println!("     Index {}:  point:({},{})", index, line.current_x_for_y(sweep_line), cursor.peek_next().unwrap().trap_top) ;
+            let top = cursor.peek_next().unwrap().trap_top;
+            println!("     Index {}:  x:{}  Top:({},{})", index, line.current_x_for_y(sweep_line), line.current_x_for_y(top), top) ;
             index = index + 1;
             cursor.next();
         }
