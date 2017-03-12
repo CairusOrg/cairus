@@ -373,12 +373,8 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
                         }
                     }
                 }
-
                 cursor.insert(sl_edge);
             }
-
-
-
 
             println!("Added Start to the sweep line at y: {}", sweep_line);
             println!("current x, y value: {} {}",cursor.next().unwrap().edge.line.current_x_for_y(sweep_line), sweep_line );
@@ -446,6 +442,21 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
             // After we remove it we will want to see if there is any intersections with the lines
             // before and after the cursor. If yes, and it happens after our current y we add it to
             // our event list.
+            if cursor.peek_prev().is_some() && cursor.peek_next().is_some() {
+                // gets the point if there is an intersection or none if not.
+                let next_line = &cursor.peek_next().unwrap().edge.line.clone();
+                let point = cursor.peek_prev().unwrap().edge.line.intersection(next_line);
+                // Add the event if it exists
+                if point.is_some() {
+                    // add the intersection
+                    let should_insert = add_intersection_to_events(sweep_line, point.unwrap(), cursor.peek_prev().unwrap().edge, cursor.peek_next().unwrap().edge);
+                    if should_insert {
+                        println!("Adding intersect to events");
+                        events.push(Event::new_intersection(cursor.peek_prev().unwrap().edge, cursor.peek_next().unwrap().edge, &point.unwrap()));
+                        events.sort();
+                    }
+                }
+            }
 
 
         }
@@ -495,9 +506,8 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
 
         println!("Sweep Line: {}", sweep_line);
     }
-//    println!("SLL: {:?}", sl_list);
-
-   Vec::new()
+    // Return the list of trapezoids
+    traps
 }
 
 // Checks to see if we should add the intersection to the event list
@@ -782,7 +792,20 @@ mod tests {
         create_edge(0., 1., 6., 6.),
         ];
 
-        sweep(edges);
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 2);
+    }
+
+    #[test]
+    fn sweep_test_traps_one() {
+        // test needs to be re-worked. It should produce 2 traps with this set of points.
+        let edges = vec![
+        create_edge(0., 0., 2., 4.),
+        create_edge(2., 0., 0., 4.),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 1);
     }
 
     // Tests that add_to_traps doesn't change the traps vector if the SweepLineEdge's top
