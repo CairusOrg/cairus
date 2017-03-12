@@ -33,18 +33,13 @@
  *
  */
 
-
-
 use::common_geometry::Point;
 use::context::Context;
 use::status::Status;
 
-
-
 /// Adds a sub-path rectangle of the given width and height to the current path at point (x, y).
 ///
 fn rectangle(mut cairus: Context, x: f32, y:f32, width: f32, height: f32){
-
     if cairus.status == Status::Success {
         Context::move_to(&mut cairus, x, y);
         Context::line_to(&mut cairus, x + width, y);
@@ -57,7 +52,6 @@ fn rectangle(mut cairus: Context, x: f32, y:f32, width: f32, height: f32){
 /// the length of the base is x+base.
 ///
 fn triangle(mut cairus: Context, x: f32, y:f32, base: f32, height: f32){
-
     if cairus.status == Status::Success {
         Context::move_to(&mut cairus, x, y);
         Context::line_to(&mut cairus, x + base, y);
