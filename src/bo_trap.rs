@@ -360,6 +360,7 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
                 if cursor.peek_next().is_some() {
                     check_for_intersection(sweep_line, &mut cursor, &mut events);
                 }
+
             }
 
             println!("Added Start to the sweep line at y: {}", sweep_line);
@@ -487,6 +488,11 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
 // Checks to see if we should add the intersection to the event list
 // Expects the cursor to be between the two lines that we want to check for intersection
 pub fn check_for_intersection(sweep_line: f32, cursor: &mut Cursor<SweepLineEdge>, events: &mut Vec<Event>)  {
+    // Verifies there is a previous and next before we check for intersections
+    if cursor.peek_prev().is_none() || cursor.peek_next().is_none() {
+        return;
+    }
+    println!("Starting Intersection Checks");
     let next_line = &cursor.peek_next().unwrap().edge.line.clone();
     let result = cursor.peek_prev().unwrap().edge.line.intersection(next_line);
     // Add the event if it exists
