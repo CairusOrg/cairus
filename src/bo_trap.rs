@@ -388,6 +388,20 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
             // we will be at the point of removal here, so we need to see about building trapezoids
             // before and after this point before we remove it. We will want to update the TOP of the
             // node before if we create a trapezoid
+            if cursor.peek_prev().is_some() {
+                // passing -1 for mask as winding rule default 0xFFFFFFFF
+                add_to_traps(&mut cursor, sweep_line, -1 , &mut traps);
+                cursor.peek_prev().unwrap().trap_top = sweep_line;
+            }
+            if cursor.peek_next().is_some() {
+                cursor.next();
+                if cursor.peek_next().is_some() {
+                    // passing -1 for mask as winding rule default 0xFFFFFFFF
+                    add_to_traps(&mut cursor, sweep_line, -1, &mut traps);
+                    cursor.peek_prev().unwrap().trap_top = sweep_line;
+                }
+                cursor.prev();
+            }
             cursor.remove();
             // ****** CHECK FOR INTERSECTIONS ****
             // After we remove it we will want to see if there is any intersections with the lines
@@ -518,7 +532,7 @@ add_to_traps(SL_edge edge, float bot, int mask, traps *traps)
 fn add_to_traps(cursor: &mut Cursor<SweepLineEdge>, bottom: f32, mask: i32, traps: &mut Vec<Trapezoid>) {
     // We unwrap because it should be considered a bug if this gets called when the value is
     // incorrect
-    let mut sl_edge = *cursor.next().unwrap();
+    let mut sl_edge = *cursor.peek_prev().unwrap();
 
     if sl_edge.trap_top >= bottom {
         return;
@@ -526,7 +540,9 @@ fn add_to_traps(cursor: &mut Cursor<SweepLineEdge>, bottom: f32, mask: i32, trap
 
     let mut right = *cursor.peek_next().unwrap();
     let mut in_out = 0;
+    let mut count = 0;
     while let Some(edge) = cursor.next() {
+        count += 1;
         in_out += edge.edge.direction;
     }
 
@@ -540,6 +556,9 @@ fn add_to_traps(cursor: &mut Cursor<SweepLineEdge>, bottom: f32, mask: i32, trap
         let trap = bo_trap_from_lines(&left, &right, top_y, bottom);
         traps.push(trap)
     }
+    //rewind cursor to starting position (+1 because loop advances past end)
+    cursor.seek_backward(count+1);
+
 }
 
 fn bo_trap_from_lines(left: &LineSegment,
@@ -732,6 +751,7 @@ mod tests {
         let mut sl_list: LinkedList<SweepLineEdge> = LinkedList::new();
         sl_list.push_front(edge);
         let mut cursor = sl_list.cursor();
+        cursor.next();
         // Call
         add_to_traps(&mut cursor, bottom, mask, &mut traps);
         assert_eq!(traps.len(), 0);
@@ -773,6 +793,7 @@ mod tests {
         let mut traps: Vec<Trapezoid> = Vec::new();
 
         let mut cursor = sl_list.cursor();
+        cursor.next();
         // Call
         add_to_traps(&mut cursor, bottom, mask, &mut traps);
         assert!(traps.len() > 0);
