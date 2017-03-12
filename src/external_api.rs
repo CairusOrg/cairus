@@ -1,8 +1,73 @@
+/*
+ * Cairus - a reimplementation of the cairo graphics library in Rust
+ *
+ * Copyright © 2017 CairusOrg
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it either under the terms of the GNU Lesser General Public
+ * License version 2.1 as published by the Free Software Foundation
+ * (the "LGPL") or, at your option, under the terms of the Mozilla
+ * Public License Version 2.0 (the "MPL"). If you do not alter this
+ * notice, a recipient may use your version of this file under either
+ * the MPL or the LGPL.
+ *
+ * You should have received a copy of the LGPL along with this library
+ * in the file LICENSE-LGPL-2_1; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
+ * You should have received a copy of the MPL along with this library
+ * in the file LICENSE-MPL-2_0
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY
+ * OF ANY KIND, either express or implied. See the LGPL or the MPL for
+ * the specific language governing rights and limitations.
+ *
+ * The Original Code is the cairus graphics library.
+ *
+ * Contributor(s):
+ *  Sara Ferdousi <ferdousi@pdx.edu>
+ *
+ */
+
+
+
 use::common_geometry::Point;
+use::context::Context;
+use::status::Status;
 
-fn move_to(x: f32, y:f32)->Point{
 
-    let currentpoint = Point::create(x, y);
 
-    return currentpoint;
+/// Adds a sub-path rectangle of the given width and height to the current path at point (x, y).
+///
+fn rectangle(mut cairus: Context, x: f32, y:f32, width: f32, height: f32){
+
+    if cairus.status == Status::Success {
+        Context::move_to(&mut cairus, x, y);
+        Context::line_to(&mut cairus, x + width, y);
+        Context::line_to(&mut cairus, x, y + height);
+        Context::line_to(&mut cairus, x + width, y + height);
+    }
+}
+
+/// Adds a sub-path triange of the given height to the current path at point (x, y).
+/// the length of the base is x+base.
+///
+fn triangle(mut cairus: Context, x: f32, y:f32, base: f32, height: f32){
+
+    if cairus.status == Status::Success {
+        Context::move_to(&mut cairus, x, y);
+        Context::line_to(&mut cairus, x + base, y);
+
+        let half = (x + (x+base))/2.0;
+
+        Context::move_to(&mut cairus, x + half, y + height);
+        Context::line_to(&mut cairus, x, y);
+        Context::move_to(&mut cairus, x + half, y + height);
+        Context::line_to(&mut cairus, x + base, y);
+    }
+
 }
