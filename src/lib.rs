@@ -30,7 +30,7 @@
  *
  * Contributor(s):
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
- *
+ *  Evan Smelser <evanjsmelser@gmail.com>
  */
 
 //! The main crate for Cairus.
@@ -53,7 +53,7 @@ mod types;
 pub mod surfaces;
 
 #[allow(dead_code)]
-mod decasteljau;
+mod splines;
 
 #[allow(dead_code)]
 pub mod context;
@@ -62,7 +62,10 @@ pub mod context;
 mod trapezoid_rasterizer;
 
 #[allow(dead_code)]
-mod external_api;
+pub mod common_geometry;
 
 #[allow(dead_code)]
-mod common_geometry;
+pub mod status;
+
+#[allow(dead_code)]
+pub mod path;

@@ -34,7 +34,8 @@
  *
  */
 
-enum Status{
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Status{
 
     Success = 0,
     NoMemory,
