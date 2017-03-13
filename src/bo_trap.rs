@@ -199,7 +199,7 @@ impl Ord for EventType {
 #[derive(Debug)]
 pub struct Event {
     edge_left: Edge,
-    edge_right: Option<Box<Edge>>,
+    edge_right: Vec<Edge>,
     point: Point,
     event_type: EventType
 }
@@ -244,7 +244,7 @@ impl Event {
         Event {
             point: *point,
             edge_left: edge_left,
-            edge_right: None,
+            edge_right: Vec::new(),
             event_type: event_type,
         }
     }
@@ -253,7 +253,7 @@ impl Event {
         Event {
             point: *point,
             edge_left: edge_left,
-            edge_right: Some(Box::new(edge_right)),
+            edge_right: vec![edge_right],
             event_type: EventType::Intersection,
         }
     }
@@ -477,16 +477,60 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
 
                 // move the cursor between the two edges
                 // *** Issue: How do i access the element inside of a BOX? ***
-//                move_cursor_to_line(event.point, event.edge_right.unwrap(), &mut cursor );
-
+                move_cursor_to_line(event.point, *event.edge_right.get(0).unwrap(), &mut cursor );
+                let line_before = cursor.peek_prev().unwrap().edge.line.clone();
+                let line_after = cursor.peek_next().unwrap().edge.line.clone();
+                println!("   Line Previous point is: ({},{})", line_before.current_x_for_y(sweep_line), sweep_line);
+                println!("   Line Next point is: ({},{})", line_after.current_x_for_y(sweep_line), sweep_line);
                 // check for traps before
-                // check for traps after
+                println!("Starting trap checks");
+                cursor.prev();
+                if cursor.peek_prev().is_some() {
+                    add_to_traps(&mut cursor, sweep_line, -1 , &mut traps);
+                    cursor.peek_prev().unwrap().trap_top = sweep_line;
+                }
                 // check for traps between
+                cursor.next();
+                add_to_traps(&mut cursor, sweep_line, -1 , &mut traps);
+                cursor.peek_prev().unwrap().trap_top = sweep_line;
+
+                // check for traps after
+                cursor.next();
+                if cursor.next().is_some() {
+                    add_to_traps(&mut cursor, sweep_line, -1 , &mut traps);
+                    cursor.peek_prev().unwrap().trap_top = sweep_line;
+                }
+                println!("Ending trap checks");
+
+                // move the cursor back between our edges
+                cursor.prev();
+
+                if  cursor.peek_prev().is_none() || cursor.peek_next().is_none() {
+                    println! ("**** ERROR WHAT HAPPENED TO THE CURSOR ****");
+                    move_cursor_to_line(event.point, *event.edge_right.get(0).unwrap(), &mut cursor );
+                }
+                let line_before = cursor.peek_prev().unwrap().edge.line.clone();
+                let line_after = cursor.peek_next().unwrap().edge.line.clone();
+                println!("   Line Previous point is: ({},{})", line_before.current_x_for_y(sweep_line), sweep_line);
+                println!("   Line Next point is: ({},{})", line_after.current_x_for_y(sweep_line), sweep_line);
 
                 // swap
+                let swap_sl_edge = cursor.remove().unwrap();
+                cursor.prev();
+                cursor.insert(swap_sl_edge);
 
                 // check for intersections before set
+                cursor.prev();
+                if cursor.peek_prev().is_some() {
+                    check_for_intersection(sweep_line, &mut cursor, &mut events);
+                }
+                cursor.next();
+
                 // check for intersections after set
+                cursor.next();
+                if cursor.peek_next().is_some() {
+                    check_for_intersection(sweep_line, &mut cursor, &mut events);
+                }
 
                 println!("Finished INTERSECT Case");
             }
@@ -526,7 +570,7 @@ pub fn check_for_intersection(sweep_line: f32, cursor: &mut Cursor<SweepLineEdge
     if result.is_some() {
         let point = result.unwrap();
         // if the event has already happened, do not add it
-        if point.y < sweep_line {
+        if point.y <= sweep_line {
             println!("Ending Intersection Checks: No Intersection");
             return;
         }
@@ -902,7 +946,7 @@ mod tests {
         ];
 
         let traps = sweep(edges);
-        assert_eq!(traps.len(), 1);
+        assert_eq!(traps.len(), 2);
     }
 
     // Tests that add_to_traps doesn't change the traps vector if the SweepLineEdge's top
