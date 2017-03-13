@@ -859,6 +859,7 @@ mod tests {
 
     #[test]
     fn sweep_test_traps_one() {
+        // Expected to make 1 trap with the 2 lines
         let edges = vec![
         create_edge(0., 0., 1., 4.),
         create_edge(2., 0., 3., 4.),
@@ -869,7 +870,22 @@ mod tests {
     }
 
     #[test]
+    fn sweep_test_traps_two_a() {
+        // Expected to make 2 traps with the 3 lines
+        let edges = vec![
+        create_edge(0., 0., 1., 4.),
+        create_edge(2., 0., 3., 4.),
+        create_edge(4., 0., 5., 4.),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 2);
+    }
+
+    #[test]
     fn sweep_test_traps_two() {
+        // Expected to make 2 traps with the 2 lines that cross
+        // need to fix after the Intersection case is complete
         // test needs to be re-worked. It should produce 2 traps with this set of points.
         let edges = vec![
         create_edge(0., 0., 2., 4.),
