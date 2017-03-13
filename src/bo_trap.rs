@@ -692,13 +692,15 @@ fn bo_trap_from_lines(left: &LineSegment,
     println!("Starting Create Trap");
     let min_x = left.min_x_point().x.min(right.min_x_point().x);
     let max_x = left.max_x_point().x.min(right.max_x_point().x);
-    let top_line = LineSegment::new(min_x, top, max_x, top);
-    let bottom_line = LineSegment::new(min_x, bottom, max_x, bottom);
-
-    let top_left = top_line.intersection(&left).unwrap();
-    let top_right = top_line.intersection(&right).unwrap();
-    let bottom_left = bottom_line.intersection(&left).unwrap();
-    let bottom_right = bottom_line.intersection(&right).unwrap();
+//    let top_line = LineSegment::new(min_x, top, max_x, top);
+//    let bottom_line = LineSegment::new(min_x, bottom, max_x, bottom);
+    println!("left line: {:?}", left);
+    println!("right line: {:?}", right);
+    println!("top: {} bottom: {}", top, bottom);
+    let top_left = Point::new(left.current_x_for_y(top),top);
+    let top_right = Point::new(right.current_x_for_y(top),top);
+    let bottom_left = Point::new(left.current_x_for_y(bottom),bottom);
+    let bottom_right = Point::new(right.current_x_for_y(bottom),bottom);
 
     println!("Ending Create Trap");
     Trapezoid::from_points(top_left, top_right, bottom_left, bottom_right)
