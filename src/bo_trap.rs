@@ -422,31 +422,10 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
             // if no then we need to see which direction to move...
             // if our event line is greater then our cursor left line then we need to move right and repeat
             // if our event line is less then our cursor left line then we need to move left
-            let mut result = Comparator::Empty;
-            while result != Comparator::Equal {
-                // Not sure if i need this. could if the cursor is at the end of the list
-                if cursor.peek_next().is_none() {
-//                    println!("Next is Empty");
-                    cursor.prev();
-                    continue;
-                }
-                result = find_line_place(event.point, event.edge_left, *cursor.peek_next().unwrap());
 
-                if result == Comparator::Equal {
- //                   println!("Next is Equal");
-                    break;
-                } else if result == Comparator::Greater {
- //                   println!("Next is Greater");
-                    cursor.prev();
-                } else if result == Comparator::Less {
- //                   println!("Next is Less");
-                    cursor.next();
-                } else {
-  //                  println!("Failed to remove a SL_Edge from the List");
-                    break;
-                }
+            // Move the cursor to before the sweep line edge we wish to delete
+            move_cursor_to_line(event.point, event.edge_left, &mut cursor);
 
-            }
             let line = cursor.peek_next().unwrap().edge.line.clone();
             println!("Cursor Next point is: ({},{})", line.current_x_for_y(sweep_line), sweep_line);
 
@@ -492,9 +471,28 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
 
 
         // INTERSECT CASE
+            else if event.event_type == EventType::Intersection {
+                println!("Starting INTERSECT case for point: ({},{})", event.point.x, event.point.y);
+                println!("Sweep Line is: {}", sweep_line);
+
+                // move the cursor between the two edges
+
+                // check for traps before
+                // check for traps after
+                // check for traps between
+
+                // swap
+
+                // check for intersections before set
+                // check for intersections after set
+
+                println!("Finished INTERSECT Case");
+            }
         // Move the cursor to the correct position
         // if there is a previous then we need to make a trapezoid for it
         //
+
+        // to swap the nodes we can remove the one to the right, move our cursor to previous, then insert the removed one
 
         /*
                 case: event.type = intersection
@@ -584,6 +582,32 @@ pub enum Comparator {
     Less,
     Equal,
     Empty,
+}
+
+// Searches the sweep line list for a line matching the one if the edge
+// point: the current event point
+// edge: the edge we are trying to find a match to
+// cursor: will be set to the position before the edge that is equal
+pub fn move_cursor_to_line(point: Point, edge:Edge, cursor: &mut Cursor<SweepLineEdge> ) {
+    // If we are at the end of the list move one position back so we have something to compare
+    if cursor.peek_next().is_none() {
+        cursor.prev();
+    }
+    let mut result = Comparator::Empty;
+    while result != Comparator::Equal {
+        result = find_line_place(point, edge, *cursor.peek_next().unwrap());
+
+        if result == Comparator::Equal {
+            break;
+        } else if result == Comparator::Greater {
+            cursor.prev();
+        } else if result == Comparator::Less {
+            cursor.next();
+        } else {
+            break;
+        }
+    }
+
 }
 
 // need to rename function. it will compare a line to the next one in the list
@@ -883,7 +907,21 @@ mod tests {
     }
 
     #[test]
-    fn sweep_test_traps_two() {
+    fn sweep_test_traps_two_b() {
+        // Expected to make 2 traps with the 4 lines because of the winding rule
+        let edges = vec![
+        create_edge(0., 0., 1., 7.),
+        create_edge(2., 0., 3., 6.),
+        create_edge(4., 0., 5., 5.),
+        create_edge(6., 0., 7., 4.),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 2);
+    }
+
+    #[test]
+    fn sweep_test_intersect_two() {
         // Expected to make 2 traps with the 2 lines that cross
         // need to fix after the Intersection case is complete
         // test needs to be re-worked. It should produce 2 traps with this set of points.
