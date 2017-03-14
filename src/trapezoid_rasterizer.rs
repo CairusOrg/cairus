@@ -205,13 +205,20 @@ impl IntoPixels for Trapezoid {
         let mut pixels = Vec::new();
         let min_y = outline_pixels[0].y;
         let max_y = outline_pixels[outline_pixels.len() - 1].y + 1;
-        for y in min_y..max_y {
-            for x in minmap[&y]..(maxmap[&y] + 1) {
-                let pixel = Pixel{x: x, y: y};
+        for (outer_idx, y) in (min_y..max_y).enumerate() {
+            if outer_idx == 0 {
+                continue;
+            }
+            for (inner_idx, x) in (minmap[&y]..(maxmap[&y] + 1)).enumerate() {
+                if inner_idx == 0 {
+                    continue;
+                }
+                let pixel = Pixel{x: x, y: y, is_edge: false};
                 pixels.push(pixel);
             }
         }
 
+        pixels.append(&mut outline_pixels);
         pixels
     }
 }
@@ -318,12 +325,15 @@ pub fn mask_from_trapezoids(trapezoids: &Vec<Trapezoid>, width: usize, height: u
     for trapezoid in trapezoids {
         for pixel in trapezoid.into_pixels() {
             let mut successes = 0;
-            for sample_point in pixel.sample_points() {
-                if trapezoid.contains_point(&sample_point) {
-                    successes +=1;
+            if pixel.is_edge() {
+                for sample_point in pixel.sample_points() {
+                    if trapezoid.contains_point(&sample_point) {
+                        successes += 1;
+                    }
                 }
+            } else {
+                successes = 255;
             }
-
             let (x, y) = (pixel.x as usize, pixel.y as usize);
             match mask.get_mut(x, y) {
                 Some(mut rgba) => {
