@@ -179,6 +179,14 @@ impl ImageSurface {
         self.base.get_mut(position)
     }
 
+    pub fn get_with_index(&self, idx: usize) -> Option<&Rgba> {
+        self.base.get(idx)
+    }
+
+    pub fn get_mut_with_index(&mut self, idx: usize) -> Option<&mut Rgba> {
+        self.base.get_mut(idx)
+    }
+
     fn calculate_position(width: usize, x: usize, y: usize) -> usize {
         y.wrapping_mul(width).wrapping_add(x)
     }
