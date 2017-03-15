@@ -240,7 +240,6 @@ impl<'a> Context<'a> {
             self.line_to(x + half, y + height);
             self.line_to(x, y);
         }
-
     }
 }
 
