@@ -43,6 +43,7 @@ use operators::fetch_operator;
 use status::Status;
 use path::Path;
 use common_geometry::Slope;
+use common_geometry::Point;
 
 /// Struct defined for context
 pub struct Context<'a>{
@@ -63,7 +64,7 @@ impl<'a> Context<'a> {
             target: target,
             operator: Operator::Over,
             status: Status::Success,
-            path: Path::create() 
+            path: Path::create()
         }
     }
 
@@ -124,22 +125,22 @@ impl<'a> Context<'a> {
     }
 
     ///Implementation of user facing path related functions
-    
-    ///Clears the current path. 
+
+    ///Clears the current path.
     ///After this call there will be no path and the current point will be set t.
     pub fn new_path(&mut self) -> Status {
         //let mut status = Status::Success;
         if self.status != Status::Success {
             return Status::InvalidPathData;
         }
-        
+
         let status = self.path.new_path();
         if status != Status::Success {
             self.set_error(status);
         }
-        self.status        
+        self.status
     }
-    
+
     ///new_sub_path
     ///
     ///Begin a new sub-path. Note that the existing path is not
@@ -158,14 +159,14 @@ impl<'a> Context<'a> {
         if self.status != Status::Success {
             return Status::InvalidPathData;
         }
-        
+
         let status = self.path.new_sub_path();
         if status != Status::Success {
             self.set_error(status);
         }
         self.status
     }
-    
+
     ///move_to
     ///
     ///Begin a new sub-path. After this call the current point will be (x, y).
@@ -174,14 +175,14 @@ impl<'a> Context<'a> {
         if self.status != Status::Success {
             return Status::InvalidPathData;
         }
-        
+
         let status = self.path.move_to(x, y);
         if status != Status::Success {
             self.set_error(status);
         }
         self.status
     }
-    
+
     ///line_to
     ///
     ///Adds a line to the path from the current point to position (x, y) in user-space coordinates.
@@ -191,7 +192,7 @@ impl<'a> Context<'a> {
         if self.status != Status::Success {
             return Status::InvalidPathData;
         }
-        
+
         let status = self.path.line_to(x, y);
         if status != Status::Success {
             self.set_error(status);
@@ -211,7 +212,7 @@ impl<'a> Context<'a> {
         if self.status != Status::Success {
             return Status::InvalidPathData;
         }
-        
+
         let status = self.path.curve_to(x1, y1, x2, y2, x3, y3);
         if status != Status::Success {
             self.set_error(status);
@@ -220,18 +221,19 @@ impl<'a> Context<'a> {
     }
 
     /// Adds a sub-path rectangle of the given width and height to the current path at point (x, y).
+    ///Where X represents the top-leftmost X coordinate and Y represents the top-leftmost Y
+    /// coordinate.
     pub fn rectangle(&mut self, x: f32, y:f32, width: f32, height: f32){
         if self.status == Status::Success {
             self.move_to(x, y);
             self.line_to(x + width, y);
             self.line_to(x + width, y + height);
             self.line_to(x, y + height);
-
         }
     }
 
-    /// Adds a sub-path triange of the given height to the current path at point (x, y).
-    /// the length of the base is x+base.
+    /// Adds a sub-path triangle of the given height to the current path at point (x, y).
+    /// the length of the base is x+ base.
     pub fn isoscelestriangle(&mut self, x: f32, y:f32, base: f32, height: f32){
         if self.status == Status::Success {
             self.move_to(x, y);
@@ -240,6 +242,32 @@ impl<'a> Context<'a> {
             self.line_to(x + half, y + height);
             self.line_to(x, y);
         }
+    }
+    /// Adds a sub-path square of sides with dimensions of the given base to the current path
+    /// at point (x, y). Where X represents the top-leftmost X coordinate and Y represents the top-
+    /// leftmost Y coordinate.
+    pub fn square(&mut self, x: f32, y:f32, base: f32) -> Status {
+        if self.status != Status::Success {
+            self.move_to(x, y);
+            self.line_to(x + base, y);
+            self.line_to(x + base, y + base);
+            self.line_to(x, y + base);
+            self.line_to(x, y);
+            //self.close_path;
+        }
+        self.status
+    }
+
+    /// Adds a sub-path triangle given three point coordinates, a (x, y) , b (x, y) and c (x, y).
+    pub fn triangle(&mut self, a: Point, b: Point, c: Point) -> Status {
+        if self.status != Status::Success {
+                self.move_to(a.x, a.y);
+                self.line_to(b.x, b.y);
+                self.line_to(c.x, c.y);
+                self.line_to(a.x, a.y);
+                //self.close_path;
+            }
+        self.status
     }
 }
 
