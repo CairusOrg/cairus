@@ -42,6 +42,7 @@ use operators::Operator;
 use operators::fetch_operator;
 use status::Status;
 use path::Path;
+use common_geometry::Slope;
 
 /// Struct defined for context
 pub struct Context<'a>{
@@ -216,6 +217,32 @@ impl<'a> Context<'a> {
             self.set_error(status);
         }
         self.status
+    }
+
+    /// Adds a sub-path rectangle of the given width and height to the current path at point (x, y).
+    ///
+    fn rectangle(&mut self, x: f32, y:f32, width: f32, height: f32){
+        if self.status == Status::Success {
+            self.move_to(x, y);
+            self.line_to(x + width, y);
+            self.line_to(x + width, y + height);
+            self.line_to(x, y + height);
+
+        }
+    }
+
+    /// Adds a sub-path triange of the given height to the current path at point (x, y).
+    /// the length of the base is x+base.
+    ///
+    fn isoscelestriangle(&mut self, x: f32, y:f32, base: f32, height: f32){
+        if self.status == Status::Success {
+            self.move_to(x, y);
+            self.line_to(x + base, y);
+            let half = base/2.0;
+            self.line_to(x + half, y + height);
+            self.line_to(x, y);
+        }
+
     }
 }
 

@@ -70,5 +70,5 @@ pub mod status;
 #[allow(dead_code)]
 pub mod path;
 
-#[allow(dead_code)]
-pub mod external_api;
+
+//pub mod external_api;
