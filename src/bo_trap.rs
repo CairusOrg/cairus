@@ -262,44 +262,17 @@ impl Event {
 fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
     let mut events = Vec::new();
     for edge in edges {
+        // Case for horizontal line
         if edge.top == edge.bottom {
-            // Is horizontal
-            if edge.line.point1.x < edge.line.point2.x {
-                // let start_event = Event::new();
-                events.push(Event::new(edge,
-                                       &Point::new(edge.line.point1.x, edge.line.point1.y),
-                                       EventType::Start));
-                events.push(Event::new(edge,
-                                       &Point::new(edge.line.point2.x, edge.line.point2.y),
-                                       EventType::End));
-            }
-            else {
-                events.push(Event::new(edge,
-                                       &Point::new(edge.line.point2.x, edge.line.point2.y),
-                                       EventType::Start ));
-                events.push(Event::new(edge,
-                                       &Point::new(edge.line.point1.x, edge.line.point1.y),
-                                       EventType::End ));
-            }
-        }
-
-        if edge.top == edge.line.point1.y {
-            // Point1 is start event
-            events.push(Event::new(edge,
-                                   &Point::new(edge.line.point1.x, edge.line.point1.y),
-                                   EventType::Start ));
-            events.push(Event::new(edge,
-                                   &Point::new(edge.line.point2.x, edge.line.point2.y),
-                                   EventType::End ));
-
+            let start_point = edge.line.min_x_point();
+            let end_point = edge.line.max_x_point();
+            events.push(Event::new(edge, &start_point, EventType::Start));
+            events.push(Event::new(edge, &end_point, EventType::End));
         } else {
-            // Point2 is start event
-            events.push(Event::new(edge,
-                                   &Point::new(edge.line.point2.x, edge.line.point2.y),
-                                   EventType::Start ));
-            events.push(Event::new(edge,
-                                   &Point::new(edge.line.point1.x, edge.line.point1.y),
-                                   EventType::End ));
+            let start_point = edge.line.min_y_point();
+            let end_point = edge.line.max_y_point();
+            events.push(Event::new(edge, &start_point, EventType::Start));
+            events.push(Event::new(edge, &end_point, EventType::End));
         }
     }
     events.sort();
@@ -604,6 +577,7 @@ pub enum Comparator {
 // edge: the edge we are trying to find a match to
 // cursor: will be set to the position before the edge that is equal
 pub fn move_cursor_to_line(point: Point, edge:Edge, cursor: &mut Cursor<SweepLineEdge> ) {
+    println!("Starting move_cursor to point");
     // If we are at the end of the list move one position back so we have something to compare
     if cursor.peek_next().is_none() {
         cursor.prev();
@@ -622,7 +596,7 @@ pub fn move_cursor_to_line(point: Point, edge:Edge, cursor: &mut Cursor<SweepLin
             break;
         }
     }
-
+    println!("Ending move_cursor to point");
 }
 
 // need to rename function. it will compare a line to the next one in the list
@@ -834,7 +808,7 @@ mod tests {
 
         event_list.sort();
         assert_eq!(event_list.get(0).unwrap().point.y, 1.);
-        assert_eq!(event_list.get(1).unwrap().point.y, 1.);
+        assert_eq!(event_list.get(1).unwrap().point.y, 2.);
         assert_eq!(event_list.get(2).unwrap().point.y, 3.);
 
     }
@@ -928,6 +902,20 @@ mod tests {
         assert_eq!(event_list.get(5).unwrap().event_type, EventType::End);
     }
 
+    #[test]
+    fn event_list_from_edges_sorted_horizontal_line() {
+        // Verify event list events have the correct start/end types
+        let edges = vec![
+        create_edge(1., 4., 3., 4., 1),
+        ];
+
+        let event_list = event_list_from_edges(edges);
+        assert_eq!(event_list.get(0).unwrap().point.x, 1.);
+        assert_eq!(event_list.get(0).unwrap().event_type, EventType::Start);
+        assert_eq!(event_list.get(1).unwrap().point.x, 3.);
+        assert_eq!(event_list.get(1).unwrap().event_type, EventType::End);
+    }
+
 
     #[test]
     fn event_constructor() {
@@ -949,6 +937,17 @@ mod tests {
 
         let traps = sweep(edges);
         assert_eq!(traps.len(), 2);
+    }
+
+    #[test]
+    fn sweep_test_traps_none() {
+        // Verify that a single line will not create traps
+        let edges = vec![
+        create_edge(0., 0., 1., 4., 1),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 0);
     }
 
     #[test]
@@ -980,21 +979,19 @@ mod tests {
     fn sweep_test_traps_two_b() {
         // Expected to make 2 traps with the 4 lines because of the winding rule
         let edges = vec![
-        create_edge(0., 0., 1., 7., 1),
-        create_edge(2., 0., 3., 6., 1),
-        create_edge(4., 0., 5., 5., 1),
-        create_edge(6., 0., 7., 4., 1),
+        create_edge(0., 0., 1., 4., 1),
+        create_edge(2., 0., 3., 4., -1),
+        create_edge(4., 0., 5., 4., 1),
+        create_edge(6., 0., 7., 4., -1),
         ];
 
         let traps = sweep(edges);
- //       assert_eq!(traps.len(), 2);
+        assert_eq!(traps.len(), 2);
     }
 
     #[test]
     fn sweep_test_intersect_two() {
         // Expected to make 2 traps with the 2 lines that cross
-        // need to fix after the Intersection case is complete
-        // test needs to be re-worked. It should produce 2 traps with this set of points.
         let edges = vec![
         create_edge(0., 0., 2., 4., 1),
         create_edge(2., 0., 0., 4., 1),
@@ -1002,6 +999,54 @@ mod tests {
 
         let traps = sweep(edges);
         assert_eq!(traps.len(), 2);
+    }
+
+    #[test]
+    fn sweep_test_vertical_line() {
+        // Test with vertical line. Should not create a trap
+        let edges = vec![
+        create_edge(1., 0., 1., 2., 0),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 0);
+    }
+
+    #[test]
+    fn sweep_test_vertical_lines() {
+        // Test with vertical lines. Should create one trap
+        let edges = vec![
+        create_edge(1., 0., 1., 4., 1),
+        create_edge(2., 1., 2., 3., 1),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 1);
+    }
+
+    #[test]
+    fn sweep_test_horizontal_lines() {
+        // Test with vertical line. Should not create a trap
+        let edges = vec![
+        create_edge(1., 0., 3., 0., 0),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 0);
+    }
+
+    #[test]
+    fn sweep_test_create_box() {
+        // A set of lines that create a box should create a single trap
+        let edges = vec![
+        create_edge(0., 0., 2., 0., 0),
+        create_edge(2., 0., 2., 2., 1),
+        create_edge(2., 2., 0., 2., 0),
+        create_edge(0., 2., 0., 0., -1),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 1);
     }
 
     // Tests that add_to_traps doesn't change the traps vector if the SweepLineEdge's top
