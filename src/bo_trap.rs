@@ -752,7 +752,7 @@ mod tests {
     use std::cmp::Ordering;
     use trapezoid_rasterizer::Trapezoid;
 
-    fn create_edge(x1: f32, y1: f32, x2: f32, y2:f32) -> Edge{
+    fn create_edge(x1: f32, y1: f32, x2: f32, y2:f32, dir:i32) -> Edge{
         let mut top = y1;
         let mut bottom = y2;
         if y1 > y2 {
@@ -764,63 +764,118 @@ mod tests {
             line: LineSegment::new(x1, y1, x2, y2),
             top: top,
             bottom: bottom,
-            direction: 1,
+            direction: dir,
 
         }
     }
 
-    fn create_start_event(x1: f32, y1: f32, x2:f32, y2:f32) -> Event {
-        let edge = create_edge(x1, y1, x2, y2);
+
+
+    fn create_start_event(x1: f32, y1: f32, x2:f32, y2:f32, dir:i32) -> Event {
+        let edge = create_edge(x1, y1, x2, y2, dir);
         let point = Point::new(x1, y1);
         Event::new(edge, &point, EventType::Start)
     }
 
+    fn create_end_event(x1: f32, y1: f32, x2:f32, y2:f32, dir:i32) -> Event {
+        let edge = create_edge(x1, y1, x2, y2, dir);
+        let point = Point::new(x1, y1);
+        Event::new(edge, &point, EventType::End)
+    }
+
+    fn create_intersection_event(x1: f32, y1: f32, x2:f32, y2:f32, dir:i32) -> Event {
+        let edge = create_edge(x1, y1, x2, y2, dir);
+        let point = Point::new(x1, y1);
+        Event::new(edge, &point, EventType::Intersection)
+    }
+
     #[test]
     fn event_compare_y_lesser(){
-        let lesser = create_start_event(0., 0., 3., 3.);
-        let greater = create_start_event(1., 1., 0., 2.);
+        let lesser = create_start_event(0., 0., 3., 3., 1);
+        let greater = create_start_event(1., 1., 0., 2., 1);
         assert_eq!(lesser.cmp(&greater), Ordering::Less);
     }
 
     #[test]
     fn event_compare_y_greater(){
-        let lesser = create_start_event(0., 0., 3., 3.);
-        let greater = create_start_event(1., 1., 0., 2.);
+        let lesser = create_start_event(0., 0., 3., 3., 1);
+        let greater = create_start_event(1., 1., 0., 2., 1);
         assert_eq!(greater.cmp(&lesser), Ordering::Greater);
     }
 
     #[test]
     fn event_compare_x_lesser(){
-        let lesser = create_start_event(0., 0., 0., 0.);
-        let greater = create_start_event(1., 0., 0., 0.);
+        let lesser = create_start_event(0., 0., 0., 0., 1);
+        let greater = create_start_event(1., 0., 0., 0., 1);
         assert_eq!(lesser.cmp(&greater), Ordering::Less);
     }
 
     #[test]
     fn event_compare_x_greater(){
-        let lesser = create_start_event(0., 0., 0., 0.);
-        let greater = create_start_event(1., 0., 0., 0.);
+        let lesser = create_start_event(0., 0., 0., 0., 1);
+        let greater = create_start_event(1., 0., 0., 0., 1);
         assert_eq!(greater.cmp(&lesser), Ordering::Greater);
     }
 
     #[test]
     fn event_compare_type_greater(){
-        let dummy = create_start_event(0., 0., 0., 0.);
+        let dummy = create_start_event(0., 0., 0., 0., 1);
         assert_eq!(dummy.cmp(&dummy), Ordering::Greater);
     }
 
     #[test]
-    fn event_sorting() {
+    fn event_sorting_points() {
+        // Verify that the events are sorted by points
         let mut event_list = vec![
-            create_start_event(0., 2., 9., 9.),
-            create_start_event(0., 1., 9., 9.),
-            create_start_event(0., 3., 9., 9.)
+            create_start_event(0., 2., 9., 9., 1),
+            create_start_event(0., 1., 9., 9., 1),
+            create_start_event(0., 3., 9., 9., 1),
         ];
 
         event_list.sort();
         assert_eq!(event_list.get(0).unwrap().point.y, 1.);
-        assert_eq!(event_list.get(1).unwrap().point.y, 2.);
+        assert_eq!(event_list.get(1).unwrap().point.y, 1.);
         assert_eq!(event_list.get(2).unwrap().point.y, 3.);
+
+    }
+
+    #[test]
+    fn event_sorting_type() {
+        // Verify that the End event precedes the Start event for equal points
+        let mut event_list = vec![
+        create_start_event(0., 2., 9., 9., 1),
+        create_start_event(0., 1., 9., 9., 1),
+        create_start_event(0., 3., 9., 9., 1),
+        create_end_event(0., 1., 9., 9., 1)
+        ];
+
+        event_list.sort();
+        assert_eq!(event_list.get(0).unwrap().point.y, 1.);
+        assert_eq!(event_list.get(0).unwrap().event_type, EventType::End );
+        assert_eq!(event_list.get(1).unwrap().point.y, 1.);
+        assert_eq!(event_list.get(1).unwrap().event_type, EventType::Start );
+
+    }
+
+    #[test]
+    fn event_sorting_intersection() {
+        // Verify that intersection is between start end end event for equal points
+        let mut event_list = vec![
+        create_start_event(0., 2., 9., 9., 1),
+        create_start_event(0., 1., 9., 9., 1),
+        create_start_event(0., 3., 9., 9., 1),
+        create_end_event(0., 1., 9., 9., 1),
+        create_intersection_event(0., 1., 9., 9., 1)
+        ];
+
+        event_list.sort();
+        assert_eq!(event_list.get(0).unwrap().point.y, 1.);
+        assert_eq!(event_list.get(0).unwrap().event_type, EventType::End );
+        assert_eq!(event_list.get(1).unwrap().point.y, 1.);
+        assert_eq!(event_list.get(1).unwrap().event_type, EventType::Intersection );
+        assert_eq!(event_list.get(2).unwrap().point.y, 1.);
+        assert_eq!(event_list.get(2).unwrap().event_type, EventType::Start );
+
     }
 
 
@@ -828,9 +883,9 @@ mod tests {
     fn event_list_from_edges_sorted_test_size() {
         // Verify event list is the correct size
         let edges = vec![
-            create_edge(3., 4., 1., 2.),
-            create_edge(0., 1., 6., 6.),
-            create_edge(0., 0., 5., 5.),
+            create_edge(3., 4., 1., 2., 1),
+            create_edge(0., 1., 6., 6., 1),
+            create_edge(0., 0., 5., 5., 1),
         ];
 
         let event_list = event_list_from_edges(edges);
@@ -841,9 +896,9 @@ mod tests {
     fn event_list_from_edges_sorted_test_order() {
         // Verify event list is the correct order
         let edges = vec![
-        create_edge(3., 4., 1., 2.),
-        create_edge(0., 1., 6., 6.),
-        create_edge(0., 0., 5., 5.),
+        create_edge(3., 4., 1., 2., 1),
+        create_edge(0., 1., 6., 6., 1),
+        create_edge(0., 0., 5., 5., 1),
         ];
 
         let event_list = event_list_from_edges(edges);
@@ -859,9 +914,9 @@ mod tests {
     fn event_list_from_edges_sorted_test_types() {
         // Verify event list events have the correct start/end types
         let edges = vec![
-        create_edge(3., 4., 1., 2.),
-        create_edge(0., 1., 6., 6.),
-        create_edge(0., 0., 5., 5.),
+        create_edge(3., 4., 1., 2., 1),
+        create_edge(0., 1., 6., 6., 1),
+        create_edge(0., 0., 5., 5., 1),
         ];
 
         let event_list = event_list_from_edges(edges);
@@ -876,7 +931,7 @@ mod tests {
 
     #[test]
     fn event_constructor() {
-        let edge = create_edge(0., 0., 0., 0.);
+        let edge = create_edge(0., 0., 0., 0., 1);
         let point = Point{x: 0., y: 0.};
         let event = Event::new(edge, &point, EventType::Start);
         assert_eq!(event.edge_left.line.point1, edge.line.point1);
@@ -887,9 +942,9 @@ mod tests {
     #[test]
     fn sweep_test() {
         let edges = vec![
-        create_edge(0., 0., 5., 5.),
-        create_edge(3., 4., 1., 2.),
-        create_edge(0., 1., 6., 6.),
+        create_edge(0., 0., 5., 5., 1),
+        create_edge(3., 4., 1., 2., 1),
+        create_edge(0., 1., 6., 6., 1),
         ];
 
         let traps = sweep(edges);
@@ -900,8 +955,8 @@ mod tests {
     fn sweep_test_traps_one() {
         // Expected to make 1 trap with the 2 lines
         let edges = vec![
-        create_edge(0., 0., 1., 4.),
-        create_edge(2., 0., 3., 4.),
+        create_edge(0., 0., 1., 4., 1),
+        create_edge(2., 0., 3., 4., 1),
         ];
 
         let traps = sweep(edges);
@@ -912,9 +967,9 @@ mod tests {
     fn sweep_test_traps_two_a() {
         // Expected to make 2 traps with the 3 lines
         let edges = vec![
-        create_edge(0., 0., 1., 4.),
-        create_edge(2., 0., 3., 4.),
-        create_edge(4., 0., 5., 4.),
+        create_edge(0., 0., 1., 4., 1),
+        create_edge(2., 0., 3., 4., 1),
+        create_edge(4., 0., 5., 4., 1),
         ];
 
         let traps = sweep(edges);
@@ -925,10 +980,10 @@ mod tests {
     fn sweep_test_traps_two_b() {
         // Expected to make 2 traps with the 4 lines because of the winding rule
         let edges = vec![
-        create_edge(0., 0., 1., 7.),
-        create_edge(2., 0., 3., 6.),
-        create_edge(4., 0., 5., 5.),
-        create_edge(6., 0., 7., 4.),
+        create_edge(0., 0., 1., 7., 1),
+        create_edge(2., 0., 3., 6., 1),
+        create_edge(4., 0., 5., 5., 1),
+        create_edge(6., 0., 7., 4., 1),
         ];
 
         let traps = sweep(edges);
@@ -941,8 +996,8 @@ mod tests {
         // need to fix after the Intersection case is complete
         // test needs to be re-worked. It should produce 2 traps with this set of points.
         let edges = vec![
-        create_edge(0., 0., 2., 4.),
-        create_edge(2., 0., 0., 4.),
+        create_edge(0., 0., 2., 4., 1),
+        create_edge(2., 0., 0., 4., 1),
         ];
 
         let traps = sweep(edges);
