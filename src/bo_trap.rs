@@ -1025,8 +1025,8 @@ mod tests {
     }
 
     #[test]
-    fn sweep_test_horizontal_lines() {
-        // Test with vertical line. Should not create a trap
+    fn sweep_test_horizontal_line() {
+        // Test with horizontal line. Should not create a trap
         let edges = vec![
         create_edge(1., 0., 3., 0., 0),
         ];
@@ -1038,6 +1038,7 @@ mod tests {
     #[test]
     fn sweep_test_create_box() {
         // A set of lines that create a box should create a single trap
+        // horizontal lines have NaN x values
         let edges = vec![
         create_edge(0., 0., 2., 0., 0),
         create_edge(2., 0., 2., 2., 1),
