@@ -321,6 +321,12 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
     while !events.is_empty() {
         // Get the current event
         let event = events.remove(0);
+
+        // Temporary skip horizontal lines
+        if event.edge_left.line.slope() == 0. {
+            continue;
+        }
+
         // Set the sweep line to the events y value
         let sweep_line = event.point.y;
 
@@ -415,9 +421,6 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
             if cursor.peek_next().is_some() {
                 cursor.next();
                 if cursor.peek_next().is_some() {
-                    if cursor.peek_prev().is_none() {
-                        println!("HOW IS THIS POSSIBLE??");
-                    }
                     println!("Calling add_to_traps for trap after current cursor");
                     let line_before = cursor.peek_prev().unwrap().edge.line.clone();
                     let line_after = cursor.peek_next().unwrap().edge.line.clone();
@@ -516,7 +519,7 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
         while cursor.peek_next().is_some(){
             let line = cursor.peek_next().unwrap().edge.line.clone();
             let top = cursor.peek_next().unwrap().trap_top;
-            println!("     Index {}:  x:{}  Top:({},{})", index, line.current_x_for_y(sweep_line), line.current_x_for_y(top), top) ;
+            println!("     Index {}:  x:{}  Top:({},{}) Slope:{}", index, line.current_x_for_y(sweep_line), line.current_x_for_y(top), top, line.slope()) ;
             index = index + 1;
             cursor.next();
         }
@@ -607,7 +610,6 @@ pub fn move_cursor_to_line(point: Point, edge:Edge, cursor: &mut Cursor<SweepLin
 pub fn find_line_place(point: Point, edge: Edge, next_sl_edge : SweepLineEdge) -> Comparator {
     let next_line = next_sl_edge.edge.line;
     // if the lines are the same line we return equal because we have a duplicate
-    // will probably need to change this for intersections
     if edge.line == next_line {
 //        println!("Lines are equal");
         return Comparator::Equal;
@@ -1044,6 +1046,20 @@ mod tests {
         create_edge(2., 0., 2., 2., 1),
         create_edge(2., 2., 0., 2., 0),
         create_edge(0., 2., 0., 0., -1),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 1);
+    }
+
+    #[test]
+    fn sweep_test_create_trapezoid() {
+        // A set of lines that create a trapezoid should create a single trap
+        let edges = vec![
+        create_edge(0., 0., 2., 0., 0),
+        create_edge(2., 0., 3., 3., 1),
+        create_edge(3., 3., 1., 3., 0),
+        create_edge(1., 3., 0., 0., -1),
         ];
 
         let traps = sweep(edges);
