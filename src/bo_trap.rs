@@ -323,9 +323,9 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
         let event = events.remove(0);
 
         // Temporary skip horizontal lines
-        if event.edge_left.line.slope() == 0. {
-            continue;
-        }
+//        if event.edge_left.line.slope() == 0. {
+//            continue;
+//        }
 
         // Set the sweep line to the events y value
         let sweep_line = event.point.y;
@@ -580,25 +580,32 @@ pub enum Comparator {
 // edge: the edge we are trying to find a match to
 // cursor: will be set to the position before the edge that is equal
 pub fn move_cursor_to_line(point: Point, edge:Edge, cursor: &mut Cursor<SweepLineEdge> ) {
-    println!("Starting move_cursor to point");
+    println!("Starting move_cursor to line");
     // If we are at the end of the list move one position back so we have something to compare
-    if cursor.peek_next().is_none() {
-        cursor.prev();
-    }
-    let mut result = Comparator::Empty;
+//    if cursor.peek_next().is_none() {
+//        cursor.prev();
+//    }
+//    let mut result = Comparator::Empty;
+//    while result != Comparator::Equal {
+//        result = find_line_place(point, edge, *cursor.peek_next().unwrap());
+//
+//        if result == Comparator::Equal {
+//            break;
+//        } else if result == Comparator::Greater {
+//            cursor.prev();
+//        } else if result == Comparator::Less {
+//            cursor.next();
+//        } else {
+//            break;
+//        }
+//    }
+    cursor.reset();
+    let mut result = find_line_place(point, edge, *cursor.peek_next().unwrap());
     while result != Comparator::Equal {
+        cursor.next();
         result = find_line_place(point, edge, *cursor.peek_next().unwrap());
-
-        if result == Comparator::Equal {
-            break;
-        } else if result == Comparator::Greater {
-            cursor.prev();
-        } else if result == Comparator::Less {
-            cursor.next();
-        } else {
-            break;
-        }
     }
+
     println!("Ending move_cursor to point");
 }
 
@@ -839,18 +846,19 @@ mod tests {
         let mut event_list = vec![
         create_start_event(0., 2., 9., 9., 1),
         create_start_event(0., 1., 9., 9., 1),
+        create_intersection_event(0., 0., 0., 0., 1),
         create_start_event(0., 3., 9., 9., 1),
         create_end_event(0., 1., 9., 9., 1),
         create_intersection_event(0., 1., 9., 9., 1)
         ];
 
         event_list.sort();
-        assert_eq!(event_list.get(0).unwrap().point.y, 1.);
-        assert_eq!(event_list.get(0).unwrap().event_type, EventType::End );
         assert_eq!(event_list.get(1).unwrap().point.y, 1.);
-        assert_eq!(event_list.get(1).unwrap().event_type, EventType::Intersection );
+        assert_eq!(event_list.get(1).unwrap().event_type, EventType::End );
         assert_eq!(event_list.get(2).unwrap().point.y, 1.);
-        assert_eq!(event_list.get(2).unwrap().event_type, EventType::Start );
+        assert_eq!(event_list.get(2).unwrap().event_type, EventType::Intersection );
+        assert_eq!(event_list.get(3).unwrap().point.y, 1.);
+        assert_eq!(event_list.get(3).unwrap().event_type, EventType::Start );
 
     }
 
@@ -1048,8 +1056,18 @@ mod tests {
         create_edge(0., 2., 0., 0., -1),
         ];
 
+        let point1 = Point{x: 0., y:0.};
+        let point2 = Point{x: 2., y:0.};
+        let point3 = Point{x: 0., y:2.};
+        let point4 = Point{x: 2., y:2.};
+
         let traps = sweep(edges);
         assert_eq!(traps.len(), 1);
+//        for index in 0..4 {
+//            let line = traps.get(0).unwrap().lines.get(index);
+//            println!("Line: {:?}", line);
+//        }
+//        assert!(traps.get(0).unwrap().contains_point(&point1));
     }
 
     #[test]
@@ -1064,6 +1082,20 @@ mod tests {
 
         let traps = sweep(edges);
         assert_eq!(traps.len(), 1);
+    }
+
+    #[test]
+    fn sweep_test_create_diamond() {
+        // A set of lines that create a trapezoid should create a single trap
+        let edges = vec![
+        create_edge(2., 0., 4., 2., 1),
+        create_edge(4., 2., 2., 4., 1),
+        create_edge(2., 4., 0., 2., 1),
+        create_edge(0., 2., 2., 0., 1),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 2);
     }
 
     // Tests that add_to_traps doesn't change the traps vector if the SweepLineEdge's top

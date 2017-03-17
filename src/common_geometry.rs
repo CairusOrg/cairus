@@ -214,11 +214,19 @@ impl LineSegment {
 
     // return x value of line for a given y value
     // if y is out of range of line, x will be too.
+    // if it is a horizontal line, returns the min x
     // (y2-y1)/(x2-x1) = m
     // (y2-y1) = m(x2-x1)
     // (y2-y1) + mx1 = mx2
     // x2 = (y2-y1)/m + x1
     pub fn current_x_for_y(&self, y: f32) -> f32 {
+        if self.slope() == 0.  && self.min_y_point().y == y {
+            return self.min_x_point().x;
+        }
+        if self.slope() == f32::INFINITY {
+            return self.min_x_point().x;
+        }
+
         let min = self.min_y_point();
         (y - min.y) / self.slope() + min.x
     }
