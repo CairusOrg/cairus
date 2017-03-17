@@ -33,7 +33,7 @@
  *  Evan Smelser <evanjsmelser@gmail.com>
  *  Bobby Eshleman <bobbyeshleman@gmail.com>
  *  Kyle Kneitinger <kyle@kneit.in>
- *
+ *  Courtney Anderson-Clark <anderson@pdx.edu>
  */
 
 use surfaces::ImageSurface;
@@ -44,6 +44,7 @@ use status::Status;
 use path::Path;
 use common_geometry::Slope;
 use common_geometry::Point;
+use std::f32;
 
 /// Struct defined for context
 pub struct Context<'a>{
@@ -122,6 +123,20 @@ impl<'a> Context<'a> {
     }
     pub fn set_error(&mut self, status: Status) {
         self.status = status;
+    }
+
+    fn is_status_success(&self) -> bool {
+        match self.status {
+            Status::Success => return true,
+            _ => return false,
+        }
+    }
+
+    pub fn calculate_relative_point(& mut self, x: f32, y: f32) -> Point{
+        //obtain the current Point
+        let c = self.path.get_current_point();
+        //calculate the offset of the new relative Point using the user's coordinate offsets
+        Point{x: x + c.x, y: y + c.y}
     }
 
     ///Implementation of user facing path related functions
@@ -223,69 +238,125 @@ impl<'a> Context<'a> {
     /// Adds a sub-path rectangle of the given width and height to the current path at point (x, y).
     ///Where X represents the top-leftmost X coordinate and Y represents the top-leftmost Y
     /// coordinate.
-    pub fn rectangle(&mut self, x: f32, y:f32, width: f32, height: f32){
+    pub fn rectangle(&mut self, x: f32, y:f32, width: f32, height: f32) -> Status {
         if self.status == Status::Success {
             self.move_to(x, y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(x + width, y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(x + width, y + height);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(x, y + height);
+            if !self.is_status_success(){
+                return self.status;
+            }
             //self.close_path;
         }
+        self.status
     }
 
     /// Adds a sub-path rectangle of the given width and height to the current path at point (x, y).
     ///Where X represents the relative position of the current point added with the new X offset
     /// and Y represents the relative position of the current point added with the new Y offset
     ///
-    pub fn rel_rectangle(&mut self, x: f32, y:f32, width: f32, height: f32){
+    pub fn rel_rectangle(&mut self, x: f32, y:f32, width: f32, height: f32) -> Status {
 
-        //obtain the current Point
         let c = self.path.get_current_point();
-        //calculate the offset of the new relative Point using the user's coordinate offsets
-        let r = Point{x: x + c.x, y: y + c.y};
+        if c.x.is_nan() || c.y.is_nan() {
+            return Status::InvalidPathData;
+        }
+        //obtain the calculated relative point
+        let r = self.calculate_relative_point(x , y);
 
         //construct the rectangle from the new relative point
         if self.status == Status::Success {
             self.move_to(r.x, r.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(r.x + width, r.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(r.x + width, r.y + height);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(r.x, r.y + height);
+            if !self.is_status_success(){
+                return self.status;
+            }
             //self.close_path;
         }
+        self.status
     }
 
     /// Adds a sub-path triangle of the given height to the current path at point (x, y).
    /// the length of the base is x + base.
-    pub fn isoscelestriangle(&mut self, x: f32, y:f32, base: f32, height: f32){
+    pub fn isoscelestriangle(&mut self, x: f32, y:f32, base: f32, height: f32) -> Status {
         if self.status == Status::Success {
             self.move_to(x, y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(x + base, y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             let half = base/2.0;
             self.line_to(x + half, y + height);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(x, y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             //self.close_path;
         }
+        self.status
     }
 
     /// Adds a sub-path triangle of the given height to the current path at point (x, y).
     /// Where X represents the relative position of the current point added with the new X
     /// offset and Y represents the relative position of the current point added with the new Y
     /// offset. The length of the base is x + base.
-    pub fn rel_isoscelestriangle(&mut self, x: f32, y:f32, base: f32, height: f32){
+    pub fn rel_isoscelestriangle(&mut self, x: f32, y:f32, base: f32, height: f32) -> Status {
 
-        //obtain the current Point
         let c = self.path.get_current_point();
-        //calculate the offset of the new relative Point using the user's coordinate offsets
-        let r = Point{x: x + c.x, y: y + c.y};
+        if c.x.is_nan() || c.y.is_nan() {
+            return Status::InvalidPathData;
+        }
+        //obtain the calculated relative point
+        let r = self.calculate_relative_point(x , y);
 
         if self.status == Status::Success {
             self.move_to(r.x, r.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(r.x + base, r.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             let half = base/2.0;
             self.line_to(r.x + half, r.y + height);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(r.x, r.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             //self.close_path;
         }
+        self.status
     }
     /// Adds a sub-path square of sides with dimensions of the given base to the current path
     /// at point (x, y). Where X represents the top-leftmost X coordinate and Y represents the top-
@@ -293,10 +364,25 @@ impl<'a> Context<'a> {
     pub fn square(&mut self, x: f32, y:f32, base: f32) -> Status {
         if self.status == Status::Success {
             self.move_to(x, y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(x + base, y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(x + base, y + base);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(x, y + base);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(x, y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             //self.close_path;
         }
         self.status
@@ -308,18 +394,35 @@ impl<'a> Context<'a> {
     /// with the new y offset.
     pub fn rel_square(&mut self, x: f32, y:f32, base: f32) -> Status {
 
-        //obtain the current Point
         let c = self.path.get_current_point();
-        //calculate the offset of the new relative Point using the user's coordinate offsets
-        let r = Point{x: x + c.x, y: y + c.y};
+        if c.x.is_nan() || c.y.is_nan() {
+            return Status::InvalidPathData;
+        }
+        //obtain the calculated relative point
+        let r = self.calculate_relative_point(x , y);
 
         //construct the square from the calculated relative position
         if self.status == Status::Success {
             self.move_to(r.x, r.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(r.x + base, r.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(r.x + base, r.y + base);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(r.x, r.y + base);
+            if !self.is_status_success(){
+                return self.status;
+            }
             self.line_to(r.x, r.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             //self.close_path;
         }
         self.status
@@ -335,36 +438,62 @@ impl<'a> Context<'a> {
 
         //draw the triangle VIA the user's coordinates
         if self.status == Status::Success {
-                self.move_to(a.x, a.y);
-                self.line_to(b.x, b.y);
-                self.line_to(c.x, c.y);
-                self.line_to(a.x, a.y);
-                //self.close_path;
+            self.move_to(a.x, a.y);
+            if !self.is_status_success(){
+                return self.status;
             }
+            self.line_to(b.x, b.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
+            self.line_to(c.x, c.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
+            self.line_to(a.x, a.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
+            //self.close_path;
+        }
         //return the status of the context
         self.status
     }
 
     /// Adds a relative sub-path triangle given three point coordinates, (x1, y1) , (x2, y2) and
     /// (x3, y3). Where (x1, y1) are the new offsets to the current point.
-    pub fn rel_triangle(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32) -> Status {
+    pub fn rel_triangle(&mut self, x1: f32, y1: f32, x2: f32,
+                        y2: f32, x3: f32, y3: f32) -> Status {
 
-        //obtain the current Point
         let c = self.path.get_current_point();
-        //calculate the offset of the new relative Point using the user's coordinate offsets
-        let r = Point{x: x1 + c.x, y: y1 + c.y};
+        if c.x.is_nan() || c.y.is_nan() {
+            return Status::InvalidPathData;
+        }
 
-        //convert the coordinates into Points
-        let a = Point{x: r.x, y: r.y};
-        let b = Point{x: x2, y: y2};
-        let c = Point{x: x3, y: y3};
+        //obtain the calculated relative point
+        let r1 = self.calculate_relative_point(x1 , y1);
+        let r2 = self.calculate_relative_point(x2 , y2);
+        let r3 = self.calculate_relative_point(x3, y3);
+
 
         //draw the triangle VIA the user's coordinates
         if self.status == Status::Success {
-            self.move_to(a.x, a.y);
-            self.line_to(b.x, b.y);
-            self.line_to(c.x, c.y);
-            self.line_to(a.x, a.y);
+            self.move_to(r1.x, r1.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
+            self.line_to(r2.x, r2.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
+            self.line_to(r3.x, r3.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
+            self.line_to(r1.x, r1.y);
+            if !self.is_status_success(){
+                return self.status;
+            }
             //self.close_path;
         }
         //return the status of the context
@@ -385,6 +514,8 @@ mod tests{
     use common_geometry::{Point, LineSegment};
     use path::Path;
     use path::Data;
+    use status::Status;
+    use std:: f32;
 
     #[test]
     fn test_get_default_operator(){
@@ -475,23 +606,33 @@ mod tests{
     }
 
     #[test]
+    fn test_rel_square(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+        let r = context.calculate_relative_point(5., 5.);
+
+
+        //Call
+        let square = context.rel_square(5., 5., 5.);
+
+        //Test
+        assert_eq!(context.status, Status::Success);
+        assert_eq!(context.path.get_current_point(), r);
+    }
+
+    #[test]
     fn test_triangle(){
         //Setup
         let mut surface = ImageSurface::create(255,255);
         let mut context = Context::create(&mut surface);
         let a = Point{x: 0., y: 0.};
-        let b = Point{x: 0., y: 1.};
-        let c = Point{x: 1., y: 0.};
-
-        let line1 = LineSegment{point1: a, point2: b};
-        let line2 = LineSegment{point1: b, point2: c};
-        let line3 = LineSegment{point1: c, point2: a};
 
         //Call
         let tri = context.triangle(0., 0., 0., 1., 1., 0.);
 
         //Test
-        //test line segments equate to the ones created by triangle.
-
+        assert_eq!(context.status, Status::Success);
+        assert_eq!(context.path.get_current_point(), a);
     }
 }

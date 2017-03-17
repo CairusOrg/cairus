@@ -31,6 +31,7 @@
  * Contributor(s):
  *  Kyle Kneitinger <kyle@kneit.in>
  *  Evan Smelser <evanjsmelser@gmail.com>
+ *  Courtney Anderson-Clark <anderson@pdx.edu>
  */
 
 //extern crate cairus;
