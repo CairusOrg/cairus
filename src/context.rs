@@ -610,8 +610,8 @@ mod tests{
         //Setup
         let mut surface = ImageSurface::create(255,255);
         let mut context = Context::create(&mut surface);
+        context.move_to(0., 0.);
         let r = context.calculate_relative_point(5., 5.);
-
 
         //Call
         let square = context.rel_square(5., 5., 5.);
