@@ -42,7 +42,6 @@ use operators::Operator;
 use operators::fetch_operator;
 use status::Status;
 use path::Path;
-use common_geometry::Slope;
 use common_geometry::Point;
 use std::f32;
 
@@ -524,11 +523,8 @@ mod tests{
     use types::Rgba;
     use operators::Operator;
     use super::Context;
-    use common_geometry::{Point, LineSegment};
-    use path::Path;
-    use path::Data;
+    use common_geometry::Point;
     use status::Status;
-    use std:: f32;
 
     #[test]
     fn test_get_default_operator(){
@@ -629,7 +625,7 @@ mod tests{
         let rect = context.rectangle(0., 0., 5., 10.);
 
         //Test
-        assert_eq!(context.status, Status::Success);
+        assert_eq!(rect, Status::Success);
         assert_eq!(context.path.get_current_point(), a);
     }
 
@@ -645,8 +641,21 @@ mod tests{
         let rect = context.rel_rectangle(5., 5., 5., 10.);
 
         //Test
-        assert_eq!(context.status, Status::Success);
+        assert_eq!(rect, Status::Success);
         assert_eq!(context.path.get_current_point(), r);
+    }
+
+    #[test]
+    fn test_rel_rectangle_negative(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+
+        //Call
+        let rect = context.rel_rectangle(5., 5., 5., 10.);
+
+        //Test
+        assert_eq!(rect, Status::InvalidPathData);
     }
 
     #[test]
@@ -660,7 +669,7 @@ mod tests{
         let tri = context.isoscelestriangle(0., 0., 10., 10.);
 
         //Test
-        assert_eq!(context.status, Status::Success);
+        assert_eq!(tri, Status::Success);
         assert_eq!(context.path.get_current_point(), a);
     }
 
@@ -676,8 +685,21 @@ mod tests{
         let tri = context.rel_isoscelestriangle(5., 5., 10., 10.);
 
         //Test
-        assert_eq!(context.status, Status::Success);
+        assert_eq!(tri, Status::Success);
         assert_eq!(context.path.get_current_point(), r);
+    }
+
+    #[test]
+    fn test_rel_isoscelestriangle_negative(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+
+        //Call
+        let tri = context.rel_isoscelestriangle(5., 5., 10., 10.);
+
+        //Test
+        assert_eq!(tri, Status::InvalidPathData);
     }
 
     #[test]
@@ -691,7 +713,7 @@ mod tests{
         let square = context.square(0., 0., 5.);
 
         //Test
-        assert_eq!(context.status, Status::Success);
+        assert_eq!(square, Status::Success);
         assert_eq!(context.path.get_current_point(), a);
     }
 
@@ -707,8 +729,21 @@ mod tests{
         let square = context.rel_square(5., 5., 5.);
 
         //Test
-        assert_eq!(context.status, Status::Success);
+        assert_eq!(square, Status::Success);
         assert_eq!(context.path.get_current_point(), r);
+    }
+
+    #[test]
+    fn test_rel_square_negative(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+
+        //Call
+        let square = context.rel_square(5., 5., 5.);
+
+        //Test
+        assert_eq!(square, Status::InvalidPathData);
     }
 
     #[test]
@@ -722,7 +757,7 @@ mod tests{
         let tri = context.triangle(0., 0., 0., 1., 1., 0.);
 
         //Test
-        assert_eq!(context.status, Status::Success);
+        assert_eq!(tri, Status::Success);
         assert_eq!(context.path.get_current_point(), a);
     }
 
@@ -738,7 +773,7 @@ mod tests{
         let tri = context.rel_triangle(5., 5., 0., 1., 1., 0.);
 
         //Test
-        assert_eq!(context.status, Status::Success);
+        assert_eq!(tri, Status::Success);
         assert_eq!(context.path.get_current_point(), r);
     }
 
@@ -747,13 +782,12 @@ mod tests{
         //Setup
         let mut surface = ImageSurface::create(255,255);
         let mut context = Context::create(&mut surface);
-        let r = context.calculate_relative_point(5., 5.);
 
         //Call
         let tri = context.rel_triangle(5., 5., 0., 1., 1., 0.);
 
         //Test
-        //assert_eq!(context.status, Status::InvalidPathData);
+        assert_eq!(tri, Status::InvalidPathData);
     }
 
     #[test]
@@ -772,19 +806,6 @@ mod tests{
     }
 
     #[test]
-    fn test_line_to_negative(){
-        //Setup
-        let mut surface = ImageSurface::create(255,255);
-        let mut context = Context::create(&mut surface);
-
-        //Call
-        context.line_to(0., 0.);
-
-        //Test
-        assert_eq!(context.status, Status::InvalidPathData);
-    }
-
-    #[test]
     fn test_line_to(){
         //Setup
         let mut surface = ImageSurface::create(255,255);
@@ -796,6 +817,19 @@ mod tests{
 
         //Test
         assert_eq!(context.status, Status::Success);
+    }
+
+    #[test]
+    fn test_line_to_negative(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+
+        //Call
+        context.line_to(0., 0.);
+
+        //Test
+        assert_eq!(context.status, Status::InvalidPathData);
     }
 
     #[test]
@@ -812,5 +846,16 @@ mod tests{
         assert_eq!(context.status, Status::Success);
     }
 
+    #[test]
+    fn test_curve_to_negative(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
 
+        //Call
+        context.curve_to(0., 0., 1., 1., 2., 2.);
+
+        //Test
+        assert_eq!(context.status, Status::InvalidPathData);
+    }
 }
