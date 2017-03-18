@@ -239,6 +239,7 @@ impl<'a> Context<'a> {
     ///Where X represents the top-leftmost X coordinate and Y represents the top-leftmost Y
     /// coordinate.
     pub fn rectangle(&mut self, x: f32, y:f32, width: f32, height: f32) -> Status {
+
         if self.status == Status::Success {
             self.move_to(x, y);
             if !self.is_status_success(){
@@ -253,6 +254,10 @@ impl<'a> Context<'a> {
                 return self.status;
             }
             self.line_to(x, y + height);
+            if !self.is_status_success(){
+                return self.status;
+            }
+            self.line_to(x, y);
             if !self.is_status_success(){
                 return self.status;
             }
@@ -289,6 +294,10 @@ impl<'a> Context<'a> {
                 return self.status;
             }
             self.line_to(r.x, r.y + height);
+            if !self.is_status_success(){
+                return self.status;
+            }
+            self.line_to(r.x, r.y);
             if !self.is_status_success(){
                 return self.status;
             }
@@ -345,7 +354,10 @@ impl<'a> Context<'a> {
             if !self.is_status_success(){
                 return self.status;
             }
+
+            //calculate the halfway point of the base
             let half = base/2.0;
+
             self.line_to(r.x + half, r.y + height);
             if !self.is_status_success(){
                 return self.status;
@@ -466,6 +478,7 @@ impl<'a> Context<'a> {
                         y2: f32, x3: f32, y3: f32) -> Status {
 
         let c = self.path.get_current_point();
+        println!("{:?}",c);
         if c.x.is_nan() || c.y.is_nan() {
             return Status::InvalidPathData;
         }
@@ -606,6 +619,83 @@ mod tests{
     }
 
     #[test]
+    fn test_rectangle(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+        let a = Point{x: 0., y: 0.};
+
+        //Call
+        let rect = context.rectangle(0., 0., 5., 10.);
+
+        //Test
+        assert_eq!(context.status, Status::Success);
+        assert_eq!(context.path.get_current_point(), a);
+    }
+
+    #[test]
+    fn test_rel_rectangle(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+        context.move_to(0., 0.);
+        let r = context.calculate_relative_point(5., 5.);
+
+        //Call
+        let rect = context.rel_rectangle(5., 5., 5., 10.);
+
+        //Test
+        assert_eq!(context.status, Status::Success);
+        assert_eq!(context.path.get_current_point(), r);
+    }
+
+    #[test]
+    fn test_isoscelestriangle(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+        let a = Point{x: 0., y: 0.};
+
+        //Call
+        let tri = context.isoscelestriangle(0., 0., 10., 10.);
+
+        //Test
+        assert_eq!(context.status, Status::Success);
+        assert_eq!(context.path.get_current_point(), a);
+    }
+
+    #[test]
+    fn test_rel_isoscelestriangle(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+        context.move_to(0., 0.);
+        let r = context.calculate_relative_point(5., 5.);
+
+        //Call
+        let tri = context.rel_isoscelestriangle(5., 5., 10., 10.);
+
+        //Test
+        assert_eq!(context.status, Status::Success);
+        assert_eq!(context.path.get_current_point(), r);
+    }
+
+    #[test]
+    fn test_square(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+        let a = Point{x: 0., y: 0.};
+
+        //Call
+        let square = context.square(0., 0., 5.);
+
+        //Test
+        assert_eq!(context.status, Status::Success);
+        assert_eq!(context.path.get_current_point(), a);
+    }
+
+    #[test]
     fn test_rel_square(){
         //Setup
         let mut surface = ImageSurface::create(255,255);
@@ -635,4 +725,92 @@ mod tests{
         assert_eq!(context.status, Status::Success);
         assert_eq!(context.path.get_current_point(), a);
     }
+
+    #[test]
+    fn test_rel_triangle(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+        context.move_to(0., 0.);
+        let r = context.calculate_relative_point(5., 5.);
+
+        //Call
+        let tri = context.rel_triangle(5., 5., 0., 1., 1., 0.);
+
+        //Test
+        assert_eq!(context.status, Status::Success);
+        assert_eq!(context.path.get_current_point(), r);
+    }
+
+    #[test]
+    fn test_rel_triangle_negative(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+        let r = context.calculate_relative_point(5., 5.);
+
+        //Call
+        let tri = context.rel_triangle(5., 5., 0., 1., 1., 0.);
+
+        //Test
+        assert_eq!(context.status, Status::InvalidPathData);
+    }
+
+    #[test]
+    fn test_new_path(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+
+        //Call
+        context.new_path();
+
+        //Test
+        assert_eq!(context.status, Status::Success);
+        assert!(context.path.get_current_point().x.is_nan());
+        assert!(context.path.get_current_point().y.is_nan());
+    }
+
+    #[test]
+    fn test_line_to_negative(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+
+        //Call
+        context.line_to(0., 0.);
+
+        //Test
+        assert_eq!(context.status, Status::InvalidPathData);
+    }
+
+    #[test]
+    fn test_line_to(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+        context.move_to(0., 0.);
+
+        //Call
+        context.line_to(1., 1.);
+
+        //Test
+        assert_eq!(context.status, Status::Success);
+    }
+
+    #[test]
+    fn test_curve_to(){
+        //Setup
+        let mut surface = ImageSurface::create(255,255);
+        let mut context = Context::create(&mut surface);
+        context.move_to(0., 0.);
+
+        //Call
+        context.curve_to(0., 0., 1., 1., 2., 2.);
+
+        //Test
+        assert_eq!(context.status, Status::Success);
+    }
+
+
 }
