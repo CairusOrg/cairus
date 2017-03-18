@@ -242,7 +242,7 @@ impl IntoPixels for LineSegment {
         for _ in 0..steps {
             x += x_increment;
             y += y_increment;
-            coordinates.push(Pixel{x: x as i32, y: y as i32});
+            coordinates.push(Pixel{x: x as i32, y: y as i32, is_edge: true});
         }
         coordinates
     }
@@ -513,7 +513,7 @@ mod tests {
             (4, 1),
             (5, 1),
             (6, 1)
-          ].into_iter().map(|(x, y)| Pixel{x: x, y: y}).collect::<Vec<Pixel>>();
+          ].into_iter().map(|(x, y)| Pixel{x: x, y: y, is_edge: true}).collect::<Vec<Pixel>>();
 
           let pixels = line.into_pixels();
           for coordinate in expected {

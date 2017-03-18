@@ -161,6 +161,115 @@ macro_rules! debug_render {
     }
 }
 
+#[cfg(feature = "debug-tesselator")]
+macro_rules! debug_render_traps {
+    ($traps:expr, $color:expr) => {
+        {
+            use $crate::types::Rgba;
+            use surfaces::ImageSurface;
+            use debug_utils::get_target_dir;
+            use types::IntoPixels;
+            use trapezoid_rasterizer::mask_from_trapezoids;
+            use operators::{operator_in, operator_over};
+            use std::env;
+
+            // Get the surface size by finding the positions of the most extreme pixels
+            let mut max_x = 0 ;
+            let mut max_y = 0;
+            for trap in $traps.iter() {
+                for pixel in trap.into_pixels() {
+                    if pixel.x > max_x {
+                        max_x = pixel.x;
+                    }
+
+                    if pixel.y > max_y {
+                        max_y = pixel.y;
+                    }
+                }
+
+            }
+            // Buffer edges by 20 pixels
+            max_x = max_x + 20;
+            max_y = max_y + 20;
+
+            let mut destination = ImageSurface::create(max_x as usize, max_y as usize);
+            let mut mask = mask_from_trapezoids(&$traps, max_x as usize, max_y as usize);
+            let mut source = ImageSurface::create(max_x as usize, max_y as usize);
+
+
+
+            let color =
+                match $color.as_ref() {
+                    "red" => Rgba{red: 1., green: 0., blue: 0., alpha: 1.},
+                    "blue" => Rgba{red: 0., green: 0., blue: 1., alpha: 1.},
+                    "green" => Rgba{red: 0., green: 1., blue: 0., alpha: 1.},
+                    "black" | _ => Rgba{red: 0., green: 0., blue: 0., alpha: 1.}
+                };
+
+            for pixel in source.iter_mut() {
+                pixel.red = color.red;
+                pixel.green = color.green;
+                pixel.blue = color.blue;
+                pixel.alpha = color.alpha;
+            }
+
+
+            for (idx, mut mask_pixel) in mask.iter_mut().enumerate() {
+                match source.get_with_index(idx) {
+                    Some(src_pixel) => {
+                        operator_in(&src_pixel, &mut mask_pixel);
+                    },
+                    None => {}
+                }
+            }
+
+            for (idx, mask_pixel) in mask.iter().enumerate() {
+                match destination.get_mut_with_index(idx) {
+                    Some(mut dest_pixel) => {
+                        operator_over(&mask_pixel, &mut dest_pixel);
+                    },
+                    None => {}
+                }
+            }
+
+            // Push folders onto path
+            let mut path = get_target_dir();
+            path.push("debug");
+            path.push("images");
+
+            // If this macro is in a loop, the filename and line number will be the same
+            // Here we store the number of times we call this function an a environment variable
+            // with key={filename}{lineno}
+            let copy = path.clone();
+            let string = match copy.to_str() {
+                Some(val) => val,
+                _ => "",
+            };
+
+            let lineno = line!().to_string();
+            let split_path: Vec<&str> = file!().split("/").collect();
+            let filename = split_path[1].replace(".rs", "_") + &lineno.to_string();
+            let count = match env::var(string) {
+                Ok(val) => {
+                    val.parse::<i32>().unwrap() + 1
+                },
+                Err(_) => {
+                    1
+                }
+            };
+
+            let key = string.clone();
+            env::set_var(key, count.to_string());
+            let count = format!("_{}", count);
+            let filename = filename + &count.to_string();
+            let extension = ".png";
+            path.push(filename + &extension.to_string());
+            destination.to_file(path.as_path());
+            path
+        }
+    }
+}
+
 
 // Get absolute path to the "target" directory ("build" dir)
 pub fn get_target_dir() -> PathBuf {
@@ -329,5 +438,35 @@ mod tests {
             fs::remove_file(path).unwrap();
             assert!(passed);
         }
+    }
+
+    // Tests that an image is output when the debug-tesselator feature flag is set
+    #[cfg(feature = "debug-tesselator")]
+    #[test]
+    fn test_debug_render_traps_macro() {
+        let base1 = LineSegment::new(0., 0., 400., 0.);
+        let base2 = LineSegment::new(100., 500., 300., 500.);
+
+        let base3 = LineSegment::new(300., 0., 900., 0.);
+        let base4 = LineSegment::new(700., 1000., 800., 1000.);
+
+        // Setup
+        let trapezoids = vec![Trapezoid::from_bases(base1, base2), Trapezoid::from_bases(base3, base4)];
+
+        // Test
+        let path = debug_render_traps!(trapezoids, "red");
+/*
+        let img = image::open(&path).unwrap().to_rgba();
+        let mut passed = false;
+        for pixel in img.pixels() {
+            let r = pixel.data[0];
+            if r > 0 {
+                passed = true;
+            }
+        }
+*/
+        // Cleanup
+//        fs::remove_file(path).unwrap();
+//        assert!(passed);
     }
 }
