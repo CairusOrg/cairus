@@ -347,7 +347,7 @@ mod tests{
             context.line_to(300., 100.);
             context.line_to(300., 300.);
             context.line_to(100., 300.);
-            context.line_to(100., 100.);
+ //           context.line_to(100., 100.);
             context.close_path();
             context.fill();
         }
@@ -363,7 +363,7 @@ mod tests{
             context.set_source_rgba(0.,1.,0.,1.);
             context.move_to(100., 100.);
             context.line_to(300., 100.);
-            context.curve_to(300., 200., 200., 300., 100., 300.);
+            context.curve_to(300., 200., 200., 300., 99., 300.);
             context.close_path();
             context.fill();
         }
@@ -372,7 +372,7 @@ mod tests{
 
     #[test]
     fn demo_three() {
-        let mut surface = ImageSurface::create(400, 400);
+        let mut surface = ImageSurface::create(500, 500);
         let path = Path::new("Demo3.png");
         {
             let mut context = Context::create(&mut surface);
@@ -381,9 +381,17 @@ mod tests{
             context.line_to(300., 100.);
             context.line_to(300., 300.);
             context.line_to(100., 300.);
-            context.line_to(100., 100.);
             context.close_path();
             context.fill();
+            context.clear_path();
+            context.set_source_rgba(1.,0.,0.,0.75);
+            context.move_to(200., 200.);
+            context.line_to(400., 200.);
+            context.line_to(400., 400.);
+            context.line_to(200., 400.);
+            context.close_path();
+            context.fill();
+
         }
         surface.to_file(path);
     }
