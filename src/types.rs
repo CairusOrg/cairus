@@ -112,6 +112,7 @@ impl PartialEq for Rgba {
 pub struct Pixel {
     pub x: i32,
     pub y: i32,
+    pub is_edge: bool,
 }
 
 impl Pixel {
@@ -133,7 +134,11 @@ impl Pixel {
     }
 
     pub fn new(x: i32, y: i32) -> Pixel {
-        Pixel {x: x, y: y}
+        Pixel {x: x, y: y, is_edge: true}
+    }
+
+    pub fn is_edge(&self) -> bool {
+        self.is_edge
     }
 }
 
