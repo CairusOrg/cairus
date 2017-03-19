@@ -57,7 +57,7 @@ impl Point{
         }
     }
     ///Creates a Point with user defined values
-    pub fn create(x:f32, y:f32)->Point{
+    pub fn new(x:f32, y:f32)->Point{
         Point{
             x: x,
             y: y,
@@ -147,7 +147,7 @@ impl LineSegment {
         }
     }
 
-    pub fn highest_point(&self) -> Point {
+    pub fn max_y_point(&self) -> Point {
         if self.point1.y > self.point2.y {
             self.point1
         } else {
@@ -155,7 +155,7 @@ impl LineSegment {
         }
     }
 
-    pub fn lowest_point(&self) -> Point {
+    pub fn min_y_point(&self) -> Point {
         if self.point1.y < self.point2.y {
             self.point1
         } else {
@@ -163,7 +163,7 @@ impl LineSegment {
         }
     }
 
-    pub fn leftmost_point(&self) -> Point {
+    pub fn min_x_point(&self) -> Point {
         if self.point1.x < self.point2.x {
             self.point1
         } else {
@@ -171,12 +171,64 @@ impl LineSegment {
         }
     }
 
-    pub fn rightmost_point(&self) -> Point {
+    pub fn max_x_point(&self) -> Point {
         if self.point1.x > self.point2.x {
             self.point1
         } else {
             self.point2
         }
+    }
+
+    pub fn intersection(&self, line2 : &LineSegment) -> Option<Point> {
+        //check if the one line is entirely to the left of the other
+        if self.min_x_point().x < line2.min_x_point().x {
+            if self.max_x_point().x <= line2.min_x_point().x {
+                return None;
+            }
+        } else {
+            if self.min_x_point().x >= line2.max_x_point().x {
+                return None;
+            }
+        }
+        // mx+b=y
+        // b = y-mx
+        // mx+b-y = 0
+        //if the line's bounding boxes do overlap, we need to look at slopes
+        let m1 = self.slope();
+        let m2 = line2.slope();
+        let b1 = self.point1.y - m1*self.point1.x;
+        let b2 = line2.point1.y - m2*line2.point1.x;
+        if m1 == m2 {
+            //parallel lines
+            //if b1 == b2 {
+                //colinear lines
+            //}
+            return None;
+        }
+        else {
+            let intersection_x = (b2 - b1) / (m1 - m2);
+            Some(Point::new(intersection_x,
+                m1*intersection_x + b1))
+        }
+    }
+
+    // return x value of line for a given y value
+    // if y is out of range of line, x will be too.
+    // if it is a horizontal line, returns the min x
+    // (y2-y1)/(x2-x1) = m
+    // (y2-y1) = m(x2-x1)
+    // (y2-y1) + mx1 = mx2
+    // x2 = (y2-y1)/m + x1
+    pub fn current_x_for_y(&self, y: f32) -> f32 {
+        if self.slope() == 0.  && self.min_y_point().y == y {
+            return self.min_x_point().x;
+        }
+        if self.slope() == f32::INFINITY {
+            return self.min_x_point().x;
+        }
+
+        let min = self.min_y_point();
+        (y - min.y) / self.slope() + min.x
     }
 
     fn dda_xy_increments(&self) -> (f32, f32) {
@@ -191,11 +243,11 @@ impl LineSegment {
         let start;
         let end;
         if self.slope() != f32::INFINITY {
-            start = self.leftmost_point();
-            end = self.rightmost_point();
+            start = self.min_x_point();
+            end = self.max_x_point();
         } else {
-            start = self.lowest_point();
-            end = self.highest_point();
+            start = self.min_y_point();
+            end = self.max_y_point();
         }
         let delta_x = end.x - start.x;
         let delta_y = end.y - start.y;
@@ -205,9 +257,9 @@ impl LineSegment {
 
     fn dda_start_point(&self) -> Point {
         if self.slope() != f32::INFINITY {
-            self.leftmost_point()
+            self.min_x_point()
         } else {
-            self.lowest_point()
+            self.min_y_point()
         }
     }
 
@@ -261,7 +313,7 @@ impl IntoPixels for LineSegment {
 /// the next line would be horizontal with a 0 direction, followed by a -1 line, then
 /// a second 0 direction line.
 
-#[derive(Copy)]
+#[derive(Debug,Copy)]
 pub struct Edge {
     pub line: LineSegment,
     pub top: f32,
@@ -327,6 +379,7 @@ impl PartialEq for Vector {
 #[cfg(test)]
 mod tests {
     use super::{LineSegment, Point, Vector};
+    use std::f32;
     use types::{Pixel, IntoPixels};
 
     // Tests that point subtraction is working.
@@ -362,14 +415,14 @@ mod tests {
         let p2 = Point{x: 1., y: 1.};
         let line = LineSegment::from_points(p1, p2);
         let line_rev = LineSegment::from_points(p2, p1);
-        assert_eq!(line.leftmost_point(), p1);
-        assert_eq!(line_rev.leftmost_point(), p1);
-        assert_eq!(line.lowest_point(), p1);
-        assert_eq!(line_rev.lowest_point(), p1);
-        assert_eq!(line.rightmost_point(), p2);
-        assert_eq!(line_rev.rightmost_point(), p2);
-        assert_eq!(line.highest_point(), p2);
-        assert_eq!(line_rev.highest_point(), p2);
+        assert_eq!(line.min_x_point(), p1);
+        assert_eq!(line_rev.min_x_point(), p1);
+        assert_eq!(line.min_y_point(), p1);
+        assert_eq!(line_rev.min_y_point(), p1);
+        assert_eq!(line.max_x_point(), p2);
+        assert_eq!(line_rev.max_x_point(), p2);
+        assert_eq!(line.max_y_point(), p2);
+        assert_eq!(line_rev.max_y_point(), p2);
     }
 
     // Tests that LineSegment Eq implementation is working
@@ -458,6 +511,65 @@ mod tests {
         let vertical1 = LineSegment::new(0., 0., 0., 1.);
         let vertical2 = LineSegment::new(2., 2., 2., -1.);
         assert_eq!(vertical1.slope(), vertical2.slope());
+    }
+    // Tests no slope returns infinity
+    #[test]
+    fn infinite_slope() {
+        let vertical = LineSegment::new(0., 0., 0., 1.);
+        assert_eq!(vertical.slope(), f32::INFINITY);
+    }
+    // Tests zero slope
+    #[test]
+    fn zero_slope() {
+        let horizontal = LineSegment::new(0., 0., 1., 0.);
+        assert_eq!(horizontal.slope(), 0.);
+    }
+
+    // Tests intersection of self bounding box to left of line2 bounding box
+    #[test]
+    fn self_left_of_line2() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(1., 1., 3., 1.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Tests intersection of self bounding box to right of line2 bounding box
+    #[test]
+    fn self_right_of_line2() {
+        let line2 = LineSegment::new(0., 0., 1., 1.);
+        let line1 = LineSegment::new(1., 1., 3., 1.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Test intersection of parallel lines
+    #[test]
+    fn parallel_intersection() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(0., 1., 1., 2.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Test intersection of colinear lines
+    #[test]
+    fn colinear_intersection() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(0., 0., 2., 2.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Test intersection of lines
+    #[test]
+    fn intersection_of_lines() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(1., 0., 0., 1.);
+        assert_eq!(line1.intersection(&line2).unwrap(), Point::new(0.5,0.5));
+    }
+
+    // Test current x for y of line
+    #[test]
+    fn test_current_x() {
+        let line = LineSegment::new(0., 0., 2., 1.);
+        assert_eq!(line.current_x_for_y(2.),4.);
     }
 
     // Tests Vector::new()
