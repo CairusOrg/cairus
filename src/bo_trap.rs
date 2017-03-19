@@ -764,6 +764,22 @@ mod tests {
     }
 
     #[test]
+    fn event_type_test() {
+        // Verifies that the event type ordering is correct
+        assert!(EventType::Start == EventType::Start);
+        assert!(EventType::Start > EventType::End);
+        assert!(EventType::Start > EventType::Intersection);
+
+        assert!(EventType::End == EventType::End);
+        assert!(EventType::End < EventType::Start);
+        assert!(EventType::End < EventType::Intersection);
+
+        assert!(EventType::Intersection == EventType::Intersection);
+        assert!(EventType::Intersection < EventType::Start);
+        assert!(EventType::Intersection > EventType::End);
+    }
+
+    #[test]
     fn event_compare_y_lesser(){
         let lesser = create_start_event(0., 0., 3., 3., 1);
         let greater = create_start_event(1., 1., 0., 2., 1);
