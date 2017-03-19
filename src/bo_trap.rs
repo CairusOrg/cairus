@@ -159,6 +159,10 @@ use trapezoid_rasterizer::Trapezoid;
 extern crate linked_list;
 use self::linked_list::{LinkedList, Cursor};
 
+
+/// ## EventType
+///
+/// Defines a type of event.
 #[derive(Eq, PartialEq, Debug)]
 pub enum EventType {
     Start,
@@ -172,6 +176,7 @@ impl PartialOrd for EventType {
     }
 }
 
+/// EventType order: Start > Intersection > End
 impl Ord for EventType {
     fn cmp(&self, other: &EventType) -> Ordering {
         match *self {
@@ -196,6 +201,14 @@ impl Ord for EventType {
         }
     }
 }
+
+/// ## Event
+///
+/// For use with sweep().
+/// edge_left is the primary edge for the event.
+/// edge_right will only contain edges if the event is an Intersection
+/// point is where the event will take place
+/// event_type is the type of event {Start, End, Intersection}
 #[derive(Debug)]
 pub struct Event {
     edge_left: Edge,
@@ -210,6 +223,8 @@ impl PartialOrd for Event {
     }
 }
 
+/// Event ordering: compare y values (smaller is less) if y's are equal compare x's (smaller x comes
+///     first. IF point is equal compare event type ( End < Intersection < Start)
 impl Ord for Event {
     fn cmp(&self, other: &Event) -> Ordering {
         let y_compare = self.point.y.partial_cmp(&other.point.y).unwrap_or(Ordering::Equal);
@@ -230,7 +245,6 @@ impl Ord for Event {
     }
 }
 
-// Need to check this code
 impl PartialEq for Event {
     fn eq(&self, other:&Event) -> bool {
         true
@@ -240,6 +254,7 @@ impl PartialEq for Event {
 impl Eq for Event {}
 
 impl Event {
+    /// constructor for a new event of Start or End type.
     fn new(edge_left: Edge, point: &Point, event_type: EventType) -> Event {
         Event {
             point: *point,
@@ -248,7 +263,7 @@ impl Event {
             event_type: event_type,
         }
     }
-    // Creates a new Event for an Intersection
+    /// Creates a new Event for an Intersection type
     fn new_intersection(edge_left: Edge, edge_right: Edge, point: &Point) -> Event {
         Event {
             point: *point,
@@ -259,6 +274,7 @@ impl Event {
     }
 }
 
+/// Takes a list of edges, converts them into a list of events, then returns a sorted event list.
 fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
     let mut events = Vec::new();
     for edge in edges {
@@ -307,7 +323,7 @@ impl SweepLineEdge {
     }
 }
 
-/// /sweep will loop over all of the Edges in the vector and build Trapezoids out of them.
+/// Creates trapezoids out of the passed in edges.
 pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
     // Create the empty sweep Line Linked List
     let mut sl_list: LinkedList<SweepLineEdge> = LinkedList::new();
@@ -321,11 +337,6 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
     while !events.is_empty() {
         // Get the current event
         let event = events.remove(0);
-
-        // Temporary skip horizontal lines
-//        if event.edge_left.line.slope() == 0. {
-//            continue;
-//        }
 
         // Set the sweep line to the events y value
         let sweep_line = event.point.y;
@@ -389,12 +400,6 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
         else if event.event_type == EventType::End {
             println!("Starting END case for point: ({},{})", event.point.x, event.point.y);
             println!("Sweep Line is: {}", sweep_line );
-            // when we call remove on the cursor it will remove the next element.
-            // when we call cursor.next or cursor.prev it moves the cursor left or right
-            // when we call cursor.peek_left or right it gets the next element without moving the cursor
-            // the events will always be sorted by the current left point
-            // We know what line to remove based on the current event which will tell us what that
-            // left point will be
 
             // REMOVE FROM SL_LIST
             // if our event line is equal to our cursor_left line then see if our lines are equal, if yes remove
@@ -532,8 +537,8 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
     traps
 }
 
-// Checks to see if we should add the intersection to the event list
-// Expects the cursor to be between the two lines that we want to check for intersection
+/// Checks to see if we should add the intersection to the event list
+/// Expects the cursor to be between the two lines that we want to check for intersection
 pub fn check_for_intersection(sweep_line: f32, cursor: &mut Cursor<SweepLineEdge>, events: &mut Vec<Event>)  {
     // Verifies there is a previous and next before we check for intersections
     if cursor.peek_prev().is_none() || cursor.peek_next().is_none() {
@@ -575,10 +580,10 @@ pub enum Comparator {
     Empty,
 }
 
-// Searches the sweep line list for a line matching the one if the edge
-// point: the current event point
-// edge: the edge we are trying to find a match to
-// cursor: will be set to the position before the edge that is equal
+/// Searches the sweep line list for a line matching the one if the edge
+/// point: the current event point
+/// edge: the edge we are trying to find a match to
+/// cursor: will be set to the position before the edge that is equal
 pub fn move_cursor_to_line(point: Point, edge:Edge, cursor: &mut Cursor<SweepLineEdge> ) {
     println!("Starting move_cursor to line");
     // If we are at the end of the list move one position back so we have something to compare
@@ -599,6 +604,7 @@ pub fn move_cursor_to_line(point: Point, edge:Edge, cursor: &mut Cursor<SweepLin
 //            break;
 //        }
 //    }
+    // Temp code until we handle all of the edge cases involving horizontal lines and intersections
     cursor.reset();
     let mut result = find_line_place(point, edge, *cursor.peek_next().unwrap());
     while result != Comparator::Equal {
@@ -609,16 +615,13 @@ pub fn move_cursor_to_line(point: Point, edge:Edge, cursor: &mut Cursor<SweepLin
     println!("Ending move_cursor to point");
 }
 
-// need to rename function. it will compare a line to the next one in the list
-// may want to pass in a point as well so that we can use this same function for insert
-// Returns Equal if line and next_sl_edge.line are equal
-// Returns Greater if Next current x is greater then events, if points are equal compares slopes
-// Returns Less if Next current x is less then events, if points are equal compares slopes
+/// Compares a line to the next one in the list
+/// Returns Equal if line and next_sl_edge.line are equal
+/// Returns Greater if Next current x is greater then events, if points are equal compares slopes
+/// Returns Less if Next current x is less then events, if points are equal compares slopes
 pub fn find_line_place(point: Point, edge: Edge, next_sl_edge : SweepLineEdge) -> Comparator {
     let next_line = next_sl_edge.edge.line;
-    // if the lines are the same line we return equal because we have a duplicate
     if edge.line == next_line {
-//        println!("Lines are equal");
         return Comparator::Equal;
     }
     // Get the point on the next line for the current y value we are at since that is how the
@@ -630,19 +633,15 @@ pub fn find_line_place(point: Point, edge: Edge, next_sl_edge : SweepLineEdge) -
     if point.x == next_x {
         // compare the slopes of the lines
         if edge.line.slope() < next_line.slope() {
- //           println!("Points are equal, Next slope is greater then Events");
             return Comparator::Greater;
         }
         else {
- //           println!("Points are equal, Next slope is less then Events");
             return Comparator::Less;
         }
         // if the point is not on the nextLine we just need to see if it comes before or after
     } else if point.x < next_x {
- //       println!("Next current x is greater then Events point.x");
         return Comparator::Greater;
     } else {
- //       println!("Next current x is less then Events point.x");
         return Comparator::Less;
     }
 
@@ -667,8 +666,6 @@ add_to_traps(SL_edge edge, float bot, int mask, traps *traps)
         right = edge.deferred_trap->right->LineSegment
         traps_push(left, right, edge.deferred_trap.top, bot)
 */
-// *** QUESTION: Do we need to reset the sl_edge top when we add to the traps so that
-//               the next one continues where the last left off?
 fn add_to_traps(cursor: &mut Cursor<SweepLineEdge>, bottom: f32, mask: i32, traps: &mut Vec<Trapezoid>) {
     println!("Starting add_to_traps");
     if cursor.peek_prev().is_none() || cursor.peek_next().is_none() {
@@ -748,8 +745,6 @@ mod tests {
         }
     }
 
-
-
     fn create_start_event(x1: f32, y1: f32, x2:f32, y2:f32, dir:i32) -> Event {
         let edge = create_edge(x1, y1, x2, y2, dir);
         let point = Point::new(x1, y1);
@@ -815,7 +810,6 @@ mod tests {
         assert_eq!(event_list.get(0).unwrap().point.y, 1.);
         assert_eq!(event_list.get(1).unwrap().point.y, 2.);
         assert_eq!(event_list.get(2).unwrap().point.y, 3.);
-
     }
 
     #[test]
@@ -833,7 +827,6 @@ mod tests {
         assert_eq!(event_list.get(0).unwrap().event_type, EventType::End );
         assert_eq!(event_list.get(1).unwrap().point.y, 1.);
         assert_eq!(event_list.get(1).unwrap().event_type, EventType::Start );
-
     }
 
     #[test]
@@ -855,9 +848,7 @@ mod tests {
         assert_eq!(event_list.get(2).unwrap().event_type, EventType::Intersection );
         assert_eq!(event_list.get(3).unwrap().point.y, 1.);
         assert_eq!(event_list.get(3).unwrap().event_type, EventType::Start );
-
     }
-
 
     #[test]
     fn event_list_from_edges_sorted_test_size() {
@@ -921,7 +912,6 @@ mod tests {
         assert_eq!(event_list.get(1).unwrap().point.x, 3.);
         assert_eq!(event_list.get(1).unwrap().event_type, EventType::End);
     }
-
 
     #[test]
     fn event_constructor() {
