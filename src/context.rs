@@ -48,9 +48,9 @@ use filler::Filler;
 pub struct Context<'a>{
     pub rgba: Rgba,
     pub status: Status,
-    target: &'a mut ImageSurface,
+    pub target: &'a mut ImageSurface,
     operator: Operator,
-    path: Path,
+    pub path: Path,
     filler: Filler,
 }
 

@@ -53,7 +53,7 @@ use std::vec::Vec;
 //TODO: More research on implementing copy and clone for better testing.
 pub struct Path {
    status: Status,
-   data_vec: Vec<Data>,
+   pub data_vec: Vec<Data>,
    data_num: usize,
    current_point: Point,
 }

@@ -29,13 +29,13 @@
  * The Original Code is the cairus graphics library.
  *
  * Contributor(s):
- *	Kyle J. Kneitinger <kyle@kneit.in>
+ *  Kyle J. Kneitinger <kyle@kneit.in>
  *
  */
 
 use path::{Path,Data};
 use common_geometry::{Edge,Point};
-use splines;
+use splines::decasteljau;
 use context::Context;
 use bo_trap::sweep;
 use trapezoid_rasterizer::mask_from_trapezoids;
@@ -43,6 +43,8 @@ use trapezoid_rasterizer::mask_from_trapezoids;
 
 pub struct Filler {
     edges: Vec<Edge>,
+    last_point: Option<Point>,
+    first_point: Point,
 }
 
 impl Filler {
@@ -50,13 +52,44 @@ impl Filler {
     pub fn new() -> Filler {
         Filler {
             edges: Vec::new(),
+            last_point: Some(Point::new(0.,0.)),
+            first_point: Point::new(0.,0.),
         }
     }
 
-    fn fill(&self, mut context: Context) {
-        let traps = sweep(self.edges.as_slice());
-        let mask = mask_from_trapezoids(&traps, 100, 100);
+    fn add_point(&mut self, data: Data) {
+        match data {
+            Data::MoveTo(b)       => {
+                match self.last_point {
+                    Some(_) => (),
+                    None    => self.first_point = b,
+                };
+                self.last_point = Some(b);
+            },
+            Data::LineTo(b)       => {
+                self.edges.push(Edge::new_from_points(self.last_point.unwrap(),b));
+                self.last_point = Some(b);
+            },
+            Data::CurveTo(b,c,d)  => {
+                let points = decasteljau(&self.last_point.unwrap(),&b,&c,&d);
+                for point in points {
+                    self.edges.push(Edge::new_from_points(self.last_point.unwrap(),point));
+                    self.last_point = Some(point);
+                }
+            },
+            Data::ClosePath       => {
+                self.edges.push(Edge::new_from_points(self.last_point.unwrap(),self.first_point));
+                self.last_point = None;
+            },
+        };
     }
 
+    pub fn fill(&mut self, mut context: Context) {
+        for data in context.path.data_vec {
+            self.add_point(data);
+        }
+        let traps = sweep(self.edges.as_slice());
+        let mask = mask_from_trapezoids(&traps, context.target.width, context.target.height);
+    }
 }
 

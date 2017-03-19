@@ -326,7 +326,7 @@ impl Clone for Edge {
 }
 
 impl Edge {
-    fn new_from_points(a: Point, b: Point) -> Edge {
+    pub fn new_from_points(a: Point, b: Point) -> Edge {
         Edge {
             line: LineSegment::from_points(a, b) ,
             top: if a.y > b.y { a.y } else { b.y },

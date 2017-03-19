@@ -34,8 +34,7 @@
  */
 
 //use std::f32;
-use common_geometry::Point;
-use common_geometry::Slope;
+use common_geometry::{Point, Slope, Edge};
 use status::Status;
 
 ///SplineKnots for bezier curves
@@ -196,6 +195,32 @@ fn de_casteljau(s1: & mut SplineKnots, s2: & mut SplineKnots){
     s1.b = ab;
     s1.c = abbc;
     s1.d = fin;
+}
+
+fn lerp(a: &Point, b: &Point, t: f32 ) -> Point
+{
+    Point::new(a.x + (b.x-a.x)*t, a.y + (b.y-a.y)*t)
+}
+
+// evaluate a point on a bezier-curve. t goes from 0 to 1.0
+fn bezier(a: &Point, b: &Point, c: &Point, d: &Point, t: f32 ) -> Point
+{
+    //let ab,bc,cd,abbc,bccd;
+    let ab =lerp(&a,&b,t);           // point between a and b (green)
+    let bc = lerp(&b,&c,t);           // point between b and c (green)
+    let cd = lerp(&c,&d,t);           // point between c and d (green)
+    let abbc = lerp(&ab,&bc,t);       // point between ab and bc (blue)
+    let bccd = lerp(&bc,&cd,t);       // point between bc and cd (blue)
+    lerp(&abbc,&bccd,t)   // point on the bezier-curve (black)
+}
+
+pub fn decasteljau (a: &Point, b: &Point, c: &Point, d: &Point) -> Vec<Point> {
+    let mut points = Vec::new();
+    for i in 1..200 {
+        let p = bezier(a,b,c,d,i as f32/1000.0);
+        points.push(p);
+    }
+    points
 }
 
 ///Calculates the upper bound on the error (squared) that could result from approximating a
