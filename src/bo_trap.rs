@@ -338,7 +338,7 @@ pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
             // find the left most point of the edge_left line
             let left = event.edge_left.line.min_x_point().x;
             // create a new node and add it to the list
-            let mut sl_edge = SweepLineEdge::new(sweep_line, left, event.edge_left);
+            let sl_edge = SweepLineEdge::new(sweep_line, left, event.edge_left);
             // Set the cursor back to the beginning
             cursor.reset();
             if cursor.peek_next().is_none() {
@@ -676,13 +676,13 @@ fn add_to_traps(cursor: &mut Cursor<SweepLineEdge>, bottom: f32, mask: i32, trap
     }
     // We unwrap because it should be considered a bug if this gets called when the value is
     // incorrect
-    let mut sl_edge = *cursor.peek_prev().unwrap();
+    let sl_edge = *cursor.peek_prev().unwrap();
 
     if sl_edge.trap_top >= bottom {
         return;
     }
 
-    let mut right = *cursor.peek_next().unwrap();
+    let right = *cursor.peek_next().unwrap();
     let mut in_out = 0;
     let mut count = 0;
     println!("   Starting cursor count loop");
@@ -712,10 +712,6 @@ fn bo_trap_from_lines(left: &LineSegment,
                       top: f32,
                       bottom: f32) -> Trapezoid {
     println!("Starting Create Trap");
-    let min_x = left.min_x_point().x.min(right.min_x_point().x);
-    let max_x = left.max_x_point().x.min(right.max_x_point().x);
-//    let top_line = LineSegment::new(min_x, top, max_x, top);
-//    let bottom_line = LineSegment::new(min_x, bottom, max_x, bottom);
     println!("left line: {:?}", left);
     println!("right line: {:?}", right);
     println!("top: {} bottom: {}", top, bottom);
@@ -1012,6 +1008,20 @@ mod tests {
     }
 
     #[test]
+    fn sweep_test_intersect_four() {
+        // Expected to make 2 traps with the 2 lines that cross
+        let edges = vec![
+        create_edge(0., 0., 4., 4., -1),
+        create_edge(0., 2., 4., 6., -1),
+        create_edge(0., 4., 4., 0., 1),
+        create_edge(0., 6., 4., 2., 1),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 5);
+    }
+
+    #[test]
     fn sweep_test_vertical_line() {
         // Test with vertical line. Should not create a trap
         let edges = vec![
@@ -1048,27 +1058,57 @@ mod tests {
     #[test]
     fn sweep_test_create_box() {
         // A set of lines that create a box should create a single trap
-        // horizontal lines have NaN x values
-        let edges = vec![
-        create_edge(0., 0., 2., 0., 0),
-        create_edge(2., 0., 2., 2., 1),
-        create_edge(2., 2., 0., 2., 0),
-        create_edge(0., 2., 0., 0., -1),
-        ];
+        // Also verify that the trap contains the expected point
+        let p1 = Point{x: 0., y:0.};
+        let p2 = Point{x: 2., y:0.};
+        let p3 = Point{x: 0., y:2.};
+        let p4 = Point{x: 2., y:2.};
 
-        let point1 = Point{x: 0., y:0.};
-        let point2 = Point{x: 2., y:0.};
-        let point3 = Point{x: 0., y:2.};
-        let point4 = Point{x: 2., y:2.};
+        let edges = vec![
+        create_edge(p1.x, p1.y, p2.x, p2.y, 0),
+        create_edge(p2.x, p2.y, p4.x, p4.y, 1),
+        create_edge(p4.x, p4.y, p3.x, p3.y, 0),
+        create_edge(p3.x, p3.y, p1.x, p1.y, -1),
+        ];
 
         let traps = sweep(edges);
         assert_eq!(traps.len(), 1);
-//        for index in 0..4 {
-//            let line = traps.get(0).unwrap().lines.get(index);
-//            println!("Line: {:?}", line);
-//        }
-//        assert!(traps.get(0).unwrap().contains_point(&point1));
+        assert!(traps.get(0).unwrap().contains_point(&Point{x:1.,y:1.}));
+        assert!(!traps.get(0).unwrap().contains_point(&Point{x:3.,y:1.}));
     }
+
+    #[test]
+    fn sweep_test_create_two_boxes() {
+        // A set of lines that create two boxes should create two traps with no traps between
+        // Also verify that the trap contains the expected point
+        let p1 = Point{x: 0., y:0.};
+        let p2 = Point{x: 2., y:0.};
+        let p3 = Point{x: 0., y:2.};
+        let p4 = Point{x: 2., y:2.};
+        let p5 = Point{x: 4., y:0.};
+        let p6 = Point{x: 6., y:0.};
+        let p7 = Point{x: 4., y:2.};
+        let p8 = Point{x: 6., y:2.};
+
+        let edges = vec![
+        create_edge(p1.x, p1.y, p2.x, p2.y, 0),
+        create_edge(p2.x, p2.y, p4.x, p4.y, 1),
+        create_edge(p4.x, p4.y, p3.x, p3.y, 0),
+        create_edge(p3.x, p3.y, p1.x, p1.y, -1),
+        create_edge(p5.x, p5.y, p6.x, p6.y, 0),
+        create_edge(p6.x, p6.y, p8.x, p8.y, 1),
+        create_edge(p8.x, p8.y, p7.x, p7.y, 0),
+        create_edge(p7.x, p7.y, p5.x, p5.y, -1),
+        ];
+
+        let traps = sweep(edges);
+        assert_eq!(traps.len(), 2);
+        assert!(traps.get(0).unwrap().contains_point(&Point{x:1.,y:1.}));
+        assert!(!traps.get(0).unwrap().contains_point(&Point{x:3.,y:1.}));
+        assert!(traps.get(1).unwrap().contains_point(&Point{x:5.,y:1.}));
+        assert!(!traps.get(1).unwrap().contains_point(&Point{x:3.,y:1.}));
+    }
+
 
     #[test]
     fn sweep_test_create_trapezoid() {
