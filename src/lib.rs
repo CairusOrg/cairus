@@ -44,6 +44,10 @@
 /// When we get down to the level of pixels, they are blended together by operations
 /// defined in the operators module.
 #[allow(dead_code)]
+#[macro_use]
+mod debug_utils;
+
+#[allow(dead_code)]
 pub mod operators;
 
 #[allow(dead_code)]
@@ -69,3 +73,6 @@ pub mod status;
 
 #[allow(dead_code)]
 pub mod path;
+
+#[allow(dead_code)]
+mod bo_trap;

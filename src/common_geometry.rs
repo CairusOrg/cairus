@@ -37,6 +37,7 @@
 
 use std::ops::{Add, Sub};
 use std::f32;
+use types::{Pixel, IntoPixels};
 
 /// ## Point
 ///
@@ -56,7 +57,7 @@ impl Point{
         }
     }
     ///Creates a Point with user defined values
-    pub fn create(x:f32, y:f32)->Point{
+    pub fn new(x:f32, y:f32)->Point{
         Point{
             x: x,
             y: y,
@@ -146,7 +147,7 @@ impl LineSegment {
         }
     }
 
-    pub fn highest_point(&self) -> Point {
+    pub fn max_y_point(&self) -> Point {
         if self.point1.y > self.point2.y {
             self.point1
         } else {
@@ -154,7 +155,7 @@ impl LineSegment {
         }
     }
 
-    pub fn lowest_point(&self) -> Point {
+    pub fn min_y_point(&self) -> Point {
         if self.point1.y < self.point2.y {
             self.point1
         } else {
@@ -162,7 +163,7 @@ impl LineSegment {
         }
     }
 
-    pub fn leftmost_point(&self) -> Point {
+    pub fn min_x_point(&self) -> Point {
         if self.point1.x < self.point2.x {
             self.point1
         } else {
@@ -170,7 +171,7 @@ impl LineSegment {
         }
     }
 
-    pub fn rightmost_point(&self) -> Point {
+    pub fn max_x_point(&self) -> Point {
         if self.point1.x > self.point2.x {
             self.point1
         } else {
@@ -178,35 +179,97 @@ impl LineSegment {
         }
     }
 
+    pub fn intersection(&self, line2 : &LineSegment) -> Option<Point> {
+        //check if the one line is entirely to the left of the other
+        if self.min_x_point().x < line2.min_x_point().x {
+            if self.max_x_point().x <= line2.min_x_point().x {
+                return None;
+            }
+        } else {
+            if self.min_x_point().x >= line2.max_x_point().x {
+                return None;
+            }
+        }
+        // mx+b=y
+        // b = y-mx
+        // mx+b-y = 0
+        //if the line's bounding boxes do overlap, we need to look at slopes
+        let m1 = self.slope();
+        let m2 = line2.slope();
+        let b1 = self.point1.y - m1*self.point1.x;
+        let b2 = line2.point1.y - m2*line2.point1.x;
+        if m1 == m2 {
+            //parallel lines
+            //if b1 == b2 {
+                //colinear lines
+            //}
+            return None;
+        }
+        else {
+            let intersection_x = (b2 - b1) / (m1 - m2);
+            Some(Point::new(intersection_x,
+                m1*intersection_x + b1))
+        }
+    }
 
-    // Returns a Vector of coordinates indicating which pixels this line should color when
-    // rasterized.  The algorithm is a straight-forward DDA.
-    pub fn into_pixel_coordinates(&self) -> Vec<(i32, i32)> {
-        let leftpoint = self.leftmost_point();
-        let rightpoint = self.rightmost_point();
+    // return x value of line for a given y value
+    // if y is out of range of line, x will be too.
+    // if it is a horizontal line, returns the min x
+    // (y2-y1)/(x2-x1) = m
+    // (y2-y1) = m(x2-x1)
+    // (y2-y1) + mx1 = mx2
+    // x2 = (y2-y1)/m + x1
+    pub fn current_x_for_y(&self, y: f32) -> f32 {
+        if self.slope() == 0.  && self.min_y_point().y == y {
+            return self.min_x_point().x;
+        }
+        if self.slope() == f32::INFINITY {
+            return self.min_x_point().x;
+        }
 
-        let delta_x = rightpoint.x - leftpoint.x;
-        let delta_y = rightpoint.y - leftpoint.y;
+        let min = self.min_y_point();
+        (y - min.y) / self.slope() + min.x
+    }
 
-        let steps = if delta_x.abs() > delta_y.abs() {
+    fn dda_xy_increments(&self) -> (f32, f32) {
+        let steps = self.dda_steps();
+        let (delta_x, delta_y) = self.dda_delta_xy();
+        let x_increment = delta_x / steps;
+        let y_increment = delta_y / steps;
+        (x_increment, y_increment)
+    }
+
+    fn dda_delta_xy(&self) -> (f32, f32) {
+        let start;
+        let end;
+        if self.slope() != f32::INFINITY {
+            start = self.min_x_point();
+            end = self.max_x_point();
+        } else {
+            start = self.min_y_point();
+            end = self.max_y_point();
+        }
+        let delta_x = end.x - start.x;
+        let delta_y = end.y - start.y;
+
+        (delta_x, delta_y)
+    }
+
+    fn dda_start_point(&self) -> Point {
+        if self.slope() != f32::INFINITY {
+            self.min_x_point()
+        } else {
+            self.min_y_point()
+        }
+    }
+
+    fn dda_steps(&self) -> f32 {
+        let (delta_x, delta_y) = self.dda_delta_xy();
+        if delta_x.abs() > delta_y.abs() {
             delta_x.abs()
         } else {
             delta_y.abs()
-        };
-
-        let x_increment = delta_x / steps;
-        let y_increment = delta_y / steps;
-        let (mut x, mut y) = (leftpoint.x, leftpoint.y);
-
-        let mut result = Vec::with_capacity(steps as usize);
-        for _ in 0..(steps as i32) {
-            x += x_increment;
-            y += y_increment;
-            let point = (x as i32 , y as i32);
-            result.push(point);
         }
-
-        result
     }
 }
 
@@ -217,6 +280,50 @@ impl PartialEq for LineSegment {
     }
 }
 
+impl IntoPixels for LineSegment {
+    // Returns a Vector of coordinates indicating which pixels this line should color when
+    // rasterized.  The algorithm is a straight-forward DDA.
+    fn into_pixels(&self) -> Vec<Pixel> {
+        let (x_increment, y_increment) = self.dda_xy_increments();
+        let steps = self.dda_steps() as i32;
+        let start = self.dda_start_point();
+        let mut x = start.x;
+        let mut y = start.y;
+
+        let mut coordinates = Vec::with_capacity(steps as usize);
+        for _ in 0..steps {
+            x += x_increment;
+            y += y_increment;
+            coordinates.push(Pixel{x: x as i32, y: y as i32, is_edge: true});
+        }
+        coordinates
+    }
+}
+
+/// ## Edge
+///
+/// Defines a Edge
+/// Edge is a LineSegment, Top, Bottom, and Direction
+/// Top is the y value closest to zero
+/// Bottom is the y value closes to infinity
+/// Direction should come from whatever initially 'drew' the lines and should be
+///  +1 for a segment that is being drawn in the positive y direction, 0 for a
+/// a horizontal line, and -1 for a segment being dawn in the negative y direction.
+///  For example: a clockwise drawn square wouold have a right sfe with a + 1 direction,
+/// the next line would be horizontal with a 0 direction, followed by a -1 line, then
+/// a second 0 direction line.
+
+#[derive(Debug,Copy)]
+pub struct Edge {
+    pub line: LineSegment,
+    pub top: f32,
+    pub bottom: f32,
+    pub direction: i32,
+}
+
+impl Clone for Edge {
+    fn clone(&self) -> Edge { *self }
+}
 
 /// ## Vector
 ///
@@ -292,6 +399,8 @@ impl Slope{
 #[cfg(test)]
 mod tests {
     use super::{LineSegment, Point, Vector, Slope};
+    use std::f32;
+    use types::{Pixel, IntoPixels};
 
     // Tests that point subtraction is working.
     #[test]
@@ -326,14 +435,14 @@ mod tests {
         let p2 = Point{x: 1., y: 1.};
         let line = LineSegment::from_points(p1, p2);
         let line_rev = LineSegment::from_points(p2, p1);
-        assert_eq!(line.leftmost_point(), p1);
-        assert_eq!(line_rev.leftmost_point(), p1);
-        assert_eq!(line.lowest_point(), p1);
-        assert_eq!(line_rev.lowest_point(), p1);
-        assert_eq!(line.rightmost_point(), p2);
-        assert_eq!(line_rev.rightmost_point(), p2);
-        assert_eq!(line.highest_point(), p2);
-        assert_eq!(line_rev.highest_point(), p2);
+        assert_eq!(line.min_x_point(), p1);
+        assert_eq!(line_rev.min_x_point(), p1);
+        assert_eq!(line.min_y_point(), p1);
+        assert_eq!(line_rev.min_y_point(), p1);
+        assert_eq!(line.max_x_point(), p2);
+        assert_eq!(line_rev.max_x_point(), p2);
+        assert_eq!(line.max_y_point(), p2);
+        assert_eq!(line_rev.max_y_point(), p2);
     }
 
     // Tests that LineSegment Eq implementation is working
@@ -423,6 +532,65 @@ mod tests {
         let vertical2 = LineSegment::new(2., 2., 2., -1.);
         assert_eq!(vertical1.slope(), vertical2.slope());
     }
+    // Tests no slope returns infinity
+    #[test]
+    fn infinite_slope() {
+        let vertical = LineSegment::new(0., 0., 0., 1.);
+        assert_eq!(vertical.slope(), f32::INFINITY);
+    }
+    // Tests zero slope
+    #[test]
+    fn zero_slope_line_seg() {
+        let horizontal = LineSegment::new(0., 0., 1., 0.);
+        assert_eq!(horizontal.slope(), 0.);
+    }
+
+    // Tests intersection of self bounding box to left of line2 bounding box
+    #[test]
+    fn self_left_of_line2() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(1., 1., 3., 1.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Tests intersection of self bounding box to right of line2 bounding box
+    #[test]
+    fn self_right_of_line2() {
+        let line2 = LineSegment::new(0., 0., 1., 1.);
+        let line1 = LineSegment::new(1., 1., 3., 1.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Test intersection of parallel lines
+    #[test]
+    fn parallel_intersection() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(0., 1., 1., 2.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Test intersection of colinear lines
+    #[test]
+    fn colinear_intersection() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(0., 0., 2., 2.);
+        assert_eq!(line1.intersection(&line2), None);
+    }
+
+    // Test intersection of lines
+    #[test]
+    fn intersection_of_lines() {
+        let line1 = LineSegment::new(0., 0., 1., 1.);
+        let line2 = LineSegment::new(1., 0., 0., 1.);
+        assert_eq!(line1.intersection(&line2).unwrap(), Point::new(0.5,0.5));
+    }
+
+    // Test current x for y of line
+    #[test]
+    fn test_current_x() {
+        let line = LineSegment::new(0., 0., 2., 1.);
+        assert_eq!(line.current_x_for_y(2.),4.);
+    }
 
     // Tests Vector::new()
     #[test]
@@ -466,7 +634,7 @@ mod tests {
     }
 
     #[test]
-      fn line_into_pixel_coordinates_slope_lt_one() {
+      fn line_into_pixels_slope_lt_one() {
           // The following coordinates were calculated by hand to be known pixels in the defined
           // line.
           let line = LineSegment::new(0., 0., 20., 5.);
@@ -477,20 +645,20 @@ mod tests {
             (4, 1),
             (5, 1),
             (6, 1)
-          ];
+          ].into_iter().map(|(x, y)| Pixel{x: x, y: y, is_edge: true}).collect::<Vec<Pixel>>();
 
-          let pixel_coordinates = line.into_pixel_coordinates();
+          let pixels = line.into_pixels();
           for coordinate in expected {
-              assert!(pixel_coordinates.contains(&coordinate));
+              assert!(pixels.contains(&coordinate));
           }
       }
 
       #[test]
-      fn line_into_pixel_coordinates_slope_gt_one() {
+      fn line_into_pixels_slope_gt_one() {
           // The following coordinates were calculated by hand to be known pixels in the defined
           // line.
           let line = LineSegment::new(0., 0., 5., 20.);
-          let expected = vec![
+          let expected : Vec<Pixel> = vec![
               (0, 1),
               (0, 2),
               (0, 3),
@@ -498,11 +666,11 @@ mod tests {
               (1, 5),
               (1, 6),
               (1, 7)
-          ];
+          ].into_iter().map(|(x, y)| Pixel::new(x, y)).collect();
 
-          let pixel_coordinates = line.into_pixel_coordinates();
+          let pixels = line.into_pixels();
           for coordinate in expected {
-              assert!(pixel_coordinates.contains(&coordinate));
+              assert!(pixels.contains(&coordinate));
           }
       }
 
@@ -510,11 +678,9 @@ mod tests {
       #[test]
       fn line_with_negative_slope() {
           let line = LineSegment { point1: Point { x: 3., y: 2. }, point2: Point { x: 4., y: 0. } };
-          for pixel in line.into_pixel_coordinates() {
-              let x = pixel.0;
-              let y = pixel.1;
-              assert!(y >= 0);
-              assert!(x >= 0);
+          for pixel in line.into_pixels() {
+              assert!(pixel.x >= 0);
+              assert!(pixel.y >= 0);
           }
       }
 
@@ -529,7 +695,7 @@ mod tests {
       #[test]
       fn zero_slope() {
           let a = Point::origin();
-          let b = Point::create(0., 1.);
+          let b = Point::new(0., 1.);
           let slope = Slope::slope_init(a, b);
           assert_eq!(slope.dx, 0.);
           assert_eq!(slope.dy, 1.);
@@ -537,8 +703,8 @@ mod tests {
 
       #[test]
       fn zero_slope_same_point() {
-          let a = Point::create(42., 42.);
-          let b = Point::create(42., 42.);
+          let a = Point::new(42., 42.);
+          let b = Point::new(42., 42.);
           let slope = Slope::slope_init(a, b);
           assert_eq!(slope.dx, 0.);
           assert_eq!(slope.dy, 0.);
@@ -546,5 +712,32 @@ mod tests {
 
       //Finish tests for regular slope, negative slope, and infinite slope.
 
+      // Passes if a vertical line converts to the correct collection of pixel coordinates
+      #[test]
+      fn vertical_line_segment_into_pixels() {
+          let a = Point{x: 0., y: 0.};
+          let b = Point{x: 0., y: 10.};
+          let line = LineSegment{point1: a, point2: b};
+          let coordinates = line.into_pixels();
+          assert!(coordinates.len() != 0);
+          for (idx, coordinate) in coordinates.iter().enumerate() {
+              let expected_coordinate = Pixel::new(0, idx as i32 + 1);
+              assert_eq!(*coordinate, expected_coordinate);
+          }
+      }
+
+      // Passes if a horizontal line converts to the correct collection of pixel coordinates
+      #[test]
+      fn horizontal_line_segment_into_pixels() {
+          let a = Point{x: 0., y: 0.};
+          let b = Point{x: 10., y: 0.};
+          let line = LineSegment{point1: a, point2: b};
+          let coordinates = line.into_pixels();
+          assert!(coordinates.len() != 0);
+          for (idx, coordinate) in coordinates.iter().enumerate() {
+              let expected_coordinate = Pixel::new(idx as i32 + 1, 0);
+              assert_eq!(*coordinate, expected_coordinate);
+          }
+      }
 }
 

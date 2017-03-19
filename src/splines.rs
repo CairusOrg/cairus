@@ -52,19 +52,19 @@ impl SplineKnots{
     ///Creates a new SplineKnots with user defined points
     fn create_from_points(a: &Point, b: &Point, c: &Point, d: &Point)->SplineKnots{
         SplineKnots{
-            a:Point::create(a.x, a.y),
-            b:Point::create(b.x, b.y),
-            c:Point::create(c.x, c.y),
-            d:Point::create(d.x, d.y),
+            a:Point::new(a.x, a.y),
+            b:Point::new(b.x, b.y),
+            c:Point::new(c.x, c.y),
+            d:Point::new(d.x, d.y),
         }
     }
 
     fn new() -> SplineKnots {
         SplineKnots{
-            a:Point::create(0.0,0.0),
-            b:Point::create(0.0,0.0),
-            c:Point::create(0.0,0.0),
-            d:Point::create(0.0,0.0),
+            a:Point::new(0.0,0.0),
+            b:Point::new(0.0,0.0),
+            c:Point::new(0.0,0.0),
+            d:Point::new(0.0,0.0),
         }
     }
 }
@@ -171,13 +171,13 @@ impl DeCasteljauPoints {
         self.abbc = lerp_half(&self.ab, &self.bc);
         self.bccd = lerp_half(&self.bc, &self.cd);
         self.fin = lerp_half(&self.abbc, &self.bccd);
-        s2.a = Point::create(self.fin.x, self.fin.y);
-        s2.b = Point::create(self.bccd.x, self.bccd.y);
-        s2.c = Point::create(self.cd.x, self.cd.y);
-        s2.d = Point::create(s1.d.x, s1.d.y);
-        s1.b = Point::create(self.ab.x, self.ab.y);
-        s1.c = Point::create(self.abbc.x, self.abbc.y);
-        s1.d = Point::create(self.fin.x, self.fin.y);
+        s2.a = Point::new(self.fin.x, self.fin.y);
+        s2.b = Point::new(self.bccd.x, self.bccd.y);
+        s2.c = Point::new(self.cd.x, self.cd.y);
+        s2.d = Point::new(s1.d.x, s1.d.y);
+        s1.b = Point::new(self.ab.x, self.ab.y);
+        s1.c = Point::new(self.abbc.x, self.abbc.y);
+        s1.d = Point::new(self.fin.x, self.fin.y);
     }
 
 }
@@ -310,10 +310,10 @@ mod tests{
         //Functional test for the creation of Splineknots using provided points
 
         //Setup
-        let p1 = Point::create(1., 1.);
-        let p2 = Point::create(-1., 2.);
-        let p3 = Point::create(-1.5, -2.4);
-        let p4 = Point::create(2.6, -3.3);
+        let p1 = Point::new(1., 1.);
+        let p2 = Point::new(-1., 2.);
+        let p3 = Point::new(-1.5, -2.4);
+        let p4 = Point::new(2.6, -3.3);
 
         //Call
         let s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
@@ -334,8 +334,8 @@ mod tests{
         //endpoints located in Q1
 
         //Setup
-        let p1 = Point::create(1.9, 2.4);
-        let p2 = Point::create(2.7, 3.3);
+        let p1 = Point::new(1.9, 2.4);
+        let p2 = Point::new(2.7, 3.3);
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
@@ -349,8 +349,8 @@ mod tests{
         //endpoints located in Q2
 
         //Setup
-        let p1 = Point::create(-1.9, 2.4);
-        let p2 = Point::create(-2.7, 3.3);
+        let p1 = Point::new(-1.9, 2.4);
+        let p2 = Point::new(-2.7, 3.3);
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
@@ -364,8 +364,8 @@ mod tests{
         //endpoints located in Q3
 
         //Setup
-        let p1 = Point::create(-1.9, -2.4);
-        let p2 = Point::create(-2.7, -3.3);
+        let p1 = Point::new(-1.9, -2.4);
+        let p2 = Point::new(-2.7, -3.3);
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
@@ -379,8 +379,8 @@ mod tests{
         //endpoints located in Q4
 
         //Setup
-        let p1 = Point::create(-1.9, -2.4);
-        let p2 = Point::create(-2.7, -3.3);
+        let p1 = Point::new(-1.9, -2.4);
+        let p2 = Point::new(-2.7, -3.3);
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
@@ -394,8 +394,8 @@ mod tests{
         //endpoints located in Q1 & Q2
 
         //Setup
-        let q1 = Point::create(1.9, 2.4);
-        let q2 = Point::create(-2.7, 3.3);
+        let q1 = Point::new(1.9, 2.4);
+        let q2 = Point::new(-2.7, 3.3);
         //Call
         let l1 = lerp_half(&q1, &q2);
         //Test
@@ -409,8 +409,8 @@ mod tests{
         //endpoints located in Q3 & Q4
 
         //Setup
-        let p1 = Point::create(-1.9, -2.4);
-        let p2 = Point::create(2.7, -3.3);
+        let p1 = Point::new(-1.9, -2.4);
+        let p2 = Point::new(2.7, -3.3);
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
@@ -424,8 +424,8 @@ mod tests{
         //endpoints located in Q1 & Q3
 
         //Setup
-        let p1 = Point::create(1.9, 2.4);
-        let p2 = Point::create(-2.7, -3.3);
+        let p1 = Point::new(1.9, 2.4);
+        let p2 = Point::new(-2.7, -3.3);
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
@@ -439,8 +439,8 @@ mod tests{
         //endpoints located in Q2 & Q4
 
         //Setup
-        let p1 = Point::create(-1.9, 2.4);
-        let p2 = Point::create(2.7, -3.3);
+        let p1 = Point::new(-1.9, 2.4);
+        let p2 = Point::new(2.7, -3.3);
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
@@ -454,8 +454,8 @@ mod tests{
         //endpoints located in Q1 & Q4
 
         //Setup
-        let p1 = Point::create(1.9, 2.4);
-        let p2 = Point::create(2.7, -3.3);
+        let p1 = Point::new(1.9, 2.4);
+        let p2 = Point::new(2.7, -3.3);
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
@@ -469,8 +469,8 @@ mod tests{
         //endpoints located in Q2 & Q3
 
         //Setup
-        let p1 = Point::create(-1.9, 2.4);
-        let p2 = Point::create(-2.7, -3.3);
+        let p1 = Point::new(-1.9, 2.4);
+        let p2 = Point::new(-2.7, -3.3);
         //Call
         let l1 = lerp_half(&p1, &p2);
         //Test
@@ -503,15 +503,15 @@ mod tests{
 
         //Setup
         //Points for splineknot one
-        let p1 = Point::create(0.,0.);
-        let p2 = Point::create(1., 2.);
-        let p3 = Point::create(1.5, 2.4);
-        let p4 = Point::create(2.6, 3.3);
+        let p1 = Point::new(0.,0.);
+        let p2 = Point::new(1., 2.);
+        let p3 = Point::new(1.5, 2.4);
+        let p4 = Point::new(2.6, 3.3);
         //Points for splineknot two
-        let p5 = Point::create(0., 1.);
-        let p6 = Point::create(2., 2.);
-        let p7 = Point::create(1.9, 2.4);
-        let p8 = Point::create(2.7, 3.3);
+        let p5 = Point::new(0., 1.);
+        let p6 = Point::new(2., 2.);
+        let p7 = Point::new(1.9, 2.4);
+        let p8 = Point::new(2.7, 3.3);
         //Splineknots
         let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
         let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);
@@ -545,15 +545,15 @@ mod tests{
 
         //Setup
         //Points for splineknot one
-        let p1 = Point::create(0.,0.);
-        let p2 = Point::create(-1., 2.);
-        let p3 = Point::create(-1.5, 2.4);
-        let p4 = Point::create(-2.6, 3.3);
+        let p1 = Point::new(0.,0.);
+        let p2 = Point::new(-1., 2.);
+        let p3 = Point::new(-1.5, 2.4);
+        let p4 = Point::new(-2.6, 3.3);
         //Points for splineknot 2
-        let p5 = Point::create(0., 0.);
-        let p6 = Point::create(-2., 2.);
-        let p7 = Point::create(-1.9, 2.4);
-        let p8 = Point::create(-2.7, 3.3);
+        let p5 = Point::new(0., 0.);
+        let p6 = Point::new(-2., 2.);
+        let p7 = Point::new(-1.9, 2.4);
+        let p8 = Point::new(-2.7, 3.3);
         //declare splineknots
         let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
         let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);
@@ -587,15 +587,15 @@ mod tests{
 
         //Setup
         //Points for splineknot one
-        let p1 = Point::create(0., 0.);
-        let p2 = Point::create(-1., -2.);
-        let p3 = Point::create(-1.5, -2.4);
-        let p4 = Point::create(-2.6, -3.3);
+        let p1 = Point::new(0., 0.);
+        let p2 = Point::new(-1., -2.);
+        let p3 = Point::new(-1.5, -2.4);
+        let p4 = Point::new(-2.6, -3.3);
         //Points for splineknot 2
-        let p5 = Point::create(0., -1.);
-        let p6 = Point::create(-2., -2.);
-        let p7 = Point::create(-1.9, -2.4);
-        let p8 = Point::create(-2.7, -3.3);
+        let p5 = Point::new(0., -1.);
+        let p6 = Point::new(-2., -2.);
+        let p7 = Point::new(-1.9, -2.4);
+        let p8 = Point::new(-2.7, -3.3);
         //declare splineknots
         let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
         let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);
@@ -629,15 +629,15 @@ mod tests{
 
         //Setup
         //Points for splineknot one
-        let p1 = Point::create(0., 0.);
-        let p2 = Point::create(1., -2.);
-        let p3 = Point::create(1.5, -2.4);
-        let p4 = Point::create(2.6, -3.3);
+        let p1 = Point::new(0., 0.);
+        let p2 = Point::new(1., -2.);
+        let p3 = Point::new(1.5, -2.4);
+        let p4 = Point::new(2.6, -3.3);
         //Points for splineknot 2
-        let p5 = Point::create(0., -1.);
-        let p6 = Point::create(2., -2.);
-        let p7 = Point::create(1.9, -2.4);
-        let p8 = Point::create(2.7, -3.3);
+        let p5 = Point::new(0., -1.);
+        let p6 = Point::new(2., -2.);
+        let p7 = Point::new(1.9, -2.4);
+        let p8 = Point::new(2.7, -3.3);
         //declare splineknots
         let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
         let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);
@@ -671,15 +671,15 @@ mod tests{
 
         //Setup
         //Points for s1
-        let p1 = Point::create(2., -2.9);
-        let p2 = Point::create(1., 2.);
-        let p3 = Point::create(-1.5, -2.4);
-        let p4 = Point::create(-2.6, 3.3);
+        let p1 = Point::new(2., -2.9);
+        let p2 = Point::new(1., 2.);
+        let p3 = Point::new(-1.5, -2.4);
+        let p4 = Point::new(-2.6, 3.3);
         //Points for s2
-        let p5 = Point::create(0., -1.);
-        let p6 = Point::create(-2., 2.);
-        let p7 = Point::create(-1.9, -2.4);
-        let p8 = Point::create(2.7, 3.3);
+        let p5 = Point::new(0., -1.);
+        let p6 = Point::new(-2., 2.);
+        let p7 = Point::new(-1.9, -2.4);
+        let p8 = Point::new(2.7, 3.3);
         //declare splineknots
         let mut s1 = SplineKnots::create_from_points(&p1, &p2, &p3, &p4);
         let mut s2 = SplineKnots::create_from_points(&p5, &p6, &p7, &p8);

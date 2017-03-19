@@ -124,7 +124,7 @@ impl Path {
             //may want to use Vec::with_capacity here, not sure of syntax restrictions
             data_vec: Vec::new(),
             data_num: 0,
-            current_point: Point::create(f32::NAN, f32::NAN),
+            current_point: Point::new(f32::NAN, f32::NAN),
         }
     }
     
@@ -151,7 +151,7 @@ impl Path {
         //may want to use Vec::with_capacity here, not sure of syntax restrictions
         self.data_vec = Vec::new();
         self.data_num = 0;
-        self.current_point = Point::create(f32::NAN, f32::NAN);
+        self.current_point = Point::new(f32::NAN, f32::NAN);
         self.status
     }
 
@@ -223,7 +223,7 @@ impl Path {
     /// let status = path.move_to(1., 1.5);
     /// ```
     pub fn move_to(&mut self, x: f32, y: f32) -> Status {
-        let point = Point::create(x, y);
+        let point = Point::new(x, y);
         if x < 0. || y < 0. {
             return Status::InvalidPathData;
         }        
@@ -261,7 +261,7 @@ impl Path {
         if self.current_point.x.is_nan() || self.current_point.y.is_nan(){
             return Status::InvalidPathData;
         }
-        let point = Point::create(x, y);
+        let point = Point::new(x, y);
         if  x < 0. || y < 0. {
             return Status::InvalidPathData;
         }        
@@ -309,9 +309,9 @@ impl Path {
             return Status::InvalidPathData;
         }
 
-        let b = Point::create(x1, y1);
-        let c = Point::create(x2, y2);
-        let d = Point::create(x3, y3);
+        let b = Point::new(x1, y1);
+        let c = Point::new(x2, y2);
+        let d = Point::new(x3, y3);
         if self.current_point == d {
             return Status::InvalidPathData;
         }
@@ -350,7 +350,7 @@ mod tests{
     #[test]
     fn test_new_path(){
         let mut path = Path::create();
-        let p1 = Point::create(1., 1.5);
+        let p1 = Point::new(1., 1.5);
         let mut status = path.move_to(p1.x, p1.y);
         status = path.new_path();
      
@@ -365,8 +365,8 @@ mod tests{
     #[test]
     fn test_move_to_different_location(){
         let mut path = Path::create();
-        let p1 = Point::create(1., 1.5);
-        let p2 = Point::create(2., 2.5);
+        let p1 = Point::new(1., 1.5);
+        let p2 = Point::new(2., 2.5);
         let mut status = path.move_to(p1.x, p1.y);
         status = path.move_to(p2.x, p2.y);
 
@@ -381,8 +381,8 @@ mod tests{
     #[test]
     fn test_move_to_same_location(){
         let mut path = Path::create();
-        let p1 = Point::create(1., 1.5);
-        let p2 = Point::create(1., 1.5);
+        let p1 = Point::new(1., 1.5);
+        let p2 = Point::new(1., 1.5);
         let mut status = path.move_to(p1.x, p1.y);
         status = path.move_to(p2.x, p2.y);
 
@@ -392,7 +392,7 @@ mod tests{
     #[test]
     fn test_move_to_negative_location(){
         let mut path = Path::create();
-        let p1 = Point::create(-1., 1.5);
+        let p1 = Point::new(-1., 1.5);
         let mut status = path.move_to(p1.x, p1.y);
 
         assert_eq!(status, Status::InvalidPathData);
@@ -402,8 +402,8 @@ mod tests{
     #[test]
     fn test_line_to_different_location(){
         let mut path = Path::create();
-        let p1 = Point::create(1., 1.5);
-        let p2 = Point::create(2., 2.5);
+        let p1 = Point::new(1., 1.5);
+        let p2 = Point::new(2., 2.5);
         let origin = Point::origin();
         
         let mut status = path.move_to(origin.x, origin.y);
@@ -421,7 +421,7 @@ mod tests{
     #[test]
     fn test_line_to_from_empty_default_point(){
         let mut path = Path::create();
-        let p1 = Point::create(1., 1.5);
+        let p1 = Point::new(1., 1.5);
 
         let mut status = path.line_to(p1.x, p1.y);
 
@@ -431,8 +431,8 @@ mod tests{
     #[test]
     fn test_line_to_same_location(){
         let mut path = Path::create();
-        let p1 = Point::create(1., 1.5);
-        let p2 = Point::create(1., 1.5);
+        let p1 = Point::new(1., 1.5);
+        let p2 = Point::new(1., 1.5);
         let mut status = path.line_to(p1.x, p1.y);
         status = path.line_to(p2.x, p2.y);
 
@@ -442,7 +442,7 @@ mod tests{
     #[test]
     fn test_line_to_negative_location(){
         let mut path = Path::create();
-        let p1 = Point::create(-1., 1.5);
+        let p1 = Point::new(-1., 1.5);
         let mut status = path.line_to(p1.x, p1.y);
 
         assert_eq!(status, Status::InvalidPathData);
@@ -452,12 +452,12 @@ mod tests{
     #[test]
     fn test_curve_to_different_location(){
         let mut path = Path::create();
-        let p1 = Point::create(1., 1.5);
-        let p2 = Point::create(2., 2.5);
-        let p3 = Point::create(3., 3.5);
-        let p4 = Point::create(4., 4.5);
-        let p5 = Point::create(5., 5.5);
-        let p6 = Point::create(6., 6.5);
+        let p1 = Point::new(1., 1.5);
+        let p2 = Point::new(2., 2.5);
+        let p3 = Point::new(3., 3.5);
+        let p4 = Point::new(4., 4.5);
+        let p5 = Point::new(5., 5.5);
+        let p6 = Point::new(6., 6.5);
         let origin = Point::origin();
 
         let mut status = path.move_to(origin.x, origin.y);
@@ -477,12 +477,12 @@ mod tests{
     #[test]
     fn test_curve_to_from_default_empty_point(){
         let mut path = Path::create();
-        let p1 = Point::create(1., 1.5);
-        let p2 = Point::create(2., 2.5);
-        let p3 = Point::create(3., 3.5);
-        let p4 = Point::create(4., 4.5);
-        let p5 = Point::create(5., 5.5);
-        let p6 = Point::create(6., 6.5);
+        let p1 = Point::new(1., 1.5);
+        let p2 = Point::new(2., 2.5);
+        let p3 = Point::new(3., 3.5);
+        let p4 = Point::new(4., 4.5);
+        let p5 = Point::new(5., 5.5);
+        let p6 = Point::new(6., 6.5);
         let mut status = path.curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
         let p7 = path.current_point;
         status = path.curve_to(p4.x, p4.y, p5.x, p5.y, p6.x, p6.y);
@@ -493,12 +493,12 @@ mod tests{
     #[test]
     fn test_curve_to_same_location(){
         let mut path = Path::create();
-        let p1 = Point::create(1., 1.5);
-        let p2 = Point::create(2., 2.5);
-        let p3 = Point::create(3., 3.5);
-        let p4 = Point::create(1., 1.5);
-        let p5 = Point::create(2., 2.5);
-        let p6 = Point::create(3., 3.5);
+        let p1 = Point::new(1., 1.5);
+        let p2 = Point::new(2., 2.5);
+        let p3 = Point::new(3., 3.5);
+        let p4 = Point::new(1., 1.5);
+        let p5 = Point::new(2., 2.5);
+        let p6 = Point::new(3., 3.5);
         let mut status = path.curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
         status = path.curve_to(p4.x, p4.y, p5.x, p5.y, p6.x, p6.y);
 
@@ -508,9 +508,9 @@ mod tests{
     #[test]
     fn test_curve_to_negative_location(){
         let mut path = Path::create();
-        let p1 = Point::create(-1., 1.5);
-        let p2 = Point::create(1., 1.5);
-        let p3 = Point::create(2., 1.5);
+        let p1 = Point::new(-1., 1.5);
+        let p2 = Point::new(1., 1.5);
+        let p3 = Point::new(2., 1.5);
         let mut status = path.curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
 
         assert_eq!(status, Status::InvalidPathData);
