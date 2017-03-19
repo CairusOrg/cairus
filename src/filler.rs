@@ -55,7 +55,7 @@ impl Filler {
     pub fn new() -> Filler {
         Filler {
             edges: Vec::new(),
-            last_point: Some(Point::new(0.,0.)),
+            last_point: None,
             first_point: Point::new(0.,0.),
         }
     }
