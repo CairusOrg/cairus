@@ -325,6 +325,17 @@ impl Clone for Edge {
     fn clone(&self) -> Edge { *self }
 }
 
+impl Edge {
+    fn new_from_points(a: Point, b: Point) -> Edge {
+        Edge {
+            line: LineSegment::from_points(a, b) ,
+            top: if a.y > b.y { a.y } else { b.y },
+            bottom: if a.y < b.y { a.y } else { b.y },
+            direction: 1,
+       }
+    }
+}
+
 /// ## Vector
 ///
 /// Defines a vector by (x, y) direction.
