@@ -29,7 +29,7 @@
  * The Original Code is the cairus graphics library.
  *
  * Contributor(s):
- *	Bobby Eshleman <bobbyeshleman@gmail.com>
+ *  Bobby Eshleman <bobbyeshleman@gmail.com>
  *
  */
 

@@ -42,10 +42,10 @@ use context::Context;
 use std::f32;
 use std::vec::Vec;
 
-/// A data structure for holding a path. 
+/// A data structure for holding a path.
 ///
 /// The `data_num` member gives the number of elements in the `data_vec` vector. This number is larger than
-/// the number of independent path portions (defined in path::Data), since the data includes both 
+/// the number of independent path portions (defined in path::Data), since the data includes both
 /// headers and coordinates for each portion. The `current_point` is the "endpoint" of the path. The
 /// `status` maintains the truthiness of the path.
 //#[derive(Debug, Copy, Clone, PartialEq)]
@@ -102,12 +102,12 @@ fn close_path(p: &Point, s: &Slope){
 
 /// Implementation of `Path` related operations.
 impl Path {
-    
+
     /// Constructs a new `Path`.
-    /// 
+    ///
     /// This will create a new (empty) path with no current point signified by the point having NAN
     /// as both it's x and y value.
-    ///  
+    ///
     /// # Return
     /// * `Path` - A new empty path object
     ///
@@ -127,9 +127,9 @@ impl Path {
             current_point: Point::new(f32::NAN, f32::NAN),
         }
     }
-    
-    /// Clears the current path. 
-    /// 
+
+    /// Clears the current path.
+    ///
     /// After this call there will be no path and no current point.
     /// The current point will be signified empty by it's x and y coordinate value both being
     /// f32::NAN values.
@@ -142,7 +142,7 @@ impl Path {
     /// ```
     /// use cairus::path::Path;
     /// use cairus::status::Status;
-    /// 
+    ///
     /// let mut path = Path::create();
     /// let mut status = path.move_to(1., 1.5);
     /// ```
@@ -156,7 +156,7 @@ impl Path {
     }
 
     /// Returns the current point of the path.
-    /// 
+    ///
     /// # Return
     /// * `Point` - The current _last_ point in the path.
     ///
@@ -176,10 +176,10 @@ impl Path {
 
     /// Begin a new sub-path. Note that the existing path is not
     /// affected. After this call there will be no current point.
-    /// 
+    ///
     /// In many cases, this call is not needed since new sub-paths are
     /// frequently started with cairo_move_to().
-    /// 
+    ///
     /// A call to cairo_new_sub_path() is particularly useful when
     /// beginning a new sub-path with one of the cairo_arc() calls. This
     /// makes things easier as it is no longer necessary to manually
@@ -194,7 +194,7 @@ impl Path {
     /// ```
     /// use cairus::path::Path;
     /// use cairus::status::Status;
-    /// 
+    ///
     /// let mut path = Path::create();
     /// //let status: Status = path.new_sub_path();
     /// ```
@@ -218,7 +218,7 @@ impl Path {
     /// ```
     /// use cairus::path::Path;
     /// use cairus::status::Status;
-    /// 
+    ///
     /// let mut path = Path::create();
     /// let status = path.move_to(1., 1.5);
     /// ```
@@ -226,11 +226,11 @@ impl Path {
         let point = Point::new(x, y);
         if x < 0. || y < 0. {
             return Status::InvalidPathData;
-        }        
+        }
         if self.current_point == point {
             return Status::InvalidPathData;
         }
-        
+
         self.data_vec.push(Data::MoveTo(point));
         self.data_num += 1;
         self.current_point = point;
@@ -252,7 +252,7 @@ impl Path {
     /// ```
     /// use cairus::path::Path;
     /// use cairus::status::Status;
-    /// 
+    ///
     /// let mut path = Path::create();
     /// let status = path.line_to(2.5, 3.);
     /// ```
@@ -264,7 +264,7 @@ impl Path {
         let point = Point::new(x, y);
         if  x < 0. || y < 0. {
             return Status::InvalidPathData;
-        }        
+        }
         if self.current_point == point {
             return Status::InvalidPathData;
         }
@@ -294,7 +294,7 @@ impl Path {
     /// ```
     /// use cairus::path::Path;
     /// use cairus::status::Status;
-    /// 
+    ///
     /// let mut path = Path::create();
     /// let status = path.curve_to(1., 2., 3., 4., 5., 6.);
     /// ```
@@ -338,7 +338,7 @@ mod tests{
     #[test]
     fn test_create_path(){
         let path = Path::create();
-        
+
         assert_eq!(path.status, Status::Success);
         assert_eq!(path.data_vec.len(), 0);
         assert_eq!(path.data_num, 0);
@@ -353,14 +353,14 @@ mod tests{
         let p1 = Point::new(1., 1.5);
         let mut status = path.move_to(p1.x, p1.y);
         status = path.new_path();
-     
+
         assert_eq!(path.status, Status::Success);
         assert_eq!(path.data_vec.len(), 0);
         assert_eq!(path.data_num, 0);
         assert!(path.current_point.x.is_nan());
         assert!(path.current_point.y.is_nan());
     }
-    
+
     //test Path::move_to()
     #[test]
     fn test_move_to_different_location(){
@@ -373,7 +373,7 @@ mod tests{
         assert_eq!(status, Status::Success);
         assert_eq!(path.current_point, p2);
         assert_eq!(path.data_vec.len(), 2);
-        assert_eq!(path.data_vec[0], Data::MoveTo(p1));     
+        assert_eq!(path.data_vec[0], Data::MoveTo(p1));
         assert_eq!(path.data_vec[1], Data::MoveTo(p2));
         assert_eq!(path.data_num, 2);
     }
@@ -405,7 +405,7 @@ mod tests{
         let p1 = Point::new(1., 1.5);
         let p2 = Point::new(2., 2.5);
         let origin = Point::origin();
-        
+
         let mut status = path.move_to(origin.x, origin.y);
         status = path.line_to(p1.x, p1.y);
         status = path.line_to(p2.x, p2.y);
@@ -413,7 +413,7 @@ mod tests{
         assert_eq!(status, Status::Success);
         assert_eq!(path.current_point, p2);
         assert_eq!(path.data_vec.len(), 3);
-        assert_eq!(path.data_vec[1], Data::LineTo(p1));     
+        assert_eq!(path.data_vec[1], Data::LineTo(p1));
         assert_eq!(path.data_vec[2], Data::LineTo(p2));
         assert_eq!(path.data_num, 3);
     }
@@ -448,7 +448,7 @@ mod tests{
         assert_eq!(status, Status::InvalidPathData);
     }
 
-   //test Path::curve_to() 
+   //test Path::curve_to()
     #[test]
     fn test_curve_to_different_location(){
         let mut path = Path::create();
@@ -469,7 +469,7 @@ mod tests{
         assert_eq!(path.current_point, p6);
         assert_eq!(p3, p7);
         assert_eq!(path.data_vec.len(), 3);
-        assert_eq!(path.data_vec[1], Data::CurveTo(p1, p2, p3));     
+        assert_eq!(path.data_vec[1], Data::CurveTo(p1, p2, p3));
         assert_eq!(path.data_vec[2], Data::CurveTo(p4, p5, p6));
         assert_eq!(path.data_num, 3);
     }

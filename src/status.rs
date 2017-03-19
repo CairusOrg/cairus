@@ -29,7 +29,7 @@
  * The Original Code is the cairus graphics library.
  *
  * Contributor(s):
- *	Sara Ferdousi <ferdousi@pdx.edu>
+ *  Sara Ferdousi <ferdousi@pdx.edu>
  *  Evan Smelser <evanjsmelser@gmail.com>
  *
  */

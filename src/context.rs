@@ -62,7 +62,7 @@ impl<'a> Context<'a> {
             target: target,
             operator: Operator::Over,
             status: Status::Success,
-            path: Path::create() 
+            path: Path::create()
         }
     }
 
@@ -123,22 +123,22 @@ impl<'a> Context<'a> {
     }
 
     ///Implementation of user facing path related functions
-    
-    ///Clears the current path. 
+
+    ///Clears the current path.
     ///After this call there will be no path and the current point will be set t.
     pub fn new_path(&mut self) -> Status {
         //let mut status = Status::Success;
         if self.status != Status::Success {
             return Status::InvalidPathData;
         }
-        
+
         let status = self.path.new_path();
         if status != Status::Success {
             self.set_error(status);
         }
-        self.status        
+        self.status
     }
-    
+
     ///new_sub_path
     ///
     ///Begin a new sub-path. Note that the existing path is not
@@ -157,14 +157,14 @@ impl<'a> Context<'a> {
         if self.status != Status::Success {
             return Status::InvalidPathData;
         }
-        
+
         let status = self.path.new_sub_path();
         if status != Status::Success {
             self.set_error(status);
         }
         self.status
     }
-    
+
     ///move_to
     ///
     ///Begin a new sub-path. After this call the current point will be (x, y).
@@ -173,14 +173,14 @@ impl<'a> Context<'a> {
         if self.status != Status::Success {
             return Status::InvalidPathData;
         }
-        
+
         let status = self.path.move_to(x, y);
         if status != Status::Success {
             self.set_error(status);
         }
         self.status
     }
-    
+
     ///line_to
     ///
     ///Adds a line to the path from the current point to position (x, y) in user-space coordinates.
@@ -190,7 +190,7 @@ impl<'a> Context<'a> {
         if self.status != Status::Success {
             return Status::InvalidPathData;
         }
-        
+
         let status = self.path.line_to(x, y);
         if status != Status::Success {
             self.set_error(status);
@@ -210,7 +210,7 @@ impl<'a> Context<'a> {
         if self.status != Status::Success {
             return Status::InvalidPathData;
         }
-        
+
         let status = self.path.curve_to(x1, y1, x2, y2, x3, y3);
         if status != Status::Success {
             self.set_error(status);
