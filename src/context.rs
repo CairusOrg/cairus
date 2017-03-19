@@ -42,6 +42,7 @@ use operators::Operator;
 use operators::fetch_operator;
 use status::Status;
 use path::Path;
+use filler::Filler;
 
 /// Struct defined for context
 pub struct Context<'a>{
@@ -50,6 +51,7 @@ pub struct Context<'a>{
     target: &'a mut ImageSurface,
     operator: Operator,
     path: Path,
+    filler: Filler,
 }
 
 /// Implementation of methods for context
@@ -62,7 +64,8 @@ impl<'a> Context<'a> {
             target: target,
             operator: Operator::Over,
             status: Status::Success,
-            path: Path::create()
+            path: Path::create(),
+            filler: Filler::new()
         }
     }
 

@@ -29,53 +29,34 @@
  * The Original Code is the cairus graphics library.
  *
  * Contributor(s):
- *  Bobby Eshleman <bobbyeshleman@gmail.com>
- *  Evan Smelser <evanjsmelser@gmail.com>
+ *	Kyle J. Kneitinger <kyle@kneit.in>
+ *
  */
 
-//! The main crate for Cairus.
-//!
-//! ## Overview
-//!
-//! Cairus is a 2D graphics library based on the Cairo vector graphics library.  Cairus is designed
-//! to utilize and preserve the Cairo drawing model while providing the benefits of a native Rust
-//! implementation.
+use path::{Path,Data};
+use common_geometry::{Edge,Point};
+use splines;
+use context::Context;
+use bo_trap::sweep;
+use trapezoid_rasterizer::mask_from_trapezoids;
 
-/// When we get down to the level of pixels, they are blended together by operations
-/// defined in the operators module.
-#[allow(dead_code)]
-#[macro_use]
-mod debug_utils;
 
-#[allow(dead_code)]
-pub mod operators;
+pub struct Filler {
+    edges: Vec<Edge>,
+}
 
-#[allow(dead_code)]
-mod types;
+impl Filler {
 
-#[allow(dead_code)]
-pub mod surfaces;
+    pub fn new() -> Filler {
+        Filler {
+            edges: Vec::new(),
+        }
+    }
 
-#[allow(dead_code)]
-mod splines;
+    fn fill(&self, mut context: Context) {
+        let traps = sweep(self.edges.as_slice());
+        let mask = mask_from_trapezoids(&traps, 100, 100);
+    }
 
-#[allow(dead_code)]
-pub mod context;
+}
 
-#[allow(dead_code)]
-mod trapezoid_rasterizer;
-
-#[allow(dead_code)]
-pub mod common_geometry;
-
-#[allow(dead_code)]
-pub mod status;
-
-#[allow(dead_code)]
-pub mod path;
-
-#[allow(dead_code)]
-pub mod bo_trap;
-
-#[allow(dead_code)]
-mod filler;

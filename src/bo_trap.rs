@@ -275,20 +275,20 @@ impl Event {
 }
 
 /// Takes a list of edges, converts them into a list of events, then returns a sorted event list.
-fn event_list_from_edges(edges: Vec<Edge>) -> Vec<Event> {
+fn event_list_from_edges(edges: & [Edge]) -> Vec<Event> {
     let mut events = Vec::new();
     for edge in edges {
         // Case for horizontal line
         if edge.top == edge.bottom {
             let start_point = edge.line.min_x_point();
             let end_point = edge.line.max_x_point();
-            events.push(Event::new(edge, &start_point, EventType::Start));
-            events.push(Event::new(edge, &end_point, EventType::End));
+            events.push(Event::new(*edge, &start_point, EventType::Start));
+            events.push(Event::new(*edge, &end_point, EventType::End));
         } else {
             let start_point = edge.line.min_y_point();
             let end_point = edge.line.max_y_point();
-            events.push(Event::new(edge, &start_point, EventType::Start));
-            events.push(Event::new(edge, &end_point, EventType::End));
+            events.push(Event::new(*edge, &start_point, EventType::Start));
+            events.push(Event::new(*edge, &end_point, EventType::End));
         }
     }
     events.sort();
@@ -324,7 +324,7 @@ impl SweepLineEdge {
 }
 
 /// Creates trapezoids out of the passed in edges.
-pub fn sweep(edges: Vec<Edge>) -> Vec<Trapezoid> {
+pub fn sweep(edges: & [Edge]) -> Vec<Trapezoid> {
     // Create the empty sweep Line Linked List
     let mut sl_list: LinkedList<SweepLineEdge> = LinkedList::new();
     // Create a cursor to move over the list
@@ -875,7 +875,7 @@ mod tests {
             create_edge(0., 0., 5., 5., 1),
         ];
 
-        let event_list = event_list_from_edges(edges);
+        let event_list = event_list_from_edges(edges.as_slice());
         assert_eq!(event_list.len(), 6);
     }
 
@@ -888,7 +888,7 @@ mod tests {
         create_edge(0., 0., 5., 5., 1),
         ];
 
-        let event_list = event_list_from_edges(edges);
+        let event_list = event_list_from_edges(edges.as_slice());
         assert_eq!(event_list.get(0).unwrap().point, Point::new(0., 0.));
         assert_eq!(event_list.get(1).unwrap().point, Point::new(0., 1.));
         assert_eq!(event_list.get(2).unwrap().point, Point::new(1., 2.));
@@ -906,7 +906,7 @@ mod tests {
         create_edge(0., 0., 5., 5., 1),
         ];
 
-        let event_list = event_list_from_edges(edges);
+        let event_list = event_list_from_edges(edges.as_slice());
         assert_eq!(event_list.get(0).unwrap().event_type, EventType::Start);
         assert_eq!(event_list.get(1).unwrap().event_type, EventType::Start);
         assert_eq!(event_list.get(2).unwrap().event_type, EventType::Start);
@@ -922,7 +922,7 @@ mod tests {
         create_edge(1., 4., 3., 4., 1),
         ];
 
-        let event_list = event_list_from_edges(edges);
+        let event_list = event_list_from_edges(edges.as_slice());
         assert_eq!(event_list.get(0).unwrap().point.x, 1.);
         assert_eq!(event_list.get(0).unwrap().event_type, EventType::Start);
         assert_eq!(event_list.get(1).unwrap().point.x, 3.);
@@ -947,7 +947,7 @@ mod tests {
         create_edge(0., 1., 6., 6., 1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 2);
     }
 
@@ -958,7 +958,7 @@ mod tests {
         create_edge(0., 0., 1., 4., 1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 0);
     }
 
@@ -970,7 +970,7 @@ mod tests {
         create_edge(2., 0., 3., 4., 1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 1);
     }
 
@@ -983,7 +983,7 @@ mod tests {
         create_edge(4., 0., 5., 4., 1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 2);
     }
 
@@ -997,7 +997,7 @@ mod tests {
         create_edge(6., 0., 7., 4., -1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 2);
     }
 
@@ -1009,7 +1009,7 @@ mod tests {
         create_edge(2., 0., 0., 4., 1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 2);
     }
 
@@ -1023,7 +1023,7 @@ mod tests {
         create_edge(0., 6., 4., 2., 1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 5);
     }
 
@@ -1034,7 +1034,7 @@ mod tests {
         create_edge(1., 0., 1., 2., 0),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 0);
     }
 
@@ -1046,7 +1046,7 @@ mod tests {
         create_edge(2., 1., 2., 3., 1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 1);
     }
 
@@ -1057,7 +1057,7 @@ mod tests {
         create_edge(1., 0., 3., 0., 0),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 0);
     }
 
@@ -1077,7 +1077,7 @@ mod tests {
         create_edge(p3.x, p3.y, p1.x, p1.y, -1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 1);
         assert!(traps.get(0).unwrap().contains_point(&Point{x:1.,y:1.}));
         assert!(!traps.get(0).unwrap().contains_point(&Point{x:3.,y:1.}));
@@ -1107,7 +1107,7 @@ mod tests {
         create_edge(p7.x, p7.y, p5.x, p5.y, -1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 2);
         assert!(traps.get(0).unwrap().contains_point(&Point{x:1.,y:1.}));
         assert!(!traps.get(0).unwrap().contains_point(&Point{x:3.,y:1.}));
@@ -1126,7 +1126,7 @@ mod tests {
         create_edge(1., 3., 0., 0., -1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 1);
     }
 
@@ -1140,7 +1140,7 @@ mod tests {
         create_edge(0., 2., 2., 0., 1),
         ];
 
-        let traps = sweep(edges);
+        let traps = sweep(edges.as_slice());
         assert_eq!(traps.len(), 2);
     }
 
