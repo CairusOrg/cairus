@@ -39,6 +39,9 @@ use splines::decasteljau;
 use context::Context;
 use bo_trap::sweep;
 use trapezoid_rasterizer::mask_from_trapezoids;
+use operators::{operator_in,operator_over};
+use surfaces::ImageSurface;
+use types::Rgba;
 
 
 pub struct Filler {
@@ -84,12 +87,25 @@ impl Filler {
         };
     }
 
-    pub fn fill(&mut self, mut context: Context) {
-        for data in context.path.data_vec {
-            self.add_point(data);
+    pub fn fill(&mut self, path: &Path, target: &mut ImageSurface, rgba: Rgba ) {
+        for data in path.data_vec.as_slice() {
+            self.add_point(*data);
         }
         let traps = sweep(self.edges.as_slice());
-        let mask = mask_from_trapezoids(&traps, context.target.width, context.target.height);
+        let mut mask = mask_from_trapezoids(&traps, target.width, target.height);
+
+        for (idx, mut mask_pixel) in mask.iter_mut().enumerate() {
+            operator_in(&rgba, &mut mask_pixel);
+        }
+
+        for (idx, mask_pixel) in mask.iter().enumerate() {
+            match target.get_mut_with_index(idx) {
+                Some(mut dest_pixel) => {
+                    operator_over(&mask_pixel, &mut dest_pixel);
+                },
+                None => {}
+            }
+        }
     }
 }
 

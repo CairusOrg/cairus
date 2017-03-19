@@ -51,9 +51,8 @@ pub struct Context<'a>{
     pub target: &'a mut ImageSurface,
     operator: Operator,
     pub path: Path,
-    filler: Filler,
+    //filler: Option<Filler>,
 }
-
 /// Implementation of methods for context
 impl<'a> Context<'a> {
     //Creates a new cairo context with rgba values set to zeroes with passed ImageSurface as target surface
@@ -65,7 +64,7 @@ impl<'a> Context<'a> {
             operator: Operator::Over,
             status: Status::Success,
             path: Path::create(),
-            filler: Filler::new()
+            //filler: None,
         }
     }
 
@@ -219,6 +218,11 @@ impl<'a> Context<'a> {
             self.set_error(status);
         }
         self.status
+    }
+
+    pub fn fill(&mut self) {
+        let mut filler = Filler::new();
+        filler.fill(&self.path, &mut self.target, self.rgba);
     }
 }
 

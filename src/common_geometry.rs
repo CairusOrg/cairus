@@ -327,11 +327,17 @@ impl Clone for Edge {
 
 impl Edge {
     pub fn new_from_points(a: Point, b: Point) -> Edge {
+        let l = LineSegment::from_points(a,b);
+        let t = l.min_y_point().y;
+        let b = l.max_y_point().y;
+
         Edge {
-            line: LineSegment::from_points(a, b) ,
-            top: if a.y > b.y { a.y } else { b.y },
-            bottom: if a.y < b.y { a.y } else { b.y },
-            direction: 1,
+            line: l,
+            top: t,
+            bottom: b,
+            direction: if l.min_y_point().x < l.max_y_point().x { 1 } 
+                       else if t == b { 0 }
+                       else { -1 },
        }
     }
 }
