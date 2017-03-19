@@ -237,6 +237,15 @@ impl Path {
         self.status
     }
 
+    pub fn close(&mut self) -> Status {
+        self.data_vec.push(Data::ClosePath);
+//        self.current_point = match data_vec.get(0) {
+//            Data::MoveTo    => a,
+//            _               => Point::origin(),
+//        };
+        self.status
+    }
+
     /// Adds a line to the path from the current point to position (x, y) in user-space coordinates.
     /// After this call the current point will be (x, y)
     ///

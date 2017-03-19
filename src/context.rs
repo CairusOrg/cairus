@@ -220,6 +220,11 @@ impl<'a> Context<'a> {
         self.status
     }
 
+    pub fn close_path(&mut self) {
+        self.path.close();
+
+    }
+
     pub fn fill(&mut self) {
         let mut filler = Filler::new();
         filler.fill(&self.path, &mut self.target, self.rgba);
@@ -236,6 +241,7 @@ mod tests{
     use types::Rgba;
     use operators::Operator;
     use super::Context;
+    use std::path::Path;
 
     #[test]
     fn test_get_default_operator(){
@@ -323,5 +329,23 @@ mod tests{
         assert_eq!(context.rgba.green, 1.);
         assert_eq!(context.rgba.blue, 0.);
         assert_eq!(context.rgba.alpha, 1.);
+    }
+
+    #[test]
+    fn demo() {
+        let mut surface = ImageSurface::create(400, 400);
+        let path = Path::new("Demo.png");
+        {
+            let mut context = Context::create(&mut surface);
+            context.set_source_rgba(0.,1.,0.,1.);
+            context.move_to(100., 100.);
+            context.line_to(300., 100.);
+            context.line_to(300., 300.);
+            context.line_to(100., 300.);
+            context.close_path();
+            context.fill();
+        }
+        surface.to_file(path);
+
     }
 }
