@@ -246,6 +246,12 @@ impl Path {
         self.status
     }
 
+    pub fn clear(&mut self) -> Status {
+        self.data_vec.clear();
+        self.current_point = Point::origin();
+        self.status
+    }
+
     /// Adds a line to the path from the current point to position (x, y) in user-space coordinates.
     /// After this call the current point will be (x, y)
     ///

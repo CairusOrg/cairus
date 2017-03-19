@@ -225,6 +225,10 @@ impl<'a> Context<'a> {
 
     }
 
+    pub fn clear_path(&mut self) {
+        self.path.clear();
+    }
+
     pub fn fill(&mut self) {
         let mut filler = Filler::new();
         filler.fill(&self.path, &mut self.target, self.rgba);
@@ -331,6 +335,7 @@ mod tests{
         assert_eq!(context.rgba.alpha, 1.);
     }
 
+
     #[test]
     fn demo() {
         let mut surface = ImageSurface::create(400, 400);
@@ -342,10 +347,44 @@ mod tests{
             context.line_to(300., 100.);
             context.line_to(300., 300.);
             context.line_to(100., 300.);
+            context.line_to(100., 100.);
             context.close_path();
             context.fill();
         }
         surface.to_file(path);
+    }
 
+    #[test]
+    fn demo_two() {
+        let mut surface = ImageSurface::create(400, 400);
+        let path = Path::new("Demo2.png");
+        {
+            let mut context = Context::create(&mut surface);
+            context.set_source_rgba(0.,1.,0.,1.);
+            context.move_to(100., 100.);
+            context.line_to(300., 100.);
+            context.curve_to(300., 200., 200., 300., 100., 300.);
+            context.close_path();
+            context.fill();
+        }
+        surface.to_file(path);
+    }
+
+    #[test]
+    fn demo_three() {
+        let mut surface = ImageSurface::create(400, 400);
+        let path = Path::new("Demo3.png");
+        {
+            let mut context = Context::create(&mut surface);
+            context.set_source_rgba(0.,1.,0.,1.);
+            context.move_to(100., 100.);
+            context.line_to(300., 100.);
+            context.line_to(300., 300.);
+            context.line_to(100., 300.);
+            context.line_to(100., 100.);
+            context.close_path();
+            context.fill();
+        }
+        surface.to_file(path);
     }
 }
