@@ -216,7 +216,7 @@ fn bezier(a: &Point, b: &Point, c: &Point, d: &Point, t: f32 ) -> Point
 
 pub fn decasteljau (a: &Point, b: &Point, c: &Point, d: &Point) -> Vec<Point> {
     let mut points = Vec::new();
-    for i in 1..900 {
+    for i in 1..995 {
         let p = bezier(a,b,c,d,i as f32/1000.0);
         points.push(p);
     }
