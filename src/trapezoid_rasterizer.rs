@@ -203,22 +203,24 @@ impl IntoPixels for Trapezoid {
         }
 
         let mut pixels = Vec::new();
-        let min_y = outline_pixels[0].y;
-        let max_y = outline_pixels[outline_pixels.len() - 1].y + 1;
-        for (outer_idx, y) in (min_y..max_y).enumerate() {
-            if outer_idx == 0 {
-                continue;
-            }
-            for (inner_idx, x) in (minmap[&y]..(maxmap[&y] + 1)).enumerate() {
-                if inner_idx == 0 {
+        if outline_pixels.len() > 0 {
+            let min_y = outline_pixels[0].y;
+            let max_y = outline_pixels[outline_pixels.len() - 1].y + 1;
+            for (outer_idx, y) in (min_y..max_y).enumerate() {
+                if outer_idx == 0 {
                     continue;
                 }
-                let pixel = Pixel{x: x, y: y, is_edge: false};
-                pixels.push(pixel);
+                for (inner_idx, x) in (minmap[&y]..(maxmap[&y] + 1)).enumerate() {
+                    if inner_idx == 0 {
+                        continue;
+                    }
+                    let pixel = Pixel { x: x, y: y, is_edge: false };
+                    pixels.push(pixel);
+                }
             }
-        }
 
-        pixels.append(&mut outline_pixels);
+            pixels.append(&mut outline_pixels);
+        }
         pixels
     }
 }
