@@ -371,6 +371,22 @@ mod tests{
     }
 
     #[test]
+    fn demo_two_a() {
+        let mut surface = ImageSurface::create(400, 400);
+        let path = Path::new("Demo2a.png");
+        {
+            let mut context = Context::create(&mut surface);
+            context.set_source_rgba(0.,1.,0.,1.);
+            context.move_to(100., 100.);
+            context.line_to(300., 100.);
+            context.curve_to(250., 300., 150., 300., 99., 100.);
+            context.close_path();
+            context.fill();
+        }
+        surface.to_file(path);
+    }
+
+    #[test]
     fn demo_three() {
         let mut surface = ImageSurface::create(500, 500);
         let path = Path::new("Demo3.png");
