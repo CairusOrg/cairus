@@ -376,10 +376,24 @@ mod tests{
         let path = Path::new("Demo2a.png");
         {
             let mut context = Context::create(&mut surface);
-            context.set_source_rgba(0.,1.,0.,1.);
-            context.move_to(100., 100.);
-            context.line_to(300., 100.);
-            context.curve_to(250., 300., 150., 300., 99., 100.);
+            context.set_source_rgba(0.,0.,0.,1.);
+            context.move_to(100., 200.);
+            context.line_to(300., 200.);
+            context.curve_to(250., 300., 150., 300., 99., 200.);
+            context.close_path();
+            context.fill();
+            context.clear_path();
+            context.move_to(125., 100.);
+            context.line_to(175., 100.);
+            context.line_to(175., 150.);
+            context.line_to(125., 150.);
+            context.close_path();
+            context.fill();
+            context.clear_path();
+            context.move_to(225., 100.);
+            context.line_to(275., 100.);
+            context.line_to(275., 150.);
+            context.line_to(225., 150.);
             context.close_path();
             context.fill();
         }
